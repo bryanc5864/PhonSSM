@@ -40,7 +40,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import (
     EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TensorBoard
 )
-from tensorflow.keras.utils import to_categorical
+# Note: using sparse_categorical_crossentropy, no to_categorical needed
 from sklearn.utils.class_weight import compute_class_weight
 
 # Paths
@@ -118,33 +118,38 @@ def train(args):
     input_shape = (X_train.shape[1], X_train.shape[2])  # (30, 63)
     print(f"Input shape: {input_shape}")
 
-    # Convert labels to one-hot
-    y_train_cat = to_categorical(y_train, num_classes)
-    y_val_cat = to_categorical(y_val, num_classes)
-    y_test_cat = to_categorical(y_test, num_classes)
+    # Keep labels as integers (sparse) - one-hot would be 4GB+ for 5565 classes!
+    # Using sparse_categorical_crossentropy instead
 
     # Compute class weights for imbalanced data
     class_weights = None
     if args.use_class_weights:
         print("Computing class weights...")
-        classes = np.unique(y_train)
-        weights = compute_class_weight('balanced', classes=classes, y=y_train)
-        class_weights = dict(zip(classes, weights))
-        print(f"Class weights computed for {len(classes)} classes")
+        classes_in_train = np.unique(y_train)
+        weights = compute_class_weight('balanced', classes=classes_in_train, y=y_train)
+
+        # Create weight dict for classes that exist in training data
+        weight_dict = dict(zip(classes_in_train, weights))
+
+        # Fill missing classes with max weight (treat rare/missing classes as important)
+        max_weight = max(weights)
+        class_weights = {i: weight_dict.get(i, max_weight) for i in range(num_classes)}
+
+        print(f"Class weights: {len(classes_in_train)} classes in training, {num_classes - len(classes_in_train)} missing (assigned max weight)")
 
     # Build model
     print("\nBuilding model...")
     model = build_model(input_shape, num_classes)
     model.summary()
 
-    # Compile
+    # Compile with sparse loss (no one-hot encoding needed)
     model.compile(
         optimizer=Adam(learning_rate=args.learning_rate),
-        loss='categorical_crossentropy',
+        loss='sparse_categorical_crossentropy',
         metrics=[
             'accuracy',
-            tf.keras.metrics.TopKCategoricalAccuracy(k=3, name='top3_accuracy'),
-            tf.keras.metrics.TopKCategoricalAccuracy(k=5, name='top5_accuracy')
+            tf.keras.metrics.SparseTopKCategoricalAccuracy(k=3, name='top3_accuracy'),
+            tf.keras.metrics.SparseTopKCategoricalAccuracy(k=5, name='top5_accuracy')
         ]
     )
 
@@ -185,8 +190,8 @@ def train(args):
     print(f"Learning rate: {args.learning_rate}")
 
     history = model.fit(
-        X_train, y_train_cat,
-        validation_data=(X_val, y_val_cat),
+        X_train, y_train,
+        validation_data=(X_val, y_val),
         epochs=args.epochs,
         batch_size=args.batch_size,
         callbacks=callbacks,
@@ -199,7 +204,7 @@ def train(args):
     print("EVALUATION")
     print("=" * 60)
 
-    test_results = model.evaluate(X_test, y_test_cat, verbose=0)
+    test_results = model.evaluate(X_test, y_test, verbose=0)
     print(f"Test Loss: {test_results[0]:.4f}")
     print(f"Test Accuracy: {test_results[1]:.4f} ({test_results[1]*100:.2f}%)")
     print(f"Test Top-3 Accuracy: {test_results[2]:.4f} ({test_results[2]*100:.2f}%)")

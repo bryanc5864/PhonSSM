@@ -1,0 +1,12 @@
+{
+  "total_samples": 259715,
+  "train_samples": 196606,
+  "val_samples": 31551,
+  "test_samples": 31558,
+  "vocabulary_size": 5565,
+  "shape": [
+    196606,
+    30,
+    63
+  ]
+}

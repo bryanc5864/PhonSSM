@@ -1,6 +1,9 @@
-# Data files
-data/
-*.npy
+# Data files (raw)
+data/raw/
+data/processed/extended/
+data/processed/*.npy
+data/processed/*.json
+!data/processed/merged/
 *.npz
 *.zip
 *.parquet
