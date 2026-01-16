@@ -54,12 +54,12 @@ def load_data(data_dir):
     data_dir = Path(data_dir)
 
     print("Loading data...")
-    X_train = np.load(data_dir / "X_train.npy")
-    y_train = np.load(data_dir / "y_train.npy")
-    X_val = np.load(data_dir / "X_val.npy")
-    y_val = np.load(data_dir / "y_val.npy")
-    X_test = np.load(data_dir / "X_test.npy")
-    y_test = np.load(data_dir / "y_test.npy")
+    X_train = np.load(data_dir / "X_train.npy", allow_pickle=True)
+    y_train = np.load(data_dir / "y_train.npy", allow_pickle=True)
+    X_val = np.load(data_dir / "X_val.npy", allow_pickle=True)
+    y_val = np.load(data_dir / "y_val.npy", allow_pickle=True)
+    X_test = np.load(data_dir / "X_test.npy", allow_pickle=True)
+    y_test = np.load(data_dir / "y_test.npy", allow_pickle=True)
 
     with open(data_dir / "label_map.json") as f:
         label_map = json.load(f)
@@ -173,13 +173,13 @@ def train(args):
             verbose=1
         ),
         ModelCheckpoint(
-            MODEL_DIR / 'best_model.keras',
+            str(MODEL_DIR / 'best_model.keras'),
             monitor='val_accuracy',
             save_best_only=True,
             verbose=1
         ),
         TensorBoard(
-            log_dir=MODEL_DIR / 'logs' / timestamp,
+            log_dir=str(MODEL_DIR / 'logs' / timestamp),
             histogram_freq=1
         )
     ]

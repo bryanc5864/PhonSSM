@@ -8,8 +8,9 @@ data/processed/*.json
 *.zip
 *.parquet
 
-# Models
-models/
+# Models (except trained sign_classifier)
+models/*
+!models/sign_classifier/
 *.task
 *.h5
 *.onnx
