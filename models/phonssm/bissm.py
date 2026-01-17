@@ -3,6 +3,8 @@ Bidirectional Selective State Space (BiSSM)
 ============================================
 Mamba-inspired temporal modeling with O(n) complexity.
 Uses selective state space for efficient long-range dependencies.
+
+Fixed version with proper initialization for numerical stability.
 """
 import torch
 import torch.nn as nn
@@ -14,10 +16,7 @@ class SelectiveSSM(nn.Module):
     """
     Selective State Space Model (S6) - core of Mamba architecture.
 
-    Key innovations:
-    1. Input-dependent state transitions (selective)
-    2. Hardware-aware parallel scan
-    3. O(n) complexity vs O(n²) for attention
+    Fixed with proper initialization following Mamba paper guidelines.
     """
 
     def __init__(
@@ -26,7 +25,9 @@ class SelectiveSSM(nn.Module):
         d_state: int = 16,
         d_conv: int = 4,
         expand: int = 2,
-        dropout: float = 0.1
+        dropout: float = 0.1,
+        dt_min: float = 0.001,
+        dt_max: float = 0.1,
     ):
         super().__init__()
         self.d_model = d_model
@@ -47,22 +48,42 @@ class SelectiveSSM(nn.Module):
             groups=self.d_inner  # Depthwise
         )
 
-        # SSM parameters (input-dependent)
-        self.x_proj = nn.Linear(self.d_inner, d_state * 2 + 1, bias=False)
+        # SSM parameters (input-dependent) - B, C, and dt
+        # Reduced output dim, dt handled separately
+        self.x_proj = nn.Linear(self.d_inner, d_state * 2, bias=False)
 
-        # Discretization parameters
-        self.dt_proj = nn.Linear(1, self.d_inner, bias=True)
+        # dt projection with proper initialization
+        self.dt_proj = nn.Linear(self.d_inner, self.d_inner, bias=True)
 
-        # State space matrices
-        # A is structured as diagonal for efficiency
-        A = torch.arange(1, d_state + 1, dtype=torch.float32)
+        # Initialize dt_proj to give values in [dt_min, dt_max]
+        dt_init_std = self.d_inner ** -0.5
+        nn.init.uniform_(self.dt_proj.weight, -dt_init_std, dt_init_std)
+
+        # Bias initialized to give dt in desired range after softplus
+        dt_init = torch.exp(
+            torch.rand(self.d_inner) * (math.log(dt_max) - math.log(dt_min)) + math.log(dt_min)
+        )
+        inv_softplus = lambda x: x + torch.log(-torch.expm1(-x))
+        self.dt_proj.bias.data = inv_softplus(dt_init)
+
+        # State space A matrix - use smaller values for stability
+        # Instead of 1..16, use 0.5..8 (halved) for gentler dynamics
+        A = torch.arange(1, d_state + 1, dtype=torch.float32) * 0.5
         self.A_log = nn.Parameter(torch.log(A))
+
+        # D (skip connection weight)
         self.D = nn.Parameter(torch.ones(self.d_inner))
 
         # Output projection
         self.out_proj = nn.Linear(self.d_inner, d_model, bias=False)
 
+        # Initialize output projection small
+        nn.init.normal_(self.out_proj.weight, std=d_model ** -0.5)
+
         self.dropout = nn.Dropout(dropout)
+
+        # Layer norm for stability
+        self.norm = nn.LayerNorm(self.d_inner)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -84,18 +105,21 @@ class SelectiveSSM(nn.Module):
         x_conv = F.silu(x_conv)
 
         # SSM parameters from input (selective)
-        ssm_params = self.x_proj(x_conv)  # (B, T, d_state*2 + 1)
+        ssm_params = self.x_proj(x_conv)  # (B, T, d_state*2)
         B_param = ssm_params[:, :, :self.d_state]  # (B, T, d_state)
-        C_param = ssm_params[:, :, self.d_state:2*self.d_state]  # (B, T, d_state)
-        dt = F.softplus(ssm_params[:, :, -1:])  # (B, T, 1) - timestep
+        C_param = ssm_params[:, :, self.d_state:]  # (B, T, d_state)
 
-        # Discretize A
-        A = -torch.exp(self.A_log)  # (d_state,) - negative for stability
-        dt_proj = self.dt_proj(dt)  # (B, T, d_inner)
+        # dt from separate projection with softplus
+        dt = F.softplus(self.dt_proj(x_conv))  # (B, T, d_inner)
 
-        # Parallel scan (simplified sequential for clarity)
-        # In production, use associative scan for parallelism
-        y = self._ssm_scan(x_conv, A, B_param, C_param, dt_proj)
+        # Discretize A (negative for stability)
+        A = -torch.exp(self.A_log)  # (d_state,)
+
+        # Run SSM scan
+        y = self._ssm_scan(x_conv, A, B_param, C_param, dt)
+
+        # Normalize for stability
+        y = self.norm(y)
 
         # Skip connection with D
         y = y + x_conv * self.D
@@ -118,7 +142,7 @@ class SelectiveSSM(nn.Module):
         dt: torch.Tensor
     ) -> torch.Tensor:
         """
-        Selective scan operation.
+        Selective scan operation with improved numerical stability.
 
         Args:
             x: (B, T, d_inner) - input
@@ -135,15 +159,16 @@ class SelectiveSSM(nn.Module):
 
         outputs = []
         for t in range(T):
-            # Discretized A: exp(A * dt)
-            # A: (d_state,), dt[:, t, :]: (B, d_inner)
-            # Want: (B, d_inner, d_state)
+            # Get timestep for this position
             dt_t = dt[:, t, :].unsqueeze(-1)  # (B, d_inner, 1)
+
+            # Discretized A: exp(A * dt)
+            # A is negative, dt is positive small, so A*dt is negative small
+            # exp of negative small is between 0 and 1 (decay)
             dA = torch.exp(A.view(1, 1, -1) * dt_t)  # (B, d_inner, d_state)
 
-            # Discretized B: dt * B
-            # dt[:, t, :]: (B, d_inner), B[:, t, :]: (B, d_state)
-            # Want: (B, d_inner, d_state)
+            # Discretized B: (1 - dA) / A * B ≈ dt * B for small dt
+            # Simplified: dt * B
             dB = dt_t * B[:, t, :].unsqueeze(1)  # (B, d_inner, d_state)
 
             # State update: h = dA * h + dB * x
@@ -151,7 +176,6 @@ class SelectiveSSM(nn.Module):
             h = dA * h + dB * x_t
 
             # Output: y = C @ h
-            # h: (B, d_inner, d_state), C[:, t, :]: (B, d_state)
             y_t = (h * C[:, t, :].unsqueeze(1)).sum(dim=-1)  # (B, d_inner)
             outputs.append(y_t)
 

@@ -35,7 +35,7 @@ class PhonSSMConfig:
     num_locations: int = 15
     num_movements: int = 10
     num_orientations: int = 8
-    temperature: float = 0.07
+    temperature: float = 0.1
 
     # Training
     dropout: float = 0.1

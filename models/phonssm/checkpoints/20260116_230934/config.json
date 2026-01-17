@@ -1,0 +1,23 @@
+{
+  "num_landmarks": 21,
+  "num_frames": 30,
+  "coord_dim": 3,
+  "spatial_hidden": 64,
+  "spatial_out": 128,
+  "num_gat_heads": 4,
+  "component_dim": 32,
+  "num_components": 4,
+  "d_model": 128,
+  "d_state": 16,
+  "d_conv": 4,
+  "expand": 2,
+  "num_ssm_layers": 4,
+  "num_signs": 5565,
+  "num_handshapes": 30,
+  "num_locations": 15,
+  "num_movements": 10,
+  "num_orientations": 8,
+  "temperature": 0.1,
+  "dropout": 0.1,
+  "label_smoothing": 0.1
+}

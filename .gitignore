@@ -8,16 +8,20 @@ data/processed/*.json
 *.zip
 *.parquet
 
-# Models (except code and trained sign_classifier)
+# Models (except code and trained models)
 models/*
 !models/sign_classifier/
 !models/phonssm/
+
+# Model weights (except trained checkpoints)
 *.task
 *.h5
 *.onnx
 *.pt
 *.pth
 *.tflite
+!models/phonssm/checkpoints/**/*.pt
+!models/phonssm/checkpoints/**/*.json
 
 # Python
 __pycache__/
