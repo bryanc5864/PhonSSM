@@ -51,7 +51,8 @@ class PhonSSM(nn.Module):
             out_dim=self.config.spatial_out,
             num_heads=self.config.num_gat_heads,
             num_nodes=self.config.num_landmarks,
-            dropout=self.config.dropout
+            dropout=self.config.dropout,
+            input_mode=self.config.input_mode
         )
 
         # 2. Phonological Disentanglement Module
@@ -105,8 +106,9 @@ class PhonSSM(nn.Module):
         """
         B = x.shape[0]
 
-        # Handle flattened input (B, T, 63) -> (B, T, 21, 3)
-        if x.dim() == 3 and x.shape[-1] == self.config.num_landmarks * self.config.coord_dim:
+        # Handle flattened input (B, T, N*C) -> (B, T, N, C)
+        expected_flat = self.config.num_landmarks * self.config.coord_dim
+        if x.dim() == 3 and x.shape[-1] == expected_flat:
             x = x.view(B, -1, self.config.num_landmarks, self.config.coord_dim)
 
         # 1. Spatial encoding with graph attention

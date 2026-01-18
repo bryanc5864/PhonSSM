@@ -1,11 +1,27 @@
 """
 Anatomical Graph Attention Network (AGAN)
 =========================================
-Graph Attention Network that respects hand skeleton topology.
+Graph Attention Network that respects hand/body skeleton topology.
+Supports multiple input modes: single_hand, both_hands, pose_hands, full.
 """
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from typing import Literal
+
+
+def create_adjacency(mode: Literal["single_hand", "both_hands", "pose_hands", "full"] = "single_hand") -> torch.Tensor:
+    """Create adjacency matrix based on input mode."""
+    if mode == "single_hand":
+        return create_hand_adjacency()
+    elif mode == "both_hands":
+        return create_both_hands_adjacency()
+    elif mode == "pose_hands":
+        return create_pose_hands_adjacency()
+    elif mode == "full":
+        return create_full_adjacency()
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
 
 
 def create_hand_adjacency() -> torch.Tensor:
@@ -50,6 +66,148 @@ def create_hand_adjacency() -> torch.Tensor:
 
     # Self-loops
     A = A + torch.eye(21)
+
+    return A
+
+
+def create_both_hands_adjacency() -> torch.Tensor:
+    """
+    Create adjacency for both hands (42 landmarks).
+    Left hand: 0-20, Right hand: 21-41
+    """
+    A = torch.zeros(42, 42)
+
+    # Left hand (indices 0-20)
+    left_hand = create_hand_adjacency()
+    A[:21, :21] = left_hand
+
+    # Right hand (indices 21-41)
+    A[21:42, 21:42] = left_hand  # Same topology
+
+    # Cross-hand connections (wrist to wrist, weak)
+    A[0, 21] = 0.3
+    A[21, 0] = 0.3
+
+    return A
+
+
+def create_pose_hands_adjacency() -> torch.Tensor:
+    """
+    Create adjacency for pose + both hands (75 landmarks).
+
+    MediaPipe Pose landmarks (33 total):
+        0: nose, 1-4: left/right eye, 5-6: left/right ear
+        7-8: mouth, 9-10: left/right shoulder
+        11-12: left/right elbow, 13-14: left/right wrist
+        15-22: hand landmarks (simplified), 23-28: hip/knee/ankle
+        29-32: foot landmarks
+
+    Layout:
+        0-32: Pose (33 landmarks)
+        33-53: Left hand (21 landmarks)
+        54-74: Right hand (21 landmarks)
+    """
+    A = torch.zeros(75, 75)
+
+    # === Pose skeleton (0-32) ===
+    # Face
+    face_connections = [
+        (0, 1), (0, 2), (1, 3), (2, 4),  # Nose to eyes to ears
+        (0, 5), (0, 6),  # Nose to mouth
+    ]
+
+    # Upper body
+    body_connections = [
+        (9, 10),  # Shoulders
+        (9, 11), (11, 13),  # Left arm: shoulder -> elbow -> wrist
+        (10, 12), (12, 14),  # Right arm: shoulder -> elbow -> wrist
+        (9, 23), (10, 24),  # Shoulders to hips
+        (23, 24),  # Hips
+    ]
+
+    # Lower body (optional, less important for signs)
+    lower_body = [
+        (23, 25), (25, 27),  # Left leg
+        (24, 26), (26, 28),  # Right leg
+    ]
+
+    for i, j in face_connections + body_connections + lower_body:
+        if i < 33 and j < 33:
+            A[i, j] = 1
+            A[j, i] = 1
+
+    # === Left hand (33-53) ===
+    left_hand = create_hand_adjacency()
+    A[33:54, 33:54] = left_hand
+
+    # === Right hand (54-74) ===
+    A[54:75, 54:75] = left_hand
+
+    # === Connect hands to pose wrists ===
+    # Pose left wrist (13) to left hand wrist (33)
+    A[13, 33] = 1
+    A[33, 13] = 1
+
+    # Pose right wrist (14) to right hand wrist (54)
+    A[14, 54] = 1
+    A[54, 14] = 1
+
+    # Cross-hand connection (weak)
+    A[33, 54] = 0.3
+    A[54, 33] = 0.3
+
+    # Self-loops
+    A = A + torch.eye(75)
+
+    return A
+
+
+def create_full_adjacency() -> torch.Tensor:
+    """
+    Create adjacency for pose + hands + face key points (130 landmarks).
+
+    Layout:
+        0-32: Pose (33 landmarks)
+        33-53: Left hand (21 landmarks)
+        54-74: Right hand (21 landmarks)
+        75-129: Face key points (55 landmarks - subset of MediaPipe face)
+    """
+    A = torch.zeros(130, 130)
+
+    # Start with pose_hands adjacency
+    pose_hands = create_pose_hands_adjacency()
+    A[:75, :75] = pose_hands
+
+    # Face mesh key points (simplified connections)
+    # Key facial landmarks for expression recognition
+    # Eyebrows, eyes, nose, mouth outline
+    face_start = 75
+
+    # Connect face points in a mesh-like pattern (simplified)
+    # Upper face (eyebrows + eyes): 0-19
+    for i in range(19):
+        A[face_start + i, face_start + i + 1] = 0.5
+        A[face_start + i + 1, face_start + i] = 0.5
+
+    # Nose: 20-29
+    for i in range(20, 29):
+        A[face_start + i, face_start + i + 1] = 0.5
+        A[face_start + i + 1, face_start + i] = 0.5
+
+    # Mouth: 30-54
+    for i in range(30, 54):
+        A[face_start + i, face_start + i + 1] = 0.5
+        A[face_start + i + 1, face_start + i] = 0.5
+    # Close mouth loop
+    A[face_start + 30, face_start + 54] = 0.5
+    A[face_start + 54, face_start + 30] = 0.5
+
+    # Connect face to pose nose
+    A[0, face_start + 25] = 0.5  # Pose nose to face nose center
+    A[face_start + 25, 0] = 0.5
+
+    # Self-loops
+    A = A + torch.eye(130)
 
     return A
 
@@ -128,12 +286,18 @@ class GraphAttentionLayer(nn.Module):
 
 class AnatomicalGraphAttention(nn.Module):
     """
-    Graph Attention Network respecting hand skeleton topology.
+    Graph Attention Network respecting hand/body skeleton topology.
 
     Key innovations:
     1. Anatomical prior in adjacency matrix
     2. Learnable edge weights for adaptive connections
     3. Multi-head attention for different relationship types
+
+    Supports multiple input modes:
+    - single_hand: 21 landmarks (original, for webcam)
+    - both_hands: 42 landmarks
+    - pose_hands: 75 landmarks (pose + both hands)
+    - full: 130 landmarks (pose + hands + face)
     """
 
     def __init__(
@@ -143,12 +307,15 @@ class AnatomicalGraphAttention(nn.Module):
         out_dim: int = 128,
         num_heads: int = 4,
         num_nodes: int = 21,
-        dropout: float = 0.1
+        dropout: float = 0.1,
+        input_mode: str = "single_hand"
     ):
         super().__init__()
+        self.input_mode = input_mode
+        self.num_nodes = num_nodes
 
-        # Fixed anatomical adjacency
-        self.register_buffer('A_anat', create_hand_adjacency())
+        # Fixed anatomical adjacency based on input mode
+        self.register_buffer('A_anat', create_adjacency(input_mode))
 
         # Learnable adjacency residual (discovers non-obvious connections)
         self.A_learn = nn.Parameter(torch.zeros(num_nodes, num_nodes))
