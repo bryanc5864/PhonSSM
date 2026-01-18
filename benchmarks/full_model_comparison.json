@@ -1,0 +1,162 @@
+{
+  "benchmark_info": {
+    "timestamp": "2026-01-18",
+    "dataset": "SignSense Merged",
+    "test_samples": 31558,
+    "val_samples": 31551,
+    "num_classes": 5565,
+    "input_shape": [30, 63],
+    "note": "Both models benchmarked on same test set with comprehensive metrics"
+  },
+  "bilstm": {
+    "model": "Bi-LSTM",
+    "architecture": "Bidirectional LSTM (128) -> Bidirectional LSTM (64) -> Dense (128) -> Dense (64) -> Dense (5565)",
+    "parameters": 747965,
+    "epochs_trained": 50,
+    "test_accuracy": {
+      "top1": 27.39,
+      "top3": 39.96,
+      "top5": 45.14,
+      "top10": 51.81
+    },
+    "f1_scores": {
+      "macro": 7.25,
+      "weighted": 26.46
+    },
+    "per_class_accuracy": {
+      "mean": 10.62,
+      "std": 22.78,
+      "min": 0.0,
+      "max": 100.0
+    },
+    "inference": {
+      "time_per_sample_ms": 0.41,
+      "throughput_samples_per_sec": 2413.92
+    },
+    "few_shot_performance": {
+      "1-5_samples": {"accuracy": 4.08, "test_count": 98},
+      "6-10_samples": {"accuracy": 3.70, "test_count": 108},
+      "11-20_samples": {"accuracy": 5.29, "test_count": 2572},
+      "21-50_samples": {"accuracy": 10.13, "test_count": 11311},
+      "51-100_samples": {"accuracy": 1.52, "test_count": 3431},
+      "101+_samples": {"accuracy": 52.66, "test_count": 13867}
+    },
+    "source": "benchmarks/bilstm_benchmark_20260118_011903.json"
+  },
+  "phonssm": {
+    "model": "PhonSSM",
+    "architecture": "AGAN (Graph Attention) -> PDM (Phonological Disentanglement) -> BiSSM (Bidirectional State Space) -> HPC (Hierarchical Prototypical Classifier)",
+    "parameters": 3227033,
+    "parameter_breakdown": {
+      "agan": 773561,
+      "pdm": 135296,
+      "bissm": 1528704,
+      "hpc": 789472
+    },
+    "epochs_trained": 93,
+    "test_accuracy": {
+      "top1": 53.34,
+      "top3": 63.97,
+      "top5": 68.60,
+      "top10": 74.38
+    },
+    "f1_scores": {
+      "macro": 20.25,
+      "weighted": 52.36
+    },
+    "per_class_accuracy": {
+      "mean": 23.55,
+      "std": 28.99,
+      "min": 0.0,
+      "max": 100.0
+    },
+    "inference": {
+      "time_per_sample_ms": 3.85,
+      "throughput_samples_per_sec": 259.67
+    },
+    "few_shot_performance": {
+      "1-5_samples": {"accuracy": 13.27, "test_count": 98},
+      "6-10_samples": {"accuracy": 9.26, "test_count": 108},
+      "11-20_samples": {"accuracy": 12.71, "test_count": 2572},
+      "21-50_samples": {"accuracy": 24.03, "test_count": 11311},
+      "51-100_samples": {"accuracy": 26.03, "test_count": 3431},
+      "101+_samples": {"accuracy": 92.82, "test_count": 13867}
+    },
+    "source": "benchmarks/benchmark_results_20260118_004401.json"
+  },
+  "comparison": {
+    "accuracy_improvement": {
+      "top1": {
+        "bilstm": 27.39,
+        "phonssm": 53.34,
+        "absolute_gain": 25.95,
+        "relative_gain": "94.7%"
+      },
+      "top3": {
+        "bilstm": 39.96,
+        "phonssm": 63.97,
+        "absolute_gain": 24.01,
+        "relative_gain": "60.1%"
+      },
+      "top5": {
+        "bilstm": 45.14,
+        "phonssm": 68.60,
+        "absolute_gain": 23.46,
+        "relative_gain": "52.0%"
+      },
+      "top10": {
+        "bilstm": 51.81,
+        "phonssm": 74.38,
+        "absolute_gain": 22.57,
+        "relative_gain": "43.6%"
+      }
+    },
+    "f1_improvement": {
+      "macro": {
+        "bilstm": 7.25,
+        "phonssm": 20.25,
+        "absolute_gain": 13.00,
+        "relative_gain": "179.3%"
+      },
+      "weighted": {
+        "bilstm": 26.46,
+        "phonssm": 52.36,
+        "absolute_gain": 25.90,
+        "relative_gain": "97.9%"
+      }
+    },
+    "per_class_improvement": {
+      "mean_accuracy": {
+        "bilstm": 10.62,
+        "phonssm": 23.55,
+        "absolute_gain": 12.93,
+        "relative_gain": "121.8%"
+      }
+    },
+    "few_shot_improvement": {
+      "1-5_samples": {"bilstm": 4.08, "phonssm": 13.27, "relative_gain": "225.2%"},
+      "6-10_samples": {"bilstm": 3.70, "phonssm": 9.26, "relative_gain": "150.3%"},
+      "11-20_samples": {"bilstm": 5.29, "phonssm": 12.71, "relative_gain": "140.3%"},
+      "21-50_samples": {"bilstm": 10.13, "phonssm": 24.03, "relative_gain": "137.2%"},
+      "51-100_samples": {"bilstm": 1.52, "phonssm": 26.03, "relative_gain": "1612.5%"},
+      "101+_samples": {"bilstm": 52.66, "phonssm": 92.82, "relative_gain": "76.3%"}
+    },
+    "efficiency": {
+      "parameters": {
+        "bilstm": 747965,
+        "phonssm": 3227033,
+        "ratio": "4.3x more"
+      },
+      "inference_speed": {
+        "bilstm_ms": 0.41,
+        "phonssm_ms": 3.85,
+        "ratio": "9.4x slower"
+      },
+      "accuracy_per_million_params": {
+        "bilstm": 36.62,
+        "phonssm": 16.53
+      }
+    },
+    "summary": "PhonSSM achieves 94.7% relative improvement in Top-1 accuracy (27.39% -> 53.34%) with 4.3x more parameters. The phonology-aware architecture provides massive gains across all metrics: 179.3% improvement in Macro F1, 121.8% in mean per-class accuracy, and especially strong gains in few-shot scenarios (up to 1612.5% for 51-100 sample classes). For classes with 101+ samples, PhonSSM achieves 92.82% vs 52.66% accuracy."
+  }
+}

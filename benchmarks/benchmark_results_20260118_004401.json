@@ -1,0 +1,35 @@
+{
+  "timestamp": "20260118_004401",
+  "bilstm": {},
+  "phonssm": {
+    "top1_accuracy": 53.336713353190945,
+    "top3_accuracy": 63.96793206160086,
+    "top5_accuracy": 68.6006717789467,
+    "top10_accuracy": 74.38367450408772,
+    "macro_f1": 20.253821437089698,
+    "weighted_f1": 52.35676525843075,
+    "per_class_accuracy_mean": 23.551834436069843,
+    "per_class_accuracy_std": 28.990364862838707,
+    "per_class_accuracy_min": 0.0,
+    "per_class_accuracy_max": 100.0,
+    "few_shot": {
+      "accuracy_1-5_samples": 13.26530612244898,
+      "count_1-5_samples": 98,
+      "accuracy_6-10_samples": 9.25925925925926,
+      "count_6-10_samples": 108,
+      "accuracy_11-20_samples": 12.713841368584758,
+      "count_11-20_samples": 2572,
+      "accuracy_21-50_samples": 24.029705596322167,
+      "count_21-50_samples": 11311,
+      "accuracy_51-100_samples": 26.027397260273972,
+      "count_51-100_samples": 3431,
+      "accuracy_101+_samples": 92.81748034903006,
+      "count_101+_samples": 13867
+    },
+    "model": "PhonSSM",
+    "parameters": 3227033,
+    "inference_time_total_s": 121.53097224235535,
+    "inference_time_per_sample_ms": 3.8510353077620683,
+    "throughput_samples_per_sec": 259.6704314770681
+  }
+}

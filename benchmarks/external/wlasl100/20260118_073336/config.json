@@ -1,0 +1,9 @@
+{
+  "dataset": "WLASL100",
+  "num_classes": 100,
+  "train_samples": 4326,
+  "val_samples": 1014,
+  "batch_size": 128,
+  "learning_rate": 0.0003,
+  "epochs": 100
+}

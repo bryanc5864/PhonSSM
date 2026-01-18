@@ -1,0 +1,33 @@
+{
+  "top1_accuracy": 27.390835921161038,
+  "top3_accuracy": 39.96134102287851,
+  "top5_accuracy": 45.14227771088155,
+  "top10_accuracy": 51.81253564864694,
+  "macro_f1": 7.251072603048161,
+  "weighted_f1": 26.45652216661291,
+  "per_class_accuracy_mean": 10.616156551541485,
+  "per_class_accuracy_std": 22.781174293489563,
+  "per_class_accuracy_min": 0.0,
+  "per_class_accuracy_max": 100.0,
+  "few_shot": {
+    "accuracy_1-5_samples": 4.081632653061225,
+    "count_1-5_samples": 98,
+    "accuracy_6-10_samples": 3.7037037037037033,
+    "count_6-10_samples": 108,
+    "accuracy_11-20_samples": 5.287713841368585,
+    "count_11-20_samples": 2572,
+    "accuracy_21-50_samples": 10.13173017416674,
+    "count_21-50_samples": 11311,
+    "accuracy_51-100_samples": 1.51559312153891,
+    "count_51-100_samples": 3431,
+    "accuracy_101+_samples": 52.657388043556644,
+    "count_101+_samples": 13867
+  },
+  "model": "Bi-LSTM",
+  "parameters": 747965,
+  "inference_time_total_s": 13.073340892791748,
+  "inference_time_per_sample_ms": 0.41426392334088813,
+  "throughput_samples_per_sec": 2413.920072825466,
+  "test_samples": 31558,
+  "num_classes": 5565
+}
