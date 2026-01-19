@@ -203,7 +203,7 @@ def train(args):
             verbose=1
         ),
         ModelCheckpoint(
-            MODEL_DIR / 'best_model.keras',
+            str(MODEL_DIR / 'best_model.keras'),
             monitor='val_loss',
             save_best_only=True,
             verbose=1
@@ -256,8 +256,8 @@ def train(args):
     print(f"Error Type AUC: {results[6]:.4f}")
     print(f"Correctness Accuracy: {results[7]:.4f}")
 
-    # Save model
-    model.save(MODEL_DIR / 'error_diagnosis.keras')
+    # Save model (explicitly as string path for Keras 3 format)
+    model.save(str(MODEL_DIR / 'error_diagnosis.keras'))
     print(f"\nModel saved to {MODEL_DIR / 'error_diagnosis.keras'}")
 
     # Save training history

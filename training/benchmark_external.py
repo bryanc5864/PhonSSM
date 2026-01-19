@@ -411,8 +411,7 @@ def train_model_on_dataset(data, args, resume_path=None):
         optimizer,
         mode='max',
         factor=0.5,
-        patience=7,
-        verbose=True
+        patience=7
     )
 
     # Resume from checkpoint if specified
