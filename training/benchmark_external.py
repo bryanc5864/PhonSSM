@@ -311,8 +311,14 @@ def evaluate(model, dataloader, device, label_smoothing=0.1):
     }
 
 
-def train_model_on_dataset(data, args):
-    """Train a fresh PhonSSM model on the given dataset with full logging."""
+def train_model_on_dataset(data, args, resume_path=None):
+    """Train a fresh PhonSSM model on the given dataset with full logging.
+
+    Args:
+        data: Dataset dict with X_train, y_train, etc.
+        args: Command line arguments
+        resume_path: Path to checkpoint directory to resume from (optional)
+    """
     device = torch.device(args.device)
 
     # Prepare data
@@ -409,38 +415,68 @@ def train_model_on_dataset(data, args):
         verbose=True
     )
 
-    # Create checkpoint directory
-    output_dir = PROJECT_ROOT / "benchmarks" / "external" / data['dataset_name'].lower()
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Resume from checkpoint if specified
+    start_epoch = 0
+    best_val_acc = 0
+    best_state = None
+    history = {'train': [], 'val': []}
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_dir = output_dir / timestamp
-    run_dir.mkdir(exist_ok=True)
+    if resume_path:
+        resume_dir = Path(resume_path)
+        checkpoint_path = resume_dir / 'best_model.pt'
+        if checkpoint_path.exists():
+            print(f"\n[RESUME] Loading checkpoint from {checkpoint_path}")
+            checkpoint = torch.load(checkpoint_path, map_location=device)
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            start_epoch = checkpoint['epoch'] + 1
+            best_val_acc = checkpoint['val_acc']
+            best_state = checkpoint['model_state_dict']
+            print(f"[RESUME] Resuming from epoch {start_epoch}, best val acc: {best_val_acc*100:.2f}%")
 
-    # Save config
-    config_dict = {
-        'dataset': data['dataset_name'],
-        'num_classes': num_classes,
-        'train_samples': len(X_train),
-        'val_samples': len(X_val),
-        'batch_size': args.batch_size,
-        'learning_rate': args.learning_rate,
-        'epochs': args.epochs
-    }
-    with open(run_dir / 'config.json', 'w') as f:
-        json.dump(config_dict, f, indent=2)
+            # Load history if exists
+            history_path = resume_dir / 'history.json'
+            if history_path.exists():
+                with open(history_path) as f:
+                    history = json.load(f)
+                print(f"[RESUME] Loaded training history ({len(history['train'])} epochs)")
+
+            # Use the same run directory
+            run_dir = resume_dir
+        else:
+            print(f"[RESUME] Checkpoint not found at {checkpoint_path}, starting fresh")
+            resume_path = None
+
+    # Create new checkpoint directory if not resuming
+    if not resume_path:
+        output_dir = PROJECT_ROOT / "benchmarks" / "external" / data['dataset_name'].lower()
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        run_dir = output_dir / timestamp
+        run_dir.mkdir(exist_ok=True)
+
+        # Save config
+        config_dict = {
+            'dataset': data['dataset_name'],
+            'num_classes': num_classes,
+            'train_samples': len(X_train),
+            'val_samples': len(X_val),
+            'batch_size': args.batch_size,
+            'learning_rate': args.learning_rate,
+            'epochs': args.epochs
+        }
+        with open(run_dir / 'config.json', 'w') as f:
+            json.dump(config_dict, f, indent=2)
 
     # Training loop
-    print(f"\nTraining for up to {args.epochs} epochs...")
+    print(f"\nTraining for up to {args.epochs} epochs (starting from {start_epoch})...")
     print(f"Batch size: {args.batch_size}")
     print(f"Learning rate: {args.learning_rate}")
 
-    best_val_acc = 0
-    best_state = None
     patience_counter = 0
-    history = {'train': [], 'val': []}
 
-    for epoch in range(args.epochs):
+    for epoch in range(start_epoch, args.epochs):
         print(f"\nEpoch {epoch + 1}/{args.epochs}")
         print("-" * 40)
 
@@ -653,6 +689,7 @@ def main():
     parser.add_argument('--patience', type=int, default=15, help='Early stopping patience')
     parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu')
     parser.add_argument('--skip-train', action='store_true', help='Skip training, just show SOTA comparison')
+    parser.add_argument('--resume', type=str, default=None, help='Path to checkpoint to resume from (e.g., benchmarks/external/wlasl1000/20260118_191023)')
     args = parser.parse_args()
 
     print("=" * 60)
@@ -680,7 +717,7 @@ def main():
         return
 
     # Train model
-    model, run_dir = train_model_on_dataset(data, args)
+    model, run_dir = train_model_on_dataset(data, args, resume_path=args.resume)
 
     # Final evaluation
     device = torch.device(args.device)

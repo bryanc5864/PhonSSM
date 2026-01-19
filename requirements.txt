@@ -7,6 +7,12 @@ scikit-learn>=1.0.0
 
 # Deep Learning
 tensorflow>=2.10.0
+torch>=2.0.0
+
+# Web Server
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+websockets>=11.0
 
 # Data Loading
 pyarrow>=8.0.0  # For parquet files
