@@ -12,6 +12,7 @@ data/processed/*.json
 models/*
 !models/sign_classifier/
 !models/phonssm/
+!models/movement_analyzer/
 
 # Model weights (except trained checkpoints)
 *.task

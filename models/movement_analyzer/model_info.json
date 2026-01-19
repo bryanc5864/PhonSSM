@@ -1,0 +1,19 @@
+{
+  "input_shape": [
+    30,
+    9
+  ],
+  "num_movement_types": 6,
+  "movement_types": [
+    "static",
+    "linear",
+    "circular",
+    "arc",
+    "zigzag",
+    "compound"
+  ],
+  "parameters": 41257,
+  "test_type_accuracy": 1.0,
+  "test_quality_mae": 0.0002812412567436695,
+  "epochs_trained": 50
+}
