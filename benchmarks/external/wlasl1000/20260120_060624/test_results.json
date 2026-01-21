@@ -1,0 +1,14 @@
+{
+  "dataset": "WLASL1000",
+  "num_classes": 1000,
+  "test_samples": 5628,
+  "metrics": {
+    "top1_accuracy": 62.89978678038379,
+    "top5_accuracy": 82.6048329779673,
+    "top10_accuracy": 86.35394456289978,
+    "per_class_accuracy": 62.4231749949397,
+    "per_class_std": 26.08859082592107,
+    "macro_f1": 61.48621359842795,
+    "weighted_f1": 62.11511960843264
+  }
+}
