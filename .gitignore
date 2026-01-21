@@ -9,6 +9,18 @@ data/processed/*.json
 !data/processed/y_asl_citizen.npy
 !data/processed/asl_citizen_label_map.json
 !data/processed/asl_citizen_stats.json
+# Allow main training data (via Git LFS)
+!data/processed/X_train.npy
+!data/processed/X_test.npy
+!data/processed/X_train_with_errors.npy
+!data/processed/y_train_with_errors.npy
+!data/processed/component_scores_train.npy
+!data/processed/error_labels_train.npy
+!data/processed/is_correct_train.npy
+!data/processed/error_metadata.json
+!data/processed/label_map.json
+!data/processed/wlasl_label_map.json
+!data/processed/wlasl_pose_hands_label_map.json
 *.npz
 *.zip
 *.parquet
