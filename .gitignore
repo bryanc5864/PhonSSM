@@ -4,6 +4,11 @@ data/processed/extended/
 data/processed/*.npy
 data/processed/*.json
 !data/processed/merged/
+# Allow ASL Citizen data (via Git LFS)
+!data/processed/X_asl_citizen.npy
+!data/processed/y_asl_citizen.npy
+!data/processed/asl_citizen_label_map.json
+!data/processed/asl_citizen_stats.json
 *.npz
 *.zip
 *.parquet
