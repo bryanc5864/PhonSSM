@@ -92,17 +92,25 @@ PhonSSM (Phonological State Space Model) is a novel architecture for sign langua
 
 | Method | Type | Top-1 | Top-5 | Top-10 |
 |--------|------|-------|-------|--------|
-| **PhonSSM (Ours)** | Skeleton | **55.22%** | **79.23%** | **84.72%** |
+| **PhonSSM (Ours)** | Skeleton | **62.90%** | **82.60%** | **86.35%** |
 | I3D (2020) | Video | 47.33% | - | - |
 
 **Our results:**
 - Test samples: 5,628
-- Per-class accuracy: 54.68% (±26.50%)
-- Macro F1: 53.65%
+- Per-class accuracy: 62.42% (±25.63%)
+- Macro F1: 61.58%
 
 ### WLASL2000
 
-*Training in progress*
+| Method | Type | Top-1 | Top-5 | Top-10 |
+|--------|------|-------|-------|--------|
+| **PhonSSM (Ours)** | Skeleton | **72.08%** | **86.26%** | **88.56%** |
+| I3D (2020) | Video | 32.48% | - | - |
+
+**Our results:**
+- Test samples: 8,634
+- Per-class accuracy: 70.47% (±27.36%)
+- Macro F1: 69.80%
 
 ---
 
@@ -131,7 +139,7 @@ PhonSSM (Phonological State Space Model) is a novel architecture for sign langua
 
 ### Key Achievements
 
-1. **WLASL100 SOTA:** 88.37% Top-1 accuracy, beating previous best (82.56%) by +5.81 points
+1. **WLASL SOTA:** 88.4% (100), 74.4% (300), 62.9% (1000), 72.1% (2000) - all beating previous bests
 2. **Skeleton-only:** All results achieved without RGB video, using only pose landmarks
 3. **Strong generalization:** 50-64% zero-shot accuracy on unseen data distributions
 4. **Few-shot excellence:** Up to 1612% improvement over Bi-LSTM on low-data classes
@@ -154,4 +162,4 @@ Inference is 9.4x slower (3.85ms vs 0.41ms) but still real-time capable (260 sam
 
 ---
 
-*Last updated: 2026-01-19*
+*Last updated: 2026-01-22*
