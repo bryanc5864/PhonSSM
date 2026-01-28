@@ -1,0 +1,147 @@
+{
+  "accuracy": 0.9610027855153204,
+  "num_classes": 100,
+  "test_samples": 1077,
+  "confused_pairs": [
+    {
+      "true": "table",
+      "pred": "before",
+      "count": 2,
+      "true_total": 11,
+      "error_rate": 0.18181818181818182
+    },
+    {
+      "true": "book",
+      "pred": "medicine",
+      "count": 1,
+      "true_total": 22,
+      "error_rate": 0.045454545454545456
+    },
+    {
+      "true": "computer",
+      "pred": "cousin",
+      "count": 1,
+      "true_total": 16,
+      "error_rate": 0.0625
+    },
+    {
+      "true": "computer",
+      "pred": "work",
+      "count": 1,
+      "true_total": 16,
+      "error_rate": 0.0625
+    },
+    {
+      "true": "computer",
+      "pred": "paper",
+      "count": 1,
+      "true_total": 16,
+      "error_rate": 0.0625
+    },
+    {
+      "true": "before",
+      "pred": "last",
+      "count": 1,
+      "true_total": 14,
+      "error_rate": 0.07142857142857142
+    },
+    {
+      "true": "go",
+      "pred": "want",
+      "count": 1,
+      "true_total": 14,
+      "error_rate": 0.07142857142857142
+    },
+    {
+      "true": "go",
+      "pred": "brown",
+      "count": 1,
+      "true_total": 14,
+      "error_rate": 0.07142857142857142
+    },
+    {
+      "true": "cousin",
+      "pred": "drink",
+      "count": 1,
+      "true_total": 12,
+      "error_rate": 0.08333333333333333
+    },
+    {
+      "true": "year",
+      "pred": "graduate",
+      "count": 1,
+      "true_total": 12,
+      "error_rate": 0.08333333333333333
+    },
+    {
+      "true": "year",
+      "pred": "work",
+      "count": 1,
+      "true_total": 12,
+      "error_rate": 0.08333333333333333
+    },
+    {
+      "true": "cool",
+      "pred": "accident",
+      "count": 1,
+      "true_total": 11,
+      "error_rate": 0.09090909090909091
+    },
+    {
+      "true": "what",
+      "pred": "letter",
+      "count": 1,
+      "true_total": 11,
+      "error_rate": 0.09090909090909091
+    },
+    {
+      "true": "what",
+      "pred": "same",
+      "count": 1,
+      "true_total": 11,
+      "error_rate": 0.09090909090909091
+    },
+    {
+      "true": "bed",
+      "pred": "cool",
+      "count": 1,
+      "true_total": 10,
+      "error_rate": 0.1
+    },
+    {
+      "true": "dog",
+      "pred": "cool",
+      "count": 1,
+      "true_total": 10,
+      "error_rate": 0.1
+    },
+    {
+      "true": "graduate",
+      "pred": "help",
+      "count": 1,
+      "true_total": 10,
+      "error_rate": 0.1
+    },
+    {
+      "true": "graduate",
+      "pred": "year",
+      "count": 1,
+      "true_total": 10,
+      "error_rate": 0.1
+    },
+    {
+      "true": "kiss",
+      "pred": "cool",
+      "count": 1,
+      "true_total": 10,
+      "error_rate": 0.1
+    },
+    {
+      "true": "kiss",
+      "pred": "hat",
+      "count": 1,
+      "true_total": 10,
+      "error_rate": 0.1
+    }
+  ]
+}

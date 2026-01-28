@@ -1,0 +1,147 @@
+{
+  "accuracy": 0.8807042759611929,
+  "num_classes": 2000,
+  "test_samples": 11132,
+  "confused_pairs": [
+    {
+      "true": "right",
+      "pred": "correct",
+      "count": 3,
+      "true_total": 9,
+      "error_rate": 0.3333333333333333
+    },
+    {
+      "true": "draw",
+      "pred": "sketch",
+      "count": 3,
+      "true_total": 7,
+      "error_rate": 0.42857142857142855
+    },
+    {
+      "true": "secret",
+      "pred": "private",
+      "count": 3,
+      "true_total": 7,
+      "error_rate": 0.42857142857142855
+    },
+    {
+      "true": "shoes",
+      "pred": "same",
+      "count": 3,
+      "true_total": 7,
+      "error_rate": 0.42857142857142855
+    },
+    {
+      "true": "alone",
+      "pred": "only",
+      "count": 3,
+      "true_total": 7,
+      "error_rate": 0.42857142857142855
+    },
+    {
+      "true": "explain",
+      "pred": "describe",
+      "count": 3,
+      "true_total": 7,
+      "error_rate": 0.42857142857142855
+    },
+    {
+      "true": "exchange",
+      "pred": "trade",
+      "count": 3,
+      "true_total": 6,
+      "error_rate": 0.5
+    },
+    {
+      "true": "hurt",
+      "pred": "pain",
+      "count": 3,
+      "true_total": 6,
+      "error_rate": 0.5
+    },
+    {
+      "true": "policy",
+      "pred": "principle",
+      "count": 3,
+      "true_total": 5,
+      "error_rate": 0.6
+    },
+    {
+      "true": "rehearse",
+      "pred": "practice",
+      "count": 3,
+      "true_total": 6,
+      "error_rate": 0.5
+    },
+    {
+      "true": "middle",
+      "pred": "center",
+      "count": 3,
+      "true_total": 5,
+      "error_rate": 0.6
+    },
+    {
+      "true": "dirt",
+      "pred": "dirty",
+      "count": 3,
+      "true_total": 4,
+      "error_rate": 0.75
+    },
+    {
+      "true": "breeze",
+      "pred": "wind",
+      "count": 3,
+      "true_total": 4,
+      "error_rate": 0.75
+    },
+    {
+      "true": "discipline",
+      "pred": "punish",
+      "count": 3,
+      "true_total": 4,
+      "error_rate": 0.75
+    },
+    {
+      "true": "dull",
+      "pred": "bored",
+      "count": 3,
+      "true_total": 4,
+      "error_rate": 0.75
+    },
+    {
+      "true": "melody",
+      "pred": "music",
+      "count": 3,
+      "true_total": 4,
+      "error_rate": 0.75
+    },
+    {
+      "true": "penalty",
+      "pred": "punish",
+      "count": 3,
+      "true_total": 4,
+      "error_rate": 0.75
+    },
+    {
+      "true": "help",
+      "pred": "assist",
+      "count": 2,
+      "true_total": 12,
+      "error_rate": 0.16666666666666666
+    },
+    {
+      "true": "walk",
+      "pred": "common",
+      "count": 2,
+      "true_total": 12,
+      "error_rate": 0.16666666666666666
+    },
+    {
+      "true": "mother",
+      "pred": "mom",
+      "count": 2,
+      "true_total": 11,
+      "error_rate": 0.18181818181818182
+    }
+  ]
+}
