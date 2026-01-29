@@ -21,6 +21,9 @@ data/processed/*.json
 !data/processed/label_map.json
 !data/processed/wlasl_label_map.json
 !data/processed/wlasl_pose_hands_label_map.json
+# Allow WLASL pose+hands data (via Git LFS)
+!data/processed/X_wlasl_pose_hands.npy
+!data/processed/y_wlasl_pose_hands.npy
 *.npz
 *.zip
 *.parquet
