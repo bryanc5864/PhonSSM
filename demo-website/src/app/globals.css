@@ -1,0 +1,241 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Instrument Serif from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  --bg-primary: #FDFCFB;
+  --bg-secondary: #F7F5F3;
+  --bg-tertiary: #EDEAE6;
+  --text-primary: #1A1614;
+  --text-secondary: #5C5552;
+  --text-tertiary: #8A8583;
+  --accent-primary: #2D5A4A;
+  --accent-secondary: #E8B86D;
+  --accent-tertiary: #C75D4D;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1d3d32;
+}
+
+/* Selection color */
+::selection {
+  background: var(--accent-primary);
+  color: white;
+}
+
+/* Smooth image loading */
+img {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+img[data-loading="true"] {
+  opacity: 0;
+}
+
+/* Glass morphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Text gradient utility */
+.text-gradient {
+  background: linear-gradient(135deg, #2D5A4A 0%, #3D7A6A 50%, #2D5A4A 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animated underline */
+.animated-underline {
+  position: relative;
+}
+
+.animated-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent-primary);
+  transition: width 0.3s ease;
+}
+
+.animated-underline:hover::after {
+  width: 100%;
+}
+
+/* Hero background pattern */
+.hero-pattern {
+  background-image:
+    radial-gradient(ellipse at 20% 30%, rgba(45, 90, 74, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(232, 184, 109, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(199, 93, 77, 0.04) 0%, transparent 70%);
+}
+
+/* Floating animation for hero elements */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(5px) rotate(-1deg);
+  }
+}
+
+/* Pulse glow effect */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(45, 90, 74, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(45, 90, 74, 0.5);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Skeleton hand animation */
+@keyframes handWave {
+  0%, 100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
+}
+
+.hand-wave {
+  animation: handWave 1.5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Draw path animation for SVG */
+.draw-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 2s ease forwards;
+}
+
+@keyframes drawLine {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Stat counter styles */
+.stat-number {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Section divider */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--text-tertiary), transparent);
+  opacity: 0.3;
+}
+
+/* Architecture diagram styles */
+.architecture-box {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  border: 1px solid rgba(45, 90, 74, 0.2);
+  transition: all 0.3s ease;
+}
+
+.architecture-box:hover {
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 20px rgba(45, 90, 74, 0.15);
+}
+
+/* Progress bar animation */
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+}
+
+.progress-bar {
+  animation: progressFill 1.5s ease forwards;
+}
+
+/* Responsive typography adjustments */
+@media (max-width: 768px) {
+  .hero-text {
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
