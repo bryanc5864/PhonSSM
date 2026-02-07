@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="450" height="550" viewBox="0 0 450 550" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="jointGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <linearGradient id="handFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D5A4A" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#2D5A4A" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="450" height="550" fill="#FDFCFB"/>
+
+  <!-- Title -->
+  <text x="225" y="38" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#1A1614">
+    Real-Time Skeleton Tracking
+  </text>
+  <text x="225" y="62" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="#5C5552">
+    75 landmarks extracted per frame
+  </text>
+
+  <!-- Hand silhouette (RIGHT HAND - thumb on left side when viewing palm) -->
+  <path d="M225 490
+           Q165 475 155 410
+           L155 320
+           Q145 295 125 290 L85 290 Q55 295 55 330 L75 400
+           Q90 475 170 490 Z
+           M155 320 L145 240 Q140 200 160 195 Q180 190 185 230 L185 280
+           M180 280 L175 180 Q170 135 195 130 Q220 125 225 170 L225 280
+           M225 280 L235 175 Q240 130 265 130 Q290 130 290 175 L280 280
+           M280 280 L295 195 Q300 160 325 165 Q350 170 340 210 L320 280
+           M320 280 L345 240 Q360 210 385 225 Q405 245 385 285 L345 330"
+        fill="url(#handFill)" stroke="#2D5A4A" stroke-width="1.5" stroke-opacity="0.25"/>
+
+  <!-- SKELETON -->
+  <g transform="translate(0, 20)">
+    <!-- Wrist -->
+    <circle cx="225" cy="420" r="12" fill="#E8B86D" filter="url(#jointGlow)"/>
+
+    <!-- THUMB (on LEFT side - correct orientation for right hand palm view) -->
+    <g id="thumb">
+      <line x1="225" y1="420" x2="170" y2="395" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="170" y1="395" x2="125" y2="355" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="125" y1="355" x2="95" y2="320" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="95" y1="320" x2="75" y2="290" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+
+      <circle cx="170" cy="395" r="9" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="125" cy="355" r="8" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="95" cy="320" r="7" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="75" cy="290" r="6" fill="#C75D4D" filter="url(#jointGlow)"/>
+    </g>
+
+    <!-- INDEX -->
+    <g id="index">
+      <line x1="225" y1="420" x2="195" y2="340" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="195" y1="340" x2="180" y2="260" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="180" y1="260" x2="170" y2="195" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="170" y1="195" x2="165" y2="140" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+
+      <circle cx="195" cy="340" r="9" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="180" cy="260" r="8" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="170" cy="195" r="7" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="165" cy="140" r="6" fill="#C75D4D" filter="url(#jointGlow)"/>
+    </g>
+
+    <!-- MIDDLE -->
+    <g id="middle">
+      <line x1="225" y1="420" x2="225" y2="330" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="225" y1="330" x2="225" y2="245" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="225" y1="245" x2="225" y2="175" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="225" y1="175" x2="225" y2="115" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+
+      <circle cx="225" cy="330" r="9" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="225" cy="245" r="8" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="225" cy="175" r="7" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="225" cy="115" r="6" fill="#C75D4D" filter="url(#jointGlow)"/>
+    </g>
+
+    <!-- RING -->
+    <g id="ring">
+      <line x1="225" y1="420" x2="255" y2="338" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="255" y1="338" x2="275" y2="260" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="275" y1="260" x2="290" y2="195" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="290" y1="195" x2="300" y2="145" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+
+      <circle cx="255" cy="338" r="9" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="275" cy="260" r="8" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="290" cy="195" r="7" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="300" cy="145" r="6" fill="#C75D4D" filter="url(#jointGlow)"/>
+    </g>
+
+    <!-- PINKY -->
+    <g id="pinky">
+      <line x1="225" y1="420" x2="280" y2="355" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="280" y1="355" x2="320" y2="300" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="320" y1="300" x2="350" y2="255" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+      <line x1="350" y1="255" x2="375" y2="215" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+
+      <circle cx="280" cy="355" r="9" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="320" cy="300" r="8" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="350" cy="255" r="7" fill="#E8B86D" filter="url(#jointGlow)"/>
+      <circle cx="375" cy="215" r="6" fill="#C75D4D" filter="url(#jointGlow)"/>
+    </g>
+  </g>
+
+  <!-- Labels -->
+  <g font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">
+    <text x="45" y="290">Thumb</text>
+    <text x="125" y="130">Index</text>
+    <text x="225" y="98" text-anchor="middle">Middle</text>
+    <text x="310" y="135">Ring</text>
+    <text x="385" y="210">Pinky</text>
+    <text x="225" y="465" text-anchor="middle" font-weight="600">Wrist</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(75, 505)">
+    <rect x="0" y="0" width="300" height="35" rx="10" fill="#F7F5F3"/>
+
+    <circle cx="35" cy="17" r="7" fill="#E8B86D"/>
+    <text x="52" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">Joint</text>
+
+    <circle cx="115" cy="17" r="6" fill="#C75D4D"/>
+    <text x="132" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">Fingertip</text>
+
+    <line x1="195" y1="17" x2="220" y2="17" stroke="#2D5A4A" stroke-width="4" stroke-linecap="round"/>
+    <text x="232" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">Bone</text>
+  </g>
+</svg>

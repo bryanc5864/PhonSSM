@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="620" viewBox="0 0 1000 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="boxShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#000" flood-opacity="0.06"/>
+    </filter>
+
+    <linearGradient id="pipelineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2D5A4A"/>
+      <stop offset="100%" stop-color="#4A8B7A"/>
+    </linearGradient>
+
+    <marker id="flowArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0 0 L12 6 L0 12 L3 6 Z" fill="#5C5552"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="620" fill="#FDFCFB"/>
+
+  <!-- Title -->
+  <text x="500" y="50" text-anchor="middle" font-family="system-ui, sans-serif" font-size="32" font-weight="600" fill="#1A1614">
+    Four-Model Diagnostic Pipeline
+  </text>
+  <text x="500" y="82" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#5C5552">
+    From webcam to actionable feedback in under 15ms
+  </text>
+
+  <!-- INPUT STAGE -->
+  <g transform="translate(60, 140)">
+    <rect x="0" y="0" width="150" height="110" rx="16" fill="white" filter="url(#boxShadow)" stroke="#EDEAE6" stroke-width="1"/>
+
+    <!-- Camera icon -->
+    <rect x="55" y="20" width="40" height="32" rx="6" fill="#5C5552"/>
+    <circle cx="75" cy="36" r="10" fill="#8A8583"/>
+    <circle cx="75" cy="36" r="5" fill="#5C5552"/>
+    <rect x="60" y="14" width="12" height="6" rx="3" fill="#5C5552"/>
+
+    <text x="75" y="75" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1A1614">
+      Webcam
+    </text>
+    <text x="75" y="95" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#5C5552">
+      30 fps input
+    </text>
+  </g>
+
+  <!-- Arrow 1 -->
+  <line x1="220" y1="195" x2="265" y2="195" stroke="#5C5552" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- MEDIAPIPE -->
+  <g transform="translate(275, 140)">
+    <rect x="0" y="0" width="150" height="110" rx="16" fill="white" filter="url(#boxShadow)" stroke="#E8B86D" stroke-width="2"/>
+
+    <!-- Skeleton figure -->
+    <g transform="translate(50, 12)">
+      <circle cx="25" cy="15" r="6" fill="#E8B86D"/>
+      <line x1="25" y1="21" x2="25" y2="42" stroke="#E8B86D" stroke-width="3" stroke-linecap="round"/>
+      <line x1="25" y1="26" x2="12" y2="38" stroke="#E8B86D" stroke-width="3" stroke-linecap="round"/>
+      <line x1="25" y1="26" x2="38" y2="38" stroke="#E8B86D" stroke-width="3" stroke-linecap="round"/>
+      <line x1="25" y1="42" x2="15" y2="55" stroke="#E8B86D" stroke-width="3" stroke-linecap="round"/>
+      <line x1="25" y1="42" x2="35" y2="55" stroke="#E8B86D" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <text x="75" y="85" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#1A1614">
+      MediaPipe
+    </text>
+    <text x="75" y="102" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#5C5552">
+      75 landmarks/frame
+    </text>
+  </g>
+
+  <!-- Arrow 2 (splits) -->
+  <g>
+    <line x1="435" y1="195" x2="480" y2="195" stroke="#5C5552" stroke-width="2"/>
+    <line x1="480" y1="195" x2="480" y2="150" stroke="#5C5552" stroke-width="2"/>
+    <line x1="480" y1="195" x2="480" y2="230" stroke="#5C5552" stroke-width="2"/>
+    <line x1="480" y1="195" x2="480" y2="310" stroke="#5C5552" stroke-width="2"/>
+    <line x1="480" y1="195" x2="480" y2="390" stroke="#5C5552" stroke-width="2"/>
+
+    <line x1="480" y1="150" x2="510" y2="150" stroke="#5C5552" stroke-width="2" marker-end="url(#flowArrow)"/>
+    <line x1="480" y1="230" x2="510" y2="230" stroke="#5C5552" stroke-width="2" marker-end="url(#flowArrow)"/>
+    <line x1="480" y1="310" x2="510" y2="310" stroke="#5C5552" stroke-width="2" marker-end="url(#flowArrow)"/>
+    <line x1="480" y1="390" x2="510" y2="390" stroke="#5C5552" stroke-width="2" marker-end="url(#flowArrow)"/>
+  </g>
+
+  <!-- MODEL 1: PhonSSM -->
+  <g transform="translate(520, 105)">
+    <rect x="0" y="0" width="190" height="95" rx="14" fill="#2D5A4A" filter="url(#boxShadow)"/>
+
+    <text x="95" y="30" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="white">
+      1. PhonSSM
+    </text>
+    <text x="95" y="50" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">
+      Sign Classifier
+    </text>
+
+    <g transform="translate(25, 58)">
+      <rect x="0" y="0" width="32" height="14" rx="3" fill="rgba(255,255,255,0.25)"/>
+      <rect x="38" y="0" width="32" height="14" rx="3" fill="rgba(255,255,255,0.25)"/>
+      <rect x="76" y="0" width="32" height="14" rx="3" fill="rgba(255,255,255,0.25)"/>
+      <rect x="114" y="0" width="32" height="14" rx="3" fill="rgba(255,255,255,0.25)"/>
+      <text x="16" y="28" text-anchor="middle" font-family="monospace" font-size="8" fill="rgba(255,255,255,0.6)">AGAN</text>
+      <text x="54" y="28" text-anchor="middle" font-family="monospace" font-size="8" fill="rgba(255,255,255,0.6)">PDM</text>
+      <text x="92" y="28" text-anchor="middle" font-family="monospace" font-size="8" fill="rgba(255,255,255,0.6)">BiSSM</text>
+      <text x="130" y="28" text-anchor="middle" font-family="monospace" font-size="8" fill="rgba(255,255,255,0.6)">HPC</text>
+    </g>
+  </g>
+
+  <!-- MODEL 2: Error Diagnosis -->
+  <g transform="translate(520, 205)">
+    <rect x="0" y="0" width="190" height="75" rx="14" fill="#C75D4D" filter="url(#boxShadow)"/>
+
+    <text x="95" y="28" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="white">
+      2. Error Diagnosis
+    </text>
+    <text x="95" y="48" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">
+      16 error categories
+    </text>
+    <text x="95" y="65" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.6)">
+      CNN → LSTM → Multi-head
+    </text>
+  </g>
+
+  <!-- MODEL 3: Movement Analyzer -->
+  <g transform="translate(520, 285)">
+    <rect x="0" y="0" width="190" height="75" rx="14" fill="#E8B86D" filter="url(#boxShadow)"/>
+
+    <text x="95" y="28" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#1A1614">
+      3. Movement Analyzer
+    </text>
+    <text x="95" y="48" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="rgba(0,0,0,0.7)">
+      Speed, smoothness, flow
+    </text>
+    <text x="95" y="65" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="rgba(0,0,0,0.5)">
+      1D CNN → Dual output
+    </text>
+  </g>
+
+  <!-- MODEL 4: Feedback Ranker -->
+  <g transform="translate(520, 365)">
+    <rect x="0" y="0" width="190" height="75" rx="14" fill="#7C5CBF" filter="url(#boxShadow)"/>
+
+    <text x="95" y="28" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="white">
+      4. Feedback Ranker
+    </text>
+    <text x="95" y="48" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">
+      Priority ordering
+    </text>
+    <text x="95" y="65" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.6)">
+      MLP (TFLite optimized)
+    </text>
+  </g>
+
+  <!-- Merge arrows -->
+  <g>
+    <line x1="720" y1="150" x2="760" y2="150" stroke="#5C5552" stroke-width="2"/>
+    <line x1="720" y1="240" x2="760" y2="240" stroke="#5C5552" stroke-width="2"/>
+    <line x1="720" y1="320" x2="760" y2="320" stroke="#5C5552" stroke-width="2"/>
+    <line x1="720" y1="400" x2="760" y2="400" stroke="#5C5552" stroke-width="2"/>
+
+    <line x1="760" y1="150" x2="760" y2="400" stroke="#5C5552" stroke-width="2"/>
+    <line x1="760" y1="275" x2="795" y2="275" stroke="#5C5552" stroke-width="2" marker-end="url(#flowArrow)"/>
+  </g>
+
+  <!-- OUTPUT -->
+  <g transform="translate(805, 195)">
+    <rect x="0" y="0" width="175" height="160" rx="16" fill="white" filter="url(#boxShadow)" stroke="#2D5A4A" stroke-width="2"/>
+
+    <text x="87" y="28" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#2D5A4A">
+      USER FEEDBACK
+    </text>
+
+    <!-- Prediction -->
+    <g transform="translate(15, 40)">
+      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#5C5552">PREDICTION</text>
+      <text x="0" y="20" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#1A1614">HELLO</text>
+      <text x="60" y="20" font-family="system-ui, sans-serif" font-size="14" fill="#3D8B6E" font-weight="600">88%</text>
+    </g>
+
+    <!-- Bars -->
+    <g transform="translate(15, 80)">
+      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#5C5552">COMPONENTS</text>
+      <rect x="0" y="10" width="145" height="6" rx="3" fill="#EDEAE6"/>
+      <rect x="0" y="10" width="130" height="6" rx="3" fill="#3D8B6E"/>
+      <rect x="0" y="20" width="145" height="6" rx="3" fill="#EDEAE6"/>
+      <rect x="0" y="20" width="95" height="6" rx="3" fill="#D4A84B"/>
+      <rect x="0" y="30" width="145" height="6" rx="3" fill="#EDEAE6"/>
+      <rect x="0" y="30" width="120" height="6" rx="3" fill="#3D8B6E"/>
+    </g>
+
+    <!-- Feedback -->
+    <g transform="translate(15, 125)">
+      <rect x="0" y="0" width="145" height="25" rx="6" fill="#C75D4D" fill-opacity="0.15"/>
+      <text x="10" y="17" font-family="system-ui, sans-serif" font-size="11" fill="#C75D4D" font-weight="500">
+        Raise hand higher
+      </text>
+    </g>
+  </g>
+
+  <!-- STATS BAR -->
+  <g transform="translate(50, 500)">
+    <rect x="0" y="0" width="900" height="90" rx="16" fill="#F7F5F3"/>
+
+    <g transform="translate(120, 28)">
+      <text x="0" y="0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="32" font-weight="700" fill="#2D5A4A">3.2M</text>
+      <text x="0" y="24" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#5C5552">Parameters</text>
+    </g>
+
+    <g transform="translate(320, 28)">
+      <text x="0" y="0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="32" font-weight="700" fill="#2D5A4A">&lt;15ms</text>
+      <text x="0" y="24" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#5C5552">Total Latency</text>
+    </g>
+
+    <g transform="translate(520, 28)">
+      <text x="0" y="0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="32" font-weight="700" fill="#2D5A4A">260/s</text>
+      <text x="0" y="24" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#5C5552">Throughput</text>
+    </g>
+
+    <g transform="translate(720, 28)">
+      <text x="0" y="0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="32" font-weight="700" fill="#2D5A4A">CPU</text>
+      <text x="0" y="24" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#5C5552">No GPU Required</text>
+    </g>
+  </g>
+</svg>

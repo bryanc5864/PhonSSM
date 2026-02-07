@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="520" viewBox="0 0 900 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#000" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="520" fill="#FDFCFB"/>
+
+  <!-- Title -->
+  <text x="450" y="45" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" font-weight="600" fill="#1A1614">
+    Feedback That Actually Helps You Improve
+  </text>
+  <text x="450" y="75" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" fill="#5C5552">
+    See the difference component-level analysis makes
+  </text>
+
+  <!-- LEFT: Traditional Apps -->
+  <g transform="translate(50, 105)">
+    <text x="170" y="24" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="#8A8583">
+      TRADITIONAL APPS
+    </text>
+
+    <rect x="0" y="40" width="340" height="350" rx="20" fill="#FDFCFB" filter="url(#cardShadow)" stroke="#EDEAE6" stroke-width="1"/>
+
+    <!-- Mock camera -->
+    <rect x="25" y="65" width="290" height="160" rx="12" fill="#F7F5F3"/>
+    <rect x="45" y="85" width="160" height="120" rx="8" fill="#EDEAE6"/>
+    <text x="125" y="150" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#8A8583">
+      Camera Feed
+    </text>
+
+    <!-- Simple prediction -->
+    <rect x="220" y="85" width="80" height="120" rx="8" fill="#EDEAE6"/>
+    <text x="260" y="125" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#8A8583">
+      Predicted:
+    </text>
+    <text x="260" y="150" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#1A1614">
+      HELLO
+    </text>
+    <text x="260" y="175" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="#5C5552">
+      72%
+    </text>
+
+    <!-- WRONG feedback -->
+    <g transform="translate(25, 245)">
+      <rect x="0" y="0" width="290" height="60" rx="12" fill="#C45C4C" fill-opacity="0.12" stroke="#C45C4C" stroke-width="1.5"/>
+      <circle cx="35" cy="30" r="16" fill="#C45C4C"/>
+      <text x="35" y="36" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" fill="white">✗</text>
+      <text x="65" y="26" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="#C45C4C">
+        Incorrect
+      </text>
+      <text x="65" y="46" font-family="system-ui, sans-serif" font-size="13" fill="#5C5552">
+        Try again...
+      </text>
+    </g>
+
+    <!-- Pain points -->
+    <g transform="translate(30, 325)" font-family="system-ui, sans-serif" font-size="13" fill="#8A8583">
+      <text x="0" y="0">❌ No specific guidance</text>
+      <text x="0" y="22">❌ Same error repeated</text>
+      <text x="0" y="44">❌ User gets frustrated</text>
+    </g>
+  </g>
+
+  <!-- VS divider -->
+  <g transform="translate(450, 290)">
+    <circle cx="0" cy="0" r="32" fill="#EDEAE6"/>
+    <text x="0" y="7" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#5C5552">
+      VS
+    </text>
+  </g>
+
+  <!-- RIGHT: SignSense -->
+  <g transform="translate(510, 105)">
+    <text x="170" y="24" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#2D5A4A">
+      SIGNSENSE
+    </text>
+
+    <rect x="0" y="40" width="340" height="350" rx="20" fill="#FDFCFB" filter="url(#cardShadow)" stroke="#2D5A4A" stroke-width="2"/>
+
+    <!-- Mock interface -->
+    <rect x="25" y="65" width="290" height="100" rx="12" fill="#F7F5F3"/>
+
+    <!-- Mini camera -->
+    <rect x="35" y="75" width="80" height="80" rx="8" fill="#EDEAE6"/>
+    <text x="75" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#8A8583">
+      + Skeleton
+    </text>
+
+    <!-- Component scores -->
+    <g transform="translate(130, 78)">
+      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#1A1614">
+        Component Scores
+      </text>
+
+      <text x="0" y="20" font-family="system-ui, sans-serif" font-size="10" fill="#5C5552">Handshape</text>
+      <rect x="60" y="12" width="100" height="10" rx="5" fill="#EDEAE6"/>
+      <rect x="60" y="12" width="90" height="10" rx="5" fill="#3D8B6E"/>
+      <text x="165" y="21" font-family="system-ui, sans-serif" font-size="10" fill="#3D8B6E" font-weight="600">90%</text>
+
+      <text x="0" y="38" font-family="system-ui, sans-serif" font-size="10" fill="#5C5552">Location</text>
+      <rect x="60" y="30" width="100" height="10" rx="5" fill="#EDEAE6"/>
+      <rect x="60" y="30" width="65" height="10" rx="5" fill="#D4A84B"/>
+      <text x="165" y="39" font-family="system-ui, sans-serif" font-size="10" fill="#D4A84B" font-weight="600">65%</text>
+
+      <text x="0" y="56" font-family="system-ui, sans-serif" font-size="10" fill="#5C5552">Movement</text>
+      <rect x="60" y="48" width="100" height="10" rx="5" fill="#EDEAE6"/>
+      <rect x="60" y="48" width="84" height="10" rx="5" fill="#3D8B6E"/>
+      <text x="165" y="57" font-family="system-ui, sans-serif" font-size="10" fill="#3D8B6E" font-weight="600">84%</text>
+
+      <text x="0" y="74" font-family="system-ui, sans-serif" font-size="10" fill="#5C5552">Orientation</text>
+      <rect x="60" y="66" width="100" height="10" rx="5" fill="#EDEAE6"/>
+      <rect x="60" y="66" width="95" height="10" rx="5" fill="#3D8B6E"/>
+      <text x="165" y="75" font-family="system-ui, sans-serif" font-size="10" fill="#3D8B6E" font-weight="600">95%</text>
+    </g>
+
+    <!-- Detailed feedback -->
+    <g transform="translate(25, 178)">
+      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#1A1614">
+        Prioritized Feedback:
+      </text>
+
+      <!-- High priority -->
+      <rect x="0" y="14" width="290" height="48" rx="10" fill="#C75D4D" fill-opacity="0.12"/>
+      <circle cx="22" cy="38" r="12" fill="#C75D4D"/>
+      <text x="22" y="43" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="white" font-weight="700">1</text>
+      <text x="45" y="34" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#C75D4D">
+        Hand too low
+      </text>
+      <text x="45" y="52" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">
+        Raise your hand to forehead level
+      </text>
+
+      <!-- Medium priority -->
+      <rect x="0" y="70" width="290" height="48" rx="10" fill="#E8B86D" fill-opacity="0.15"/>
+      <circle cx="22" cy="94" r="12" fill="#E8B86D"/>
+      <text x="22" y="99" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="white" font-weight="700">2</text>
+      <text x="45" y="90" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#D4A84B">
+        Movement incomplete
+      </text>
+      <text x="45" y="108" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">
+        Extend the wave motion outward
+      </text>
+    </g>
+
+    <!-- Benefits -->
+    <g transform="translate(30, 325)" font-family="system-ui, sans-serif" font-size="13" fill="#2D5A4A" font-weight="500">
+      <text x="0" y="0">✓ Specific, actionable guidance</text>
+      <text x="0" y="22">✓ Fix the right thing first</text>
+      <text x="0" y="44">✓ Measurable improvement</text>
+    </g>
+  </g>
+
+  <!-- Bottom CTA -->
+  <g transform="translate(450, 485)">
+    <rect x="-150" y="-18" width="300" height="42" rx="10" fill="#2D5A4A"/>
+    <text x="0" y="8" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="white">
+      Learn faster with intelligent feedback
+    </text>
+  </g>
+</svg>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="950" height="550" viewBox="0 0 950 550" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2D5A4A"/>
+      <stop offset="100%" stop-color="#4A8B7A"/>
+    </linearGradient>
+    <filter id="barShadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#2D5A4A" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="950" height="550" fill="#FDFCFB"/>
+
+  <!-- Title -->
+  <text x="475" y="48" text-anchor="middle" font-family="system-ui, sans-serif" font-size="30" font-weight="700" fill="#1A1614">
+    State-of-the-Art Results
+  </text>
+  <text x="475" y="78" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#5C5552">
+    PhonSSM vs. previous best on WLASL benchmarks (skeleton-only)
+  </text>
+
+  <!-- Chart area -->
+  <g transform="translate(120, 120)">
+    <!-- Y-axis -->
+    <line x1="60" y1="0" x2="60" y2="280" stroke="#EDEAE6" stroke-width="2"/>
+    <text x="35" y="280" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#8A8583">0%</text>
+    <text x="35" y="210" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#8A8583">25%</text>
+    <text x="35" y="140" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#8A8583">50%</text>
+    <text x="35" y="70" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#8A8583">75%</text>
+    <text x="35" y="0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#8A8583">100%</text>
+
+    <!-- Grid -->
+    <line x1="60" y1="70" x2="720" y2="70" stroke="#EDEAE6" stroke-width="1" stroke-dasharray="6 4"/>
+    <line x1="60" y1="140" x2="720" y2="140" stroke="#EDEAE6" stroke-width="1" stroke-dasharray="6 4"/>
+    <line x1="60" y1="210" x2="720" y2="210" stroke="#EDEAE6" stroke-width="1" stroke-dasharray="6 4"/>
+
+    <!-- X-axis -->
+    <line x1="60" y1="280" x2="720" y2="280" stroke="#EDEAE6" stroke-width="2"/>
+
+    <!-- WLASL100 -->
+    <g transform="translate(110, 0)">
+      <rect x="0" y="103" width="55" height="177" rx="6" fill="#EDEAE6"/>
+      <text x="27" y="93" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#8A8583">63.2%</text>
+
+      <rect x="65" y="33" width="55" height="247" rx="6" fill="url(#barGrad)" filter="url(#barShadow)"/>
+      <text x="92" y="23" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#2D5A4A">88.4%</text>
+
+      <text x="60" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1A1614">WLASL100</text>
+      <rect x="32" y="322" width="60" height="26" rx="13" fill="#2D5A4A"/>
+      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+25.2pp</text>
+    </g>
+
+    <!-- WLASL300 -->
+    <g transform="translate(260, 0)">
+      <rect x="0" y="116" width="55" height="164" rx="6" fill="#EDEAE6"/>
+      <text x="27" y="106" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#8A8583">58.4%</text>
+
+      <rect x="65" y="72" width="55" height="208" rx="6" fill="url(#barGrad)" filter="url(#barShadow)"/>
+      <text x="92" y="62" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#2D5A4A">74.4%</text>
+
+      <text x="60" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1A1614">WLASL300</text>
+      <rect x="32" y="322" width="60" height="26" rx="13" fill="#2D5A4A"/>
+      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+16.0pp</text>
+    </g>
+
+    <!-- WLASL1000 -->
+    <g transform="translate(410, 0)">
+      <rect x="0" y="148" width="55" height="132" rx="6" fill="#EDEAE6"/>
+      <text x="27" y="138" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#8A8583">47.1%</text>
+
+      <rect x="65" y="104" width="55" height="176" rx="6" fill="url(#barGrad)" filter="url(#barShadow)"/>
+      <text x="92" y="94" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#2D5A4A">62.9%</text>
+
+      <text x="60" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1A1614">WLASL1000</text>
+      <rect x="32" y="322" width="60" height="26" rx="13" fill="#2D5A4A"/>
+      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+15.8pp</text>
+    </g>
+
+    <!-- WLASL2000 -->
+    <g transform="translate(560, 0)">
+      <rect x="0" y="130" width="55" height="150" rx="6" fill="#EDEAE6"/>
+      <text x="27" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#8A8583">53.7%</text>
+
+      <rect x="65" y="78" width="55" height="202" rx="6" fill="url(#barGrad)" filter="url(#barShadow)"/>
+      <text x="92" y="68" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#2D5A4A">72.1%</text>
+
+      <text x="60" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1A1614">WLASL2000</text>
+      <rect x="32" y="322" width="60" height="26" rx="13" fill="#2D5A4A"/>
+      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+18.4pp</text>
+    </g>
+
+    <!-- Legend -->
+    <g transform="translate(420, -35)">
+      <rect x="0" y="0" width="20" height="20" rx="4" fill="#EDEAE6"/>
+      <text x="28" y="15" font-family="system-ui, sans-serif" font-size="13" fill="#5C5552">Previous Best</text>
+
+      <rect x="140" y="0" width="20" height="20" rx="4" fill="url(#barGrad)"/>
+      <text x="168" y="15" font-family="system-ui, sans-serif" font-size="13" fill="#2D5A4A" font-weight="600">PhonSSM (Ours)</text>
+    </g>
+  </g>
+
+  <!-- Key Stats -->
+  <g transform="translate(50, 485)">
+    <rect x="0" y="0" width="850" height="55" rx="14" fill="#2D5A4A" fill-opacity="0.08"/>
+
+    <g transform="translate(110, 18)">
+      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#2D5A4A">+15.7pp</text>
+      <text x="0" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">Avg. Improvement</text>
+    </g>
+
+    <g transform="translate(310, 18)">
+      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#2D5A4A">5,565</text>
+      <text x="0" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">Signs Trained</text>
+    </g>
+
+    <g transform="translate(510, 18)">
+      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#2D5A4A">+225%</text>
+      <text x="0" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">Few-Shot Gain</text>
+    </g>
+
+    <g transform="translate(710, 18)">
+      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#2D5A4A">3.2M</text>
+      <text x="0" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">Parameters Only</text>
+    </g>
+  </g>
+</svg>
