@@ -435,32 +435,32 @@ function ProblemSection() {
 function SolutionSection() {
   const models = [
     {
-      icon: "🎯",
+      num: "1",
       title: "RECOGNIZE",
       subtitle: "PhonSSM Classifier",
       desc: "Identifies your sign with 88.4% accuracy using phonological decomposition",
-      color: "accent-primary"
+      bgColor: "bg-accent-primary"
     },
     {
-      icon: "🔍",
+      num: "2",
       title: "DIAGNOSE",
       subtitle: "Error Network",
       desc: "Pinpoints 16 specific error types across handshape, location, movement & orientation",
-      color: "accent-secondary"
+      bgColor: "bg-accent-tertiary"
     },
     {
-      icon: "📊",
+      num: "3",
       title: "ANALYZE",
       subtitle: "Movement Model",
       desc: "Assesses speed, smoothness, and completeness of your signing motion",
-      color: "accent-tertiary"
+      bgColor: "bg-accent-secondary"
     },
     {
-      icon: "📋",
+      num: "4",
       title: "PRIORITIZE",
       subtitle: "Feedback Ranker",
       desc: "Orders corrections by importance so you focus on what matters most",
-      color: "success"
+      bgColor: "bg-[#7C5CBF]"
     },
   ];
 
@@ -490,7 +490,8 @@ function SolutionSection() {
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Model cards */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {models.map((model, i) => (
             <motion.div
               key={i}
@@ -498,13 +499,13 @@ function SolutionSection() {
               className="bg-white rounded-2xl p-6 shadow-sm card-hover border border-transparent hover:border-accent-primary/20"
               custom={i}
             >
-              <motion.span
-                className="text-5xl block mb-4"
-                whileHover={{ scale: 1.2, rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.4 }}
+              <motion.div
+                className={`w-14 h-14 ${model.bgColor} rounded-xl flex items-center justify-center mb-4`}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 400 }}
               >
-                {model.icon}
-              </motion.span>
+                <span className="text-white text-2xl font-bold">{model.num}</span>
+              </motion.div>
               <h3 className="text-sm font-bold tracking-wider text-accent-primary mb-1">
                 {model.title}
               </h3>
@@ -518,26 +519,28 @@ function SolutionSection() {
           ))}
         </div>
 
-        {/* Pipeline visualization */}
+        {/* Pipeline SVG Graphic */}
+        <motion.div
+          variants={scaleUpVariants}
+          className="rounded-2xl overflow-hidden shadow-lg"
+        >
+          <img
+            src="/graphics/pipeline.svg"
+            alt="SignSense Four-Model Pipeline Architecture"
+            className="w-full"
+          />
+        </motion.div>
+
+        {/* Feedback Comparison */}
         <motion.div
           variants={fadeUpVariants}
-          className="mt-16 flex justify-center items-center gap-4 flex-wrap"
+          className="mt-20"
         >
-          {["Input", "→", "Recognize", "→", "Diagnose", "→", "Analyze", "→", "Prioritize", "→", "Feedback"].map((item, i) => (
-            <motion.span
-              key={i}
-              className={`${
-                item === "→"
-                  ? "text-accent-primary text-2xl"
-                  : "px-4 py-2 bg-bg-secondary rounded-lg font-medium text-text-primary"
-              }`}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-            >
-              {item}
-            </motion.span>
-          ))}
+          <img
+            src="/graphics/feedback-comparison.svg"
+            alt="Traditional Apps vs SignSense Feedback Comparison"
+            className="w-full rounded-2xl shadow-lg"
+          />
         </motion.div>
       </div>
     </Section>
@@ -756,58 +759,56 @@ function ResultsSection() {
           ))}
         </div>
 
-        {/* Comparison table */}
+        {/* Benchmark Chart Graphic */}
         <motion.div
           variants={scaleUpVariants}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto"
+          className="rounded-2xl overflow-hidden shadow-lg"
         >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-bg-secondary">
-                <tr>
-                  <th className="px-6 py-4 text-left font-semibold text-text-primary">Method</th>
-                  <th className="px-6 py-4 text-left font-semibold text-text-primary">Input Type</th>
-                  <th className="px-6 py-4 text-center font-semibold text-text-primary">WLASL100</th>
-                  <th className="px-6 py-4 text-center font-semibold text-text-primary">WLASL2000</th>
-                </tr>
-              </thead>
-              <tbody>
-                {comparisons.map((row, i) => (
-                  <motion.tr
-                    key={i}
-                    className={`border-t border-bg-tertiary ${row.highlight ? "bg-accent-primary/5" : ""}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <td className={`px-6 py-4 ${row.highlight ? "font-bold text-accent-primary" : "text-text-primary"}`}>
-                      {row.method}
-                    </td>
-                    <td className="px-6 py-4 text-text-secondary">{row.type}</td>
-                    <td className={`px-6 py-4 text-center ${row.highlight ? "font-bold text-accent-primary text-lg" : ""}`}>
-                      {row.w100}
-                    </td>
-                    <td className={`px-6 py-4 text-center ${row.highlight ? "font-bold text-accent-primary text-lg" : ""}`}>
-                      {row.w2000}
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <img
+            src="/graphics/benchmarks.svg"
+            alt="WLASL Benchmark Results - PhonSSM vs Previous State-of-the-Art"
+            className="w-full"
+          />
         </motion.div>
 
-        {/* Improvement callout */}
+        {/* Skeleton Hand Visualization */}
         <motion.div
           variants={fadeUpVariants}
-          className="mt-12 text-center"
+          className="mt-20 grid md:grid-cols-2 gap-12 items-center"
         >
-          <span className="inline-flex items-center gap-2 bg-success/10 text-success px-6 py-3 rounded-full font-semibold">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            +25.2 percentage points improvement over previous state-of-the-art on WLASL100
-          </span>
+          <div>
+            <h3 className="font-display text-3xl text-text-primary mb-4">
+              75 Landmarks Per Frame
+            </h3>
+            <p className="text-text-secondary text-lg leading-relaxed mb-6">
+              MediaPipe extracts precise 3D coordinates from your webcam feed — pose, hands, and fingertips.
+              Our models analyze these landmarks in real-time to understand exactly what you're signing.
+            </p>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-3 text-text-secondary">
+                <span className="w-2 h-2 bg-accent-primary rounded-full"></span>
+                33 pose landmarks for body position
+              </li>
+              <li className="flex items-center gap-3 text-text-secondary">
+                <span className="w-2 h-2 bg-accent-secondary rounded-full"></span>
+                21 landmarks per hand (42 total)
+              </li>
+              <li className="flex items-center gap-3 text-text-secondary">
+                <span className="w-2 h-2 bg-accent-tertiary rounded-full"></span>
+                Fingertips tracked for precision feedback
+              </li>
+            </ul>
+          </div>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="rounded-2xl overflow-hidden shadow-lg bg-white p-4"
+          >
+            <img
+              src="/graphics/skeleton-hand.svg"
+              alt="Hand skeleton tracking visualization"
+              className="w-full"
+            />
+          </motion.div>
         </motion.div>
       </div>
     </Section>
@@ -817,12 +818,42 @@ function ResultsSection() {
 // Applications Section
 function ApplicationsSection() {
   const applications = [
-    { icon: "🎓", title: "Classroom Supplement", desc: "Teachers assign practice, students come with specific questions" },
-    { icon: "🏥", title: "Healthcare", desc: "Hospital staff learn essential signs for patient interaction" },
-    { icon: "👨‍👩‍👧", title: "Family Communication", desc: "Families with deaf members learn together" },
-    { icon: "🚨", title: "Emergency Services", desc: "First responders learn critical signs for emergencies" },
-    { icon: "🎤", title: "Interpreter Training", desc: "Objective assessment for certification readiness" },
-    { icon: "🔬", title: "Research", desc: "Standardized data collection for linguistic studies" },
+    {
+      image: "/images/applications/education.jpg",
+      title: "Classroom Learning",
+      desc: "Teachers assign practice exercises and students come prepared with specific questions about their technique.",
+      color: "from-accent-primary/80"
+    },
+    {
+      image: "/images/applications/healthcare.jpg",
+      title: "Healthcare",
+      desc: "Hospital staff learn essential signs to communicate effectively with deaf and hard-of-hearing patients.",
+      color: "from-accent-secondary/80"
+    },
+    {
+      image: "/images/applications/family.jpg",
+      title: "Family Communication",
+      desc: "Families with deaf members learn together, building bridges and strengthening connections.",
+      color: "from-accent-primary/80"
+    },
+    {
+      image: "/images/applications/emergency.webp",
+      title: "Emergency Services",
+      desc: "First responders learn critical signs to assist deaf individuals during emergencies.",
+      color: "from-accent-tertiary/80"
+    },
+    {
+      image: "/images/applications/interpreter.jpg",
+      title: "Interpreter Training",
+      desc: "Objective assessment tools help interpreters prepare for certification with measurable feedback.",
+      color: "from-accent-secondary/80"
+    },
+    {
+      image: "/images/applications/research.png",
+      title: "Linguistic Research",
+      desc: "Standardized data collection for sign language studies and computational linguistics.",
+      color: "from-accent-primary/80"
+    },
   ];
 
   return (
@@ -833,7 +864,7 @@ function ApplicationsSection() {
             variants={fadeUpVariants}
             className="inline-block text-accent-primary font-semibold tracking-widest text-sm uppercase mb-4"
           >
-            Applications
+            Real-World Impact
           </motion.span>
           <motion.h2
             variants={fadeUpVariants}
@@ -842,27 +873,42 @@ function ApplicationsSection() {
             From Self-Study to{" "}
             <span className="text-gradient">Professional Training</span>
           </motion.h2>
+          <motion.p
+            variants={fadeUpVariants}
+            className="text-text-secondary text-lg"
+          >
+            SignSense adapts to diverse learning contexts, providing personalized feedback wherever sign language education happens.
+          </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {applications.map((app, i) => (
             <motion.div
               key={i}
               variants={fadeUpVariants}
-              className="bg-white rounded-2xl p-8 shadow-sm card-hover group"
+              className="group relative rounded-2xl overflow-hidden shadow-lg card-hover aspect-[4/3]"
               custom={i}
             >
-              <motion.span
-                className="text-5xl block mb-4"
-                whileHover={{ scale: 1.2 }}
-                transition={{ type: "spring", stiffness: 400 }}
-              >
-                {app.icon}
-              </motion.span>
-              <h3 className="font-display text-xl text-text-primary mb-2 group-hover:text-accent-primary transition-colors">
-                {app.title}
-              </h3>
-              <p className="text-text-secondary">{app.desc}</p>
+              {/* Background Image */}
+              <img
+                src={app.image}
+                alt={app.title}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+
+              {/* Gradient Overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-t ${app.color} via-transparent to-transparent opacity-90`} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+              {/* Content */}
+              <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                <h3 className="font-display text-2xl text-white mb-2 group-hover:text-accent-secondary transition-colors">
+                  {app.title}
+                </h3>
+                <p className="text-white/90 text-sm leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {app.desc}
+                </p>
+              </div>
             </motion.div>
           ))}
         </div>
