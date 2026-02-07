@@ -67,6 +67,92 @@ function Section({ children, className = "", id = "" }: { children: React.ReactN
   );
 }
 
+// Skeleton visualization components for hero
+function SkeletonJoint({ cx, cy, label, anatomy, delay, isTip }: {
+  cx: number; cy: number; label: string; anatomy: string; delay: number; isTip: boolean;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <g style={{ pointerEvents: "all" }}>
+      <motion.circle
+        cx={cx}
+        cy={cy}
+        r={isTip ? 6 : 8}
+        fill={isTip ? "#C75D4D" : "#E8B86D"}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4, delay }}
+        style={{ cursor: "pointer", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        whileHover={{ scale: 1.4 }}
+      />
+      {isHovered && (
+        <motion.g
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+        >
+          <rect
+            x={cx - 90}
+            y={cy - 55}
+            width={180}
+            height={45}
+            rx={8}
+            fill="rgba(26, 22, 20, 0.95)"
+          />
+          <polygon
+            points={`${cx - 8},${cy - 10} ${cx + 8},${cy - 10} ${cx},${cy - 2}`}
+            fill="rgba(26, 22, 20, 0.95)"
+          />
+          <text
+            x={cx}
+            y={cy - 35}
+            textAnchor="middle"
+            fill="#E8B86D"
+            fontSize={12}
+            fontWeight={600}
+            fontFamily="system-ui, sans-serif"
+          >
+            {label}
+          </text>
+          <text
+            x={cx}
+            y={cy - 18}
+            textAnchor="middle"
+            fill="white"
+            fontSize={10}
+            fontFamily="system-ui, sans-serif"
+          >
+            {anatomy}
+          </text>
+        </motion.g>
+      )}
+    </g>
+  );
+}
+
+function SkeletonBone({ x1, y1, x2, y2, delay }: {
+  x1: number; y1: number; x2: number; y2: number; delay: number;
+}) {
+  return (
+    <motion.line
+      x1={x1}
+      y1={y1}
+      x2={x2}
+      y2={y2}
+      stroke="#2D5A4A"
+      strokeWidth={3}
+      strokeLinecap="round"
+      initial={{ pathLength: 0, opacity: 0 }}
+      animate={{ pathLength: 1, opacity: 0.8 }}
+      transition={{ duration: 0.5, delay }}
+      style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))" }}
+    />
+  );
+}
+
 // Navigation
 function Navigation() {
   const [scrolled, setScrolled] = useState(false);
@@ -212,82 +298,91 @@ function HeroSection() {
             </motion.div>
           </div>
 
-          {/* Right Visual - Hand Animation */}
+          {/* Right Visual - Real Hand with Skeleton Overlay */}
           <motion.div
             className="relative"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.4 }}
           >
-            <div className="relative w-full aspect-square max-w-lg mx-auto">
+            <div className="relative w-full aspect-[4/5] max-w-md mx-auto">
               {/* Glowing background */}
-              <div className="absolute inset-0 bg-gradient-radial from-accent-primary/20 via-accent-secondary/10 to-transparent rounded-full animate-pulse-soft" />
+              <div className="absolute inset-0 bg-gradient-radial from-accent-primary/15 via-accent-secondary/5 to-transparent rounded-3xl" />
 
-              {/* Skeleton hand illustration */}
-              <motion.div
-                className="absolute inset-0 flex items-center justify-center"
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              {/* Human hand image */}
+              <motion.img
+                src="/images/human-hand.jpg"
+                alt="Human hand with skeleton overlay"
+                className="absolute inset-0 w-full h-full object-contain rounded-2xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.5 }}
+              />
+
+              {/* Skeleton overlay with interactive joints */}
+              <svg
+                viewBox="0 0 400 500"
+                className="absolute inset-0 w-full h-full"
+                style={{ pointerEvents: "none" }}
               >
-                <svg viewBox="0 0 200 280" className="w-3/4 h-3/4">
-                  {/* Palm */}
-                  <motion.ellipse
-                    cx="100" cy="180" rx="50" ry="60"
-                    fill="none"
-                    stroke="#2D5A4A"
-                    strokeWidth="3"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, delay: 0.5 }}
-                  />
+                {/* Wrist */}
+                <SkeletonJoint cx={200} cy={420} label="Wrist" anatomy="Carpal bones - connects hand to forearm" delay={0.8} isTip={false} />
 
-                  {/* Fingers */}
-                  {[
-                    { x1: 60, y1: 130, x2: 45, y2: 50 },  // Thumb
-                    { x1: 75, y1: 120, x2: 70, y2: 20 },  // Index
-                    { x1: 100, y1: 115, x2: 100, y2: 10 }, // Middle
-                    { x1: 125, y1: 120, x2: 130, y2: 25 }, // Ring
-                    { x1: 145, y1: 135, x2: 155, y2: 55 }, // Pinky
-                  ].map((finger, i) => (
-                    <motion.line
-                      key={i}
-                      x1={finger.x1} y1={finger.y1}
-                      x2={finger.x2} y2={finger.y2}
-                      stroke="#2D5A4A"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: 1, delay: 0.8 + i * 0.15 }}
-                    />
-                  ))}
+                {/* Thumb */}
+                <SkeletonBone x1={200} y1={420} x2={155} y2={385} delay={0.9} />
+                <SkeletonBone x1={155} y1={385} x2={120} y2={345} delay={1.0} />
+                <SkeletonBone x1={120} y1={345} x2={95} y2={305} delay={1.1} />
+                <SkeletonJoint cx={155} cy={385} label="CMC" anatomy="Carpometacarpal joint - thumb base" delay={1.0} isTip={false} />
+                <SkeletonJoint cx={120} cy={345} label="MCP" anatomy="Metacarpophalangeal - thumb knuckle" delay={1.1} isTip={false} />
+                <SkeletonJoint cx={95} cy={305} label="IP" anatomy="Interphalangeal - thumb tip joint" delay={1.2} isTip={true} />
 
-                  {/* Joint nodes */}
-                  {[
-                    { cx: 45, cy: 50 }, { cx: 52, cy: 90 },
-                    { cx: 70, cy: 20 }, { cx: 72, cy: 70 },
-                    { cx: 100, cy: 10 }, { cx: 100, cy: 60 },
-                    { cx: 130, cy: 25 }, { cx: 127, cy: 72 },
-                    { cx: 155, cy: 55 }, { cx: 150, cy: 95 },
-                  ].map((joint, i) => (
-                    <motion.circle
-                      key={i}
-                      cx={joint.cx} cy={joint.cy} r="6"
-                      fill="#E8B86D"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.3, delay: 1.5 + i * 0.05 }}
-                    />
-                  ))}
-                </svg>
-              </motion.div>
+                {/* Index finger */}
+                <SkeletonBone x1={200} y1={420} x2={180} y2={330} delay={1.0} />
+                <SkeletonBone x1={180} y1={330} x2={170} y2={250} delay={1.1} />
+                <SkeletonBone x1={170} y1={250} x2={165} y2={185} delay={1.2} />
+                <SkeletonBone x1={165} y1={185} x2={162} y2={130} delay={1.3} />
+                <SkeletonJoint cx={180} cy={330} label="MCP" anatomy="Metacarpophalangeal - index knuckle" delay={1.1} isTip={false} />
+                <SkeletonJoint cx={170} cy={250} label="PIP" anatomy="Proximal interphalangeal - first joint" delay={1.2} isTip={false} />
+                <SkeletonJoint cx={165} cy={185} label="DIP" anatomy="Distal interphalangeal - second joint" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={162} cy={130} label="Tip" anatomy="Index fingertip - precision grip" delay={1.4} isTip={true} />
+
+                {/* Middle finger */}
+                <SkeletonBone x1={200} y1={420} x2={210} y2={320} delay={1.1} />
+                <SkeletonBone x1={210} y1={320} x2={218} y2={235} delay={1.2} />
+                <SkeletonBone x1={218} y1={235} x2={222} y2={165} delay={1.3} />
+                <SkeletonBone x1={222} y1={165} x2={225} y2={105} delay={1.4} />
+                <SkeletonJoint cx={210} cy={320} label="MCP" anatomy="Metacarpophalangeal - middle knuckle" delay={1.2} isTip={false} />
+                <SkeletonJoint cx={218} cy={235} label="PIP" anatomy="Proximal interphalangeal - first joint" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={222} cy={165} label="DIP" anatomy="Distal interphalangeal - second joint" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={225} cy={105} label="Tip" anatomy="Middle fingertip - longest finger" delay={1.5} isTip={true} />
+
+                {/* Ring finger */}
+                <SkeletonBone x1={200} y1={420} x2={240} y2={325} delay={1.2} />
+                <SkeletonBone x1={240} y1={325} x2={262} y2={248} delay={1.3} />
+                <SkeletonBone x1={262} y1={248} x2={278} y2={185} delay={1.4} />
+                <SkeletonBone x1={278} y1={185} x2={290} y2={135} delay={1.5} />
+                <SkeletonJoint cx={240} cy={325} label="MCP" anatomy="Metacarpophalangeal - ring knuckle" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={262} cy={248} label="PIP" anatomy="Proximal interphalangeal - first joint" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={278} cy={185} label="DIP" anatomy="Distal interphalangeal - second joint" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={290} cy={135} label="Tip" anatomy="Ring fingertip" delay={1.6} isTip={true} />
+
+                {/* Pinky */}
+                <SkeletonBone x1={200} y1={420} x2={265} y2={345} delay={1.3} />
+                <SkeletonBone x1={265} y1={345} x2={305} y2={290} delay={1.4} />
+                <SkeletonBone x1={305} y1={290} x2={335} y2={245} delay={1.5} />
+                <SkeletonBone x1={335} y1={245} x2={358} y2={205} delay={1.6} />
+                <SkeletonJoint cx={265} cy={345} label="MCP" anatomy="Metacarpophalangeal - pinky knuckle" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={305} cy={290} label="PIP" anatomy="Proximal interphalangeal - first joint" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={335} cy={245} label="DIP" anatomy="Distal interphalangeal - second joint" delay={1.6} isTip={false} />
+                <SkeletonJoint cx={358} cy={205} label="Tip" anatomy="Pinky fingertip - smallest digit" delay={1.7} isTip={true} />
+              </svg>
 
               {/* Floating labels */}
               {[
-                { label: "Handshape", x: "10%", y: "20%", delay: 2 },
-                { label: "Location", x: "70%", y: "15%", delay: 2.2 },
-                { label: "Movement", x: "80%", y: "60%", delay: 2.4 },
-                { label: "Orientation", x: "5%", y: "70%", delay: 2.6 },
+                { label: "Handshape", x: "5%", y: "15%", delay: 2 },
+                { label: "Location", x: "65%", y: "10%", delay: 2.2 },
+                { label: "Movement", x: "75%", y: "55%", delay: 2.4 },
+                { label: "Orientation", x: "0%", y: "65%", delay: 2.6 },
               ].map((item, i) => (
                 <motion.div
                   key={i}
