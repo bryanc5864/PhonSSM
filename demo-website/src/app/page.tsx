@@ -95,34 +95,34 @@ function SkeletonJoint({ cx, cy, label, anatomy, delay, isTip }: {
           exit={{ opacity: 0, y: 10 }}
         >
           <rect
-            x={cx - 90}
-            y={cy - 55}
-            width={180}
-            height={45}
-            rx={8}
+            x={cx - 120}
+            y={cy - 80}
+            width={240}
+            height={70}
+            rx={12}
             fill="rgba(26, 22, 20, 0.95)"
           />
           <polygon
-            points={`${cx - 8},${cy - 10} ${cx + 8},${cy - 10} ${cx},${cy - 2}`}
+            points={`${cx - 10},${cy - 10} ${cx + 10},${cy - 10} ${cx},${cy}`}
             fill="rgba(26, 22, 20, 0.95)"
           />
           <text
             x={cx}
-            y={cy - 35}
+            y={cy - 52}
             textAnchor="middle"
             fill="#E8B86D"
-            fontSize={12}
-            fontWeight={600}
+            fontSize={18}
+            fontWeight={700}
             fontFamily="system-ui, sans-serif"
           >
             {label}
           </text>
           <text
             x={cx}
-            y={cy - 18}
+            y={cy - 28}
             textAnchor="middle"
             fill="white"
-            fontSize={10}
+            fontSize={14}
             fontFamily="system-ui, sans-serif"
           >
             {anatomy}
@@ -143,10 +143,10 @@ function SkeletonBone({ x1, y1, x2, y2, delay }: {
       x2={x2}
       y2={y2}
       stroke="#2D5A4A"
-      strokeWidth={3}
+      strokeWidth={2}
       strokeLinecap="round"
       initial={{ pathLength: 0, opacity: 0 }}
-      animate={{ pathLength: 1, opacity: 0.8 }}
+      animate={{ pathLength: 1, opacity: 0.7 }}
       transition={{ duration: 0.5, delay }}
       style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))" }}
     />
@@ -207,8 +207,8 @@ function Navigation() {
 function HeroSection() {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const opacity = useTransform(scrollYProgress, [0, 0.7, 1], [1, 1, 0]);
 
   return (
     <section ref={ref} className="min-h-screen relative overflow-hidden hero-pattern">
@@ -321,114 +321,114 @@ function HeroSection() {
 
               {/* Skeleton overlay for BOTH hands - viewBox matches image aspect ratio */}
               <svg
-                viewBox="0 0 800 600"
+                viewBox="0 0 800 530"
                 className="absolute inset-0 w-full h-full"
                 style={{ pointerEvents: "none" }}
                 preserveAspectRatio="xMidYMid meet"
               >
-                {/* ========== LEFT HAND (Palm view) ========== */}
+                {/* ========== LEFT HAND (Palm view) - fingers from left to right: pinky, ring, middle, index, thumb ========== */}
                 {/* Left Wrist */}
-                <SkeletonJoint cx={185} cy={545} label="L. Wrist" anatomy="Left carpal bones" delay={0.8} isTip={false} />
+                <SkeletonJoint cx={200} cy={500} label="L. Wrist" anatomy="Left carpal bones" delay={0.8} isTip={false} />
 
-                {/* Left Thumb (on right side of left palm) */}
-                <SkeletonBone x1={185} y1={545} x2={245} y2={485} delay={0.9} />
-                <SkeletonBone x1={245} y1={485} x2={280} y2={430} delay={1.0} />
-                <SkeletonBone x1={280} y1={430} x2={300} y2={385} delay={1.1} />
-                <SkeletonJoint cx={245} cy={485} label="CMC" anatomy="Thumb base joint" delay={1.0} isTip={false} />
-                <SkeletonJoint cx={280} cy={430} label="MCP" anatomy="Thumb knuckle" delay={1.1} isTip={false} />
-                <SkeletonJoint cx={300} cy={385} label="Tip" anatomy="Thumb tip" delay={1.2} isTip={true} />
-
-                {/* Left Index */}
-                <SkeletonBone x1={185} y1={545} x2={155} y2={420} delay={1.0} />
-                <SkeletonBone x1={155} y1={420} x2={135} y2={310} delay={1.1} />
-                <SkeletonBone x1={135} y1={310} x2={120} y2={210} delay={1.2} />
-                <SkeletonBone x1={120} y1={210} x2={110} y2={125} delay={1.3} />
-                <SkeletonJoint cx={155} cy={420} label="MCP" anatomy="Index knuckle" delay={1.1} isTip={false} />
-                <SkeletonJoint cx={135} cy={310} label="PIP" anatomy="First joint" delay={1.2} isTip={false} />
-                <SkeletonJoint cx={120} cy={210} label="DIP" anatomy="Second joint" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={110} cy={125} label="Tip" anatomy="Index tip" delay={1.4} isTip={true} />
-
-                {/* Left Middle */}
-                <SkeletonBone x1={185} y1={545} x2={180} y2={410} delay={1.1} />
-                <SkeletonBone x1={180} y1={410} x2={175} y2={295} delay={1.2} />
-                <SkeletonBone x1={175} y1={295} x2={172} y2={190} delay={1.3} />
-                <SkeletonBone x1={172} y1={190} x2={170} y2={95} delay={1.4} />
-                <SkeletonJoint cx={180} cy={410} label="MCP" anatomy="Middle knuckle" delay={1.2} isTip={false} />
-                <SkeletonJoint cx={175} cy={295} label="PIP" anatomy="First joint" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={172} cy={190} label="DIP" anatomy="Second joint" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={170} cy={95} label="Tip" anatomy="Middle tip" delay={1.5} isTip={true} />
+                {/* Left Pinky (leftmost finger) */}
+                <SkeletonBone x1={200} y1={500} x2={125} y2={400} delay={0.9} />
+                <SkeletonBone x1={125} y1={400} x2={100} y2={290} delay={1.0} />
+                <SkeletonBone x1={100} y1={290} x2={90} y2={190} delay={1.1} />
+                <SkeletonBone x1={90} y1={190} x2={85} y2={105} delay={1.2} />
+                <SkeletonJoint cx={125} cy={400} label="MCP" anatomy="Pinky knuckle" delay={1.0} isTip={false} />
+                <SkeletonJoint cx={100} cy={290} label="PIP" anatomy="First joint" delay={1.1} isTip={false} />
+                <SkeletonJoint cx={90} cy={190} label="DIP" anatomy="Second joint" delay={1.2} isTip={false} />
+                <SkeletonJoint cx={85} cy={105} label="Tip" anatomy="Pinky tip" delay={1.3} isTip={true} />
 
                 {/* Left Ring */}
-                <SkeletonBone x1={185} y1={545} x2={210} y2={415} delay={1.2} />
-                <SkeletonBone x1={210} y1={415} x2={225} y2={305} delay={1.3} />
-                <SkeletonBone x1={225} y1={305} x2={235} y2={205} delay={1.4} />
-                <SkeletonBone x1={235} y1={205} x2={242} y2={115} delay={1.5} />
-                <SkeletonJoint cx={210} cy={415} label="MCP" anatomy="Ring knuckle" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={225} cy={305} label="PIP" anatomy="First joint" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={235} cy={205} label="DIP" anatomy="Second joint" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={242} cy={115} label="Tip" anatomy="Ring tip" delay={1.6} isTip={true} />
+                <SkeletonBone x1={200} y1={500} x2={158} y2={385} delay={1.0} />
+                <SkeletonBone x1={158} y1={385} x2={142} y2={265} delay={1.1} />
+                <SkeletonBone x1={142} y1={265} x2={135} y2={160} delay={1.2} />
+                <SkeletonBone x1={135} y1={160} x2={130} y2={70} delay={1.3} />
+                <SkeletonJoint cx={158} cy={385} label="MCP" anatomy="Ring knuckle" delay={1.1} isTip={false} />
+                <SkeletonJoint cx={142} cy={265} label="PIP" anatomy="First joint" delay={1.2} isTip={false} />
+                <SkeletonJoint cx={135} cy={160} label="DIP" anatomy="Second joint" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={130} cy={70} label="Tip" anatomy="Ring tip" delay={1.4} isTip={true} />
 
-                {/* Left Pinky */}
-                <SkeletonBone x1={185} y1={545} x2={245} y2={430} delay={1.3} />
-                <SkeletonBone x1={245} y1={430} x2={275} y2={340} delay={1.4} />
-                <SkeletonBone x1={275} y1={340} x2={295} y2={260} delay={1.5} />
-                <SkeletonBone x1={295} y1={260} x2={310} y2={190} delay={1.6} />
-                <SkeletonJoint cx={245} cy={430} label="MCP" anatomy="Pinky knuckle" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={275} cy={340} label="PIP" anatomy="First joint" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={295} cy={260} label="DIP" anatomy="Second joint" delay={1.6} isTip={false} />
-                <SkeletonJoint cx={310} cy={190} label="Tip" anatomy="Pinky tip" delay={1.7} isTip={true} />
+                {/* Left Middle */}
+                <SkeletonBone x1={200} y1={500} x2={192} y2={380} delay={1.1} />
+                <SkeletonBone x1={192} y1={380} x2={185} y2={255} delay={1.2} />
+                <SkeletonBone x1={185} y1={255} x2={180} y2={145} delay={1.3} />
+                <SkeletonBone x1={180} y1={145} x2={178} y2={50} delay={1.4} />
+                <SkeletonJoint cx={192} cy={380} label="MCP" anatomy="Middle knuckle" delay={1.2} isTip={false} />
+                <SkeletonJoint cx={185} cy={255} label="PIP" anatomy="First joint" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={180} cy={145} label="DIP" anatomy="Second joint" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={178} cy={50} label="Tip" anatomy="Middle tip" delay={1.5} isTip={true} />
 
-                {/* ========== RIGHT HAND (Back view) ========== */}
+                {/* Left Index */}
+                <SkeletonBone x1={200} y1={500} x2={228} y2={385} delay={1.2} />
+                <SkeletonBone x1={228} y1={385} x2={238} y2={270} delay={1.3} />
+                <SkeletonBone x1={238} y1={270} x2={245} y2={170} delay={1.4} />
+                <SkeletonBone x1={245} y1={170} x2={250} y2={85} delay={1.5} />
+                <SkeletonJoint cx={228} cy={385} label="MCP" anatomy="Index knuckle" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={238} cy={270} label="PIP" anatomy="First joint" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={245} cy={170} label="DIP" anatomy="Second joint" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={250} cy={85} label="Tip" anatomy="Index tip" delay={1.6} isTip={true} />
+
+                {/* Left Thumb (on right side of left palm) */}
+                <SkeletonBone x1={200} y1={500} x2={265} y2={450} delay={1.3} />
+                <SkeletonBone x1={265} y1={450} x2={295} y2={400} delay={1.4} />
+                <SkeletonBone x1={295} y1={400} x2={315} y2={360} delay={1.5} />
+                <SkeletonJoint cx={265} cy={450} label="CMC" anatomy="Thumb base" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={295} cy={400} label="MCP" anatomy="Thumb knuckle" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={315} cy={360} label="Tip" anatomy="Thumb tip" delay={1.6} isTip={true} />
+
+                {/* ========== RIGHT HAND (Back view) - fingers from left to right: thumb, index, middle, ring, pinky ========== */}
                 {/* Right Wrist */}
-                <SkeletonJoint cx={605} cy={555} label="R. Wrist" anatomy="Right carpal bones" delay={1.0} isTip={false} />
+                <SkeletonJoint cx={600} cy={505} label="R. Wrist" anatomy="Right carpal bones" delay={1.0} isTip={false} />
 
-                {/* Right Thumb (on left side of right hand back) */}
-                <SkeletonBone x1={605} y1={555} x2={530} y2={490} delay={1.1} />
-                <SkeletonBone x1={530} y1={490} x2={480} y2={435} delay={1.2} />
-                <SkeletonBone x1={480} y1={435} x2={445} y2={390} delay={1.3} />
-                <SkeletonJoint cx={530} cy={490} label="CMC" anatomy="Thumb base" delay={1.2} isTip={false} />
-                <SkeletonJoint cx={480} cy={435} label="MCP" anatomy="Thumb knuckle" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={445} cy={390} label="Tip" anatomy="Thumb tip" delay={1.4} isTip={true} />
+                {/* Right Thumb (on left side of right hand) */}
+                <SkeletonBone x1={600} y1={505} x2={530} y2={455} delay={1.1} />
+                <SkeletonBone x1={530} y1={455} x2={490} y2={405} delay={1.2} />
+                <SkeletonBone x1={490} y1={405} x2={460} y2={365} delay={1.3} />
+                <SkeletonJoint cx={530} cy={455} label="CMC" anatomy="Thumb base" delay={1.2} isTip={false} />
+                <SkeletonJoint cx={490} cy={405} label="MCP" anatomy="Thumb knuckle" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={460} cy={365} label="Tip" anatomy="Thumb tip" delay={1.4} isTip={true} />
 
                 {/* Right Index */}
-                <SkeletonBone x1={605} y1={555} x2={555} y2={420} delay={1.2} />
-                <SkeletonBone x1={555} y1={420} x2={525} y2={305} delay={1.3} />
-                <SkeletonBone x1={525} y1={305} x2={505} y2={205} delay={1.4} />
-                <SkeletonBone x1={505} y1={205} x2={490} y2={115} delay={1.5} />
-                <SkeletonJoint cx={555} cy={420} label="MCP" anatomy="Index knuckle" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={525} cy={305} label="PIP" anatomy="First joint" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={505} cy={205} label="DIP" anatomy="Second joint" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={490} cy={115} label="Tip" anatomy="Index tip" delay={1.6} isTip={true} />
+                <SkeletonBone x1={600} y1={505} x2={548} y2={385} delay={1.2} />
+                <SkeletonBone x1={548} y1={385} x2={520} y2={270} delay={1.3} />
+                <SkeletonBone x1={520} y1={270} x2={505} y2={170} delay={1.4} />
+                <SkeletonBone x1={505} y1={170} x2={495} y2={90} delay={1.5} />
+                <SkeletonJoint cx={548} cy={385} label="MCP" anatomy="Index knuckle" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={520} cy={270} label="PIP" anatomy="First joint" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={505} cy={170} label="DIP" anatomy="Second joint" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={495} cy={90} label="Tip" anatomy="Index tip" delay={1.6} isTip={true} />
 
                 {/* Right Middle */}
-                <SkeletonBone x1={605} y1={555} x2={600} y2={410} delay={1.3} />
-                <SkeletonBone x1={600} y1={410} x2={595} y2={290} delay={1.4} />
-                <SkeletonBone x1={595} y1={290} x2={592} y2={185} delay={1.5} />
-                <SkeletonBone x1={592} y1={185} x2={590} y2={90} delay={1.6} />
-                <SkeletonJoint cx={600} cy={410} label="MCP" anatomy="Middle knuckle" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={595} cy={290} label="PIP" anatomy="First joint" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={592} cy={185} label="DIP" anatomy="Second joint" delay={1.6} isTip={false} />
-                <SkeletonJoint cx={590} cy={90} label="Tip" anatomy="Middle tip" delay={1.7} isTip={true} />
+                <SkeletonBone x1={600} y1={505} x2={595} y2={380} delay={1.3} />
+                <SkeletonBone x1={595} y1={380} x2={590} y2={260} delay={1.4} />
+                <SkeletonBone x1={590} y1={260} x2={587} y2={155} delay={1.5} />
+                <SkeletonBone x1={587} y1={155} x2={585} y2={65} delay={1.6} />
+                <SkeletonJoint cx={595} cy={380} label="MCP" anatomy="Middle knuckle" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={590} cy={260} label="PIP" anatomy="First joint" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={587} cy={155} label="DIP" anatomy="Second joint" delay={1.6} isTip={false} />
+                <SkeletonJoint cx={585} cy={65} label="Tip" anatomy="Middle tip" delay={1.7} isTip={true} />
 
                 {/* Right Ring */}
-                <SkeletonBone x1={605} y1={555} x2={645} y2={415} delay={1.4} />
-                <SkeletonBone x1={645} y1={415} x2={665} y2={300} delay={1.5} />
-                <SkeletonBone x1={665} y1={300} x2={680} y2={200} delay={1.6} />
-                <SkeletonBone x1={680} y1={200} x2={690} y2={115} delay={1.7} />
-                <SkeletonJoint cx={645} cy={415} label="MCP" anatomy="Ring knuckle" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={665} cy={300} label="PIP" anatomy="First joint" delay={1.6} isTip={false} />
-                <SkeletonJoint cx={680} cy={200} label="DIP" anatomy="Second joint" delay={1.7} isTip={false} />
-                <SkeletonJoint cx={690} cy={115} label="Tip" anatomy="Ring tip" delay={1.8} isTip={true} />
+                <SkeletonBone x1={600} y1={505} x2={640} y2={385} delay={1.4} />
+                <SkeletonBone x1={640} y1={385} x2={660} y2={275} delay={1.5} />
+                <SkeletonBone x1={660} y1={275} x2={675} y2={175} delay={1.6} />
+                <SkeletonBone x1={675} y1={175} x2={685} y2={95} delay={1.7} />
+                <SkeletonJoint cx={640} cy={385} label="MCP" anatomy="Ring knuckle" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={660} cy={275} label="PIP" anatomy="First joint" delay={1.6} isTip={false} />
+                <SkeletonJoint cx={675} cy={175} label="DIP" anatomy="Second joint" delay={1.7} isTip={false} />
+                <SkeletonJoint cx={685} cy={95} label="Tip" anatomy="Ring tip" delay={1.8} isTip={true} />
 
-                {/* Right Pinky */}
-                <SkeletonBone x1={605} y1={555} x2={680} y2={435} delay={1.5} />
-                <SkeletonBone x1={680} y1={435} x2={720} y2={350} delay={1.6} />
-                <SkeletonBone x1={720} y1={350} x2={750} y2={280} delay={1.7} />
-                <SkeletonBone x1={750} y1={280} x2={772} y2={220} delay={1.8} />
-                <SkeletonJoint cx={680} cy={435} label="MCP" anatomy="Pinky knuckle" delay={1.6} isTip={false} />
-                <SkeletonJoint cx={720} cy={350} label="PIP" anatomy="First joint" delay={1.7} isTip={false} />
-                <SkeletonJoint cx={750} cy={280} label="DIP" anatomy="Second joint" delay={1.8} isTip={false} />
-                <SkeletonJoint cx={772} cy={220} label="Tip" anatomy="Pinky tip" delay={1.9} isTip={true} />
+                {/* Right Pinky (rightmost finger) */}
+                <SkeletonBone x1={600} y1={505} x2={675} y2={400} delay={1.5} />
+                <SkeletonBone x1={675} y1={400} x2={705} y2={310} delay={1.6} />
+                <SkeletonBone x1={705} y1={310} x2={725} y2={230} delay={1.7} />
+                <SkeletonBone x1={725} y1={230} x2={740} y2={160} delay={1.8} />
+                <SkeletonJoint cx={675} cy={400} label="MCP" anatomy="Pinky knuckle" delay={1.6} isTip={false} />
+                <SkeletonJoint cx={705} cy={310} label="PIP" anatomy="First joint" delay={1.7} isTip={false} />
+                <SkeletonJoint cx={725} cy={230} label="DIP" anatomy="Second joint" delay={1.8} isTip={false} />
+                <SkeletonJoint cx={740} cy={160} label="Tip" anatomy="Pinky tip" delay={1.9} isTip={true} />
               </svg>
 
               {/* Floating labels */}
@@ -529,7 +529,7 @@ function ProblemSection() {
               <img
                 src="/images/asl-learning.jpg"
                 alt="People learning sign language"
-                className="w-full h-48 object-cover"
+                className="w-full h-64 object-cover"
               />
             </motion.div>
 
@@ -895,27 +895,30 @@ function ResultsSection() {
     { value: 225, label: "Few-shot Learning Gain", suffix: "%" },
   ];
 
-  // Animated bar data for background
+  // Animated bar data for background - more bars for visual richness
   const bars = [
-    { width: "88%", delay: 0, label: "PhonSSM" },
-    { width: "63%", delay: 0.2, label: "Prior Best" },
-    { width: "74%", delay: 0.4, label: "WLASL300" },
-    { width: "72%", delay: 0.6, label: "WLASL2000" },
+    { width: "92%", height: "h-16", top: "5%", delay: 0, color: "bg-accent-primary" },
+    { width: "65%", height: "h-20", top: "18%", delay: 0.15, color: "bg-accent-secondary" },
+    { width: "78%", height: "h-14", top: "32%", delay: 0.3, color: "bg-accent-primary" },
+    { width: "55%", height: "h-24", top: "48%", delay: 0.45, color: "bg-accent-tertiary" },
+    { width: "85%", height: "h-12", top: "62%", delay: 0.6, color: "bg-accent-primary" },
+    { width: "70%", height: "h-18", top: "76%", delay: 0.75, color: "bg-accent-secondary" },
+    { width: "45%", height: "h-16", top: "88%", delay: 0.9, color: "bg-accent-primary" },
   ];
 
   return (
     <Section className="py-32 bg-bg-primary relative overflow-hidden" id="results">
-      {/* Animated Background Bars */}
-      <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
+      {/* Animated Background Bars - drifting chart effect */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {bars.map((bar, i) => (
           <motion.div
             key={i}
-            className="absolute h-24 bg-accent-primary rounded-r-full"
-            style={{ top: `${15 + i * 22}%` }}
-            initial={{ width: "0%", x: "-100%" }}
+            className={`absolute ${bar.height} ${bar.color} rounded-r-full`}
+            style={{ top: bar.top, opacity: 0.06 }}
+            initial={{ width: "0%", x: "-50%" }}
             whileInView={{ width: bar.width, x: "0%" }}
             transition={{
-              duration: 2,
+              duration: 2.5,
               delay: bar.delay,
               ease: [0.25, 0.1, 0.25, 1],
             }}
