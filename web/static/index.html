@@ -3,19 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SignSense - ASL Learning with AI Feedback</title>
+    <title>SignSense - AI-Powered ASL Learning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #FDFCFB;
+            --bg-secondary: #F7F5F3;
+            --bg-tertiary: #EDEAE6;
+            --text-primary: #1A1614;
+            --text-secondary: #5C5552;
+            --text-tertiary: #8A8583;
+            --accent-primary: #2D5A4A;
+            --accent-secondary: #E8B86D;
+            --accent-tertiary: #C75D4D;
+            --success: #2D5A4A;
+            --warning: #E8B86D;
+            --error: #C75D4D;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
+            line-height: 1.6;
         }
 
         .app-container {
@@ -27,84 +50,135 @@
         /* Header */
         header {
             text-align: center;
-            padding: 15px 0 25px;
+            padding: 30px 0 40px;
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 2px;
         }
 
         header h1 {
-            font-size: 2.2rem;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 3rem;
+            font-weight: 400;
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
         }
 
         header p {
-            color: #8892b0;
-            font-size: 1rem;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
         }
 
         /* Tab Navigation */
         .tab-nav {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 25px;
+            gap: 12px;
+            margin-bottom: 35px;
+            padding: 8px;
+            background: var(--bg-secondary);
+            border-radius: 50px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .tab-btn {
-            padding: 12px 30px;
+            padding: 14px 32px;
             border: none;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.1);
-            color: #8892b0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .tab-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(45, 90, 74, 0.08);
+            color: var(--accent-primary);
         }
 
         .tab-btn.active {
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            color: #fff;
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(45, 90, 74, 0.3);
         }
 
         .tab-btn .icon {
-            margin-right: 8px;
+            font-size: 1.1rem;
         }
 
         /* Tab Content */
         .tab-content {
             display: none;
+            animation: fadeIn 0.4s ease;
         }
 
         .tab-content.active {
             display: block;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* Common Panel Styles */
         .panel {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            margin-bottom: 20px;
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--bg-tertiary);
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
         }
 
         .panel h3 {
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            color: #00d4ff;
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 1.3rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel h3::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--accent-primary);
+            border-radius: 2px;
         }
 
         /* ==================== LEARN MODE ==================== */
         .learn-container {
             display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 25px;
+            grid-template-columns: 320px 1fr;
+            gap: 30px;
         }
 
         @media (max-width: 900px) {
@@ -115,46 +189,78 @@
 
         /* Sign List */
         .sign-list {
-            max-height: 500px;
+            max-height: 520px;
             overflow-y: auto;
         }
 
         .sign-item {
             display: flex;
             align-items: center;
-            padding: 12px 15px;
-            border-radius: 10px;
+            padding: 16px 18px;
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
             margin-bottom: 8px;
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
         }
 
         .sign-item:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--bg-tertiary);
+            transform: translateX(4px);
         }
 
         .sign-item.selected {
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid rgba(0, 212, 255, 0.4);
+            background: rgba(45, 90, 74, 0.1);
+            border-color: var(--accent-primary);
         }
 
         .sign-item .sign-name {
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
             flex: 1;
+            font-size: 0.9rem;
+            letter-spacing: 0.03em;
+            color: var(--text-primary);
         }
 
         .sign-item .mastery-badge {
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.1);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--bg-tertiary);
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .sign-item .mastery-badge.mastered {
-            background: rgba(39, 174, 96, 0.3);
-            color: #27ae60;
+            background: rgba(45, 90, 74, 0.15);
+            color: var(--accent-primary);
+        }
+
+        /* Search Input */
+        .search-input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 2px solid var(--bg-tertiary);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: white;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-tertiary);
         }
 
         /* Sign Detail */
@@ -167,48 +273,62 @@
         }
 
         .sign-title {
-            font-size: 2rem;
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 400;
             text-transform: uppercase;
-            margin-bottom: 20px;
-            color: #00d4ff;
+            margin-bottom: 25px;
+            color: var(--accent-primary);
+            letter-spacing: 0.02em;
         }
 
         .sign-demo-area {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 40px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: 20px;
+            padding: 50px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             min-height: 200px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            border: 1px solid var(--bg-tertiary);
         }
 
         .sign-demo-area .demo-icon {
-            font-size: 4rem;
-            margin-bottom: 15px;
+            font-size: 5rem;
+            margin-bottom: 20px;
+            filter: grayscale(0.2);
+        }
+
+        .sign-demo-area p {
+            color: var(--text-secondary);
+            font-size: 1rem;
         }
 
         .sign-description {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            color: #ccd6f6;
-            margin-bottom: 20px;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 25px;
         }
 
         .sign-tips {
-            background: rgba(123, 44, 191, 0.15);
-            border-left: 4px solid #7b2cbf;
-            padding: 15px 20px;
-            border-radius: 0 10px 10px 0;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(232, 184, 109, 0.1) 0%, rgba(232, 184, 109, 0.05) 100%);
+            border-left: 4px solid var(--accent-secondary);
+            padding: 20px 25px;
+            border-radius: 0 16px 16px 0;
+            margin-bottom: 25px;
         }
 
         .sign-tips h4 {
-            color: #7b2cbf;
-            margin-bottom: 10px;
+            color: var(--accent-secondary);
+            margin-bottom: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .sign-tips ul {
@@ -217,54 +337,68 @@
         }
 
         .sign-tips li {
-            padding: 5px 0;
-            padding-left: 20px;
+            padding: 8px 0;
+            padding-left: 24px;
             position: relative;
+            color: var(--text-secondary);
         }
 
         .sign-tips li::before {
-            content: "•";
+            content: "→";
             position: absolute;
             left: 0;
-            color: #7b2cbf;
+            color: var(--accent-secondary);
+            font-weight: 600;
         }
 
+        /* Buttons */
         .btn {
-            padding: 12px 30px;
+            padding: 14px 32px;
             border: none;
-            border-radius: 10px;
-            font-size: 1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-primary {
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            color: #fff;
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(45, 90, 74, 0.3);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(45, 90, 74, 0.4);
+            background: #1d3d32;
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--bg-tertiary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--text-tertiary);
         }
 
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none !important;
         }
 
         /* ==================== PRACTICE MODE ==================== */
         .practice-container {
             display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 25px;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
         }
 
         @media (max-width: 1100px) {
@@ -277,9 +411,10 @@
             position: relative;
             width: 100%;
             aspect-ratio: 4/3;
-            background: #000;
-            border-radius: 15px;
+            background: var(--text-primary);
+            border-radius: 20px;
             overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
 
         #video, #canvas {
@@ -302,206 +437,305 @@
 
         .status-badge {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            padding: 8px 15px;
-            border-radius: 20px;
+            top: 20px;
+            left: 20px;
+            padding: 10px 18px;
+            border-radius: 30px;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .status-badge.connecting { background: #f39c12; }
-        .status-badge.connected { background: #27ae60; }
-        .status-badge.error { background: #e74c3c; }
+        .status-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-badge.connecting {
+            background: rgba(232, 184, 109, 0.9);
+            color: #8B6914;
+        }
+        .status-badge.connecting::before { background: #8B6914; }
+
+        .status-badge.connected {
+            background: rgba(45, 90, 74, 0.9);
+            color: white;
+        }
+        .status-badge.connected::before { background: white; }
+
+        .status-badge.error {
+            background: rgba(199, 93, 77, 0.9);
+            color: white;
+        }
+        .status-badge.error::before { background: white; }
 
         .prediction-overlay {
             position: absolute;
-            bottom: 20px;
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            padding: 15px 30px;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px 40px;
+            border-radius: 20px;
             text-align: center;
-            min-width: 220px;
+            min-width: 260px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
         .prediction-sign {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #00d4ff;
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 400;
+            color: var(--accent-primary);
             text-transform: uppercase;
+            letter-spacing: 0.02em;
         }
 
         .prediction-confidence {
             font-size: 0.9rem;
-            color: #8892b0;
-            margin-top: 5px;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+            font-weight: 500;
         }
 
         .confidence-bar {
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            margin-top: 8px;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            margin-top: 12px;
             overflow: hidden;
         }
 
         .confidence-fill {
             height: 100%;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
             transition: width 0.3s ease;
+            border-radius: 3px;
         }
 
         .practice-controls {
             display: flex;
             gap: 12px;
-            margin-top: 15px;
+            margin-top: 20px;
             flex-wrap: wrap;
+        }
+
+        .practice-select {
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: white;
+            color: var(--text-primary);
+            border: 2px solid var(--bg-tertiary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 160px;
+        }
+
+        .practice-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
         }
 
         /* Target Sign Display */
         .target-sign-display {
-            background: rgba(123, 44, 191, 0.2);
-            border: 2px solid rgba(123, 44, 191, 0.4);
-            border-radius: 12px;
-            padding: 15px;
+            background: linear-gradient(135deg, rgba(45, 90, 74, 0.1) 0%, rgba(45, 90, 74, 0.05) 100%);
+            border: 2px solid rgba(45, 90, 74, 0.2);
+            border-radius: 16px;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .target-sign-display .label {
             font-size: 0.85rem;
-            color: #8892b0;
-            margin-bottom: 5px;
+            color: var(--text-tertiary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
         }
 
         .target-sign-display .sign-name {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #7b2cbf;
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: var(--accent-primary);
             text-transform: uppercase;
         }
 
-        /* Feedback Panel - THE MAIN FEEDBACK DISPLAY */
+        /* Feedback Panel */
         .feedback-panel {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 15px;
-            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--bg-tertiary);
         }
 
         .feedback-panel h3 {
-            margin-bottom: 15px;
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 1.3rem;
+            font-weight: 400;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
         .feedback-content {
-            min-height: 120px;
+            min-height: 140px;
         }
 
         .feedback-item {
             display: flex;
             align-items: flex-start;
-            padding: 10px 12px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+            background: var(--bg-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .feedback-item:hover {
+            transform: translateX(4px);
         }
 
         .feedback-item .icon {
-            margin-right: 10px;
-            font-size: 1.2rem;
+            margin-right: 14px;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .feedback-item .text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
 
         .feedback-item.success {
-            background: rgba(39, 174, 96, 0.15);
-            border-left: 3px solid #27ae60;
+            background: rgba(45, 90, 74, 0.1);
+            border-left: 4px solid var(--accent-primary);
         }
 
-        .feedback-item.success .icon { color: #27ae60; }
+        .feedback-item.success .icon { color: var(--accent-primary); }
+        .feedback-item.success .text { color: var(--accent-primary); }
 
         .feedback-item.tip {
-            background: rgba(52, 152, 219, 0.15);
-            border-left: 3px solid #3498db;
+            background: rgba(232, 184, 109, 0.1);
+            border-left: 4px solid var(--accent-secondary);
         }
 
-        .feedback-item.tip .icon { color: #3498db; }
+        .feedback-item.tip .icon { color: var(--accent-secondary); }
 
         .feedback-item.warning {
-            background: rgba(243, 156, 18, 0.15);
-            border-left: 3px solid #f39c12;
+            background: rgba(199, 93, 77, 0.1);
+            border-left: 4px solid var(--accent-tertiary);
         }
 
-        .feedback-item.warning .icon { color: #f39c12; }
+        .feedback-item.warning .icon { color: var(--accent-tertiary); }
 
         /* Component Scores */
         .component-scores {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 15px;
+            gap: 14px;
+            margin-top: 20px;
         }
 
         .component-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px;
-            border-radius: 10px;
+            background: var(--bg-secondary);
+            padding: 18px;
+            border-radius: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .component-item:hover {
+            background: var(--bg-tertiary);
         }
 
         .component-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-size: 0.85rem;
         }
 
         .component-name {
-            color: #ccc;
+            color: var(--text-secondary);
             text-transform: capitalize;
+            font-weight: 500;
         }
 
         .component-value {
-            font-weight: 600;
+            font-weight: 700;
+            color: var(--text-primary);
         }
 
         .component-bar {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
             overflow: hidden;
         }
 
         .component-fill {
             height: 100%;
-            border-radius: 3px;
-            transition: width 0.3s ease;
+            border-radius: 4px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* ==================== PROGRESS MODE ==================== */
         .progress-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 25px;
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
             text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--bg-tertiary);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
         }
 
         .stat-card .stat-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #00d4ff;
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 3.5rem;
+            font-weight: 400;
+            color: var(--accent-primary);
+            line-height: 1;
         }
 
         .stat-card .stat-label {
-            color: #8892b0;
-            margin-top: 5px;
+            color: var(--text-tertiary);
+            margin-top: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.8rem;
         }
 
         .history-list {
@@ -513,48 +747,60 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--bg-tertiary);
+            transition: all 0.2s ease;
+        }
+
+        .history-item:hover {
+            background: var(--bg-secondary);
         }
 
         .history-item .sign-name {
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.03em;
         }
 
         .history-item .result {
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.85rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
 
         .history-item .result.correct {
-            background: rgba(39, 174, 96, 0.2);
-            color: #27ae60;
+            background: rgba(45, 90, 74, 0.1);
+            color: var(--accent-primary);
         }
 
         .history-item .result.incorrect {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
+            background: rgba(199, 93, 77, 0.1);
+            color: var(--accent-tertiary);
         }
 
         .weak-area-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 15px;
-            background: rgba(243, 156, 18, 0.1);
-            border-radius: 10px;
-            margin-bottom: 10px;
+            padding: 16px 20px;
+            background: rgba(232, 184, 109, 0.1);
+            border-radius: 14px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--accent-secondary);
         }
 
         .weak-area-item .sign-name {
             text-transform: uppercase;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
 
         .weak-area-item .accuracy {
-            color: #f39c12;
+            color: var(--accent-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
         }
 
         /* Utilities */
@@ -562,36 +808,68 @@
         .mt-20 { margin-top: 20px; }
         .hidden { display: none !important; }
 
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 50px 30px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state .icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            opacity: 0.4;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            max-width: 280px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
 
         ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-secondary);
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--accent-primary);
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: #1d3d32;
         }
 
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #8892b0;
+        /* Focus styles */
+        *:focus-visible {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
         }
 
-        .empty-state .icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            opacity: 0.5;
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Full-width panel on progress page */
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (min-width: 900px) {
+            .half-width {
+                grid-column: span 2;
+            }
         }
     </style>
 </head>
@@ -599,7 +877,7 @@
     <div class="app-container">
         <header>
             <h1>SignSense</h1>
-            <p>AI-Powered ASL Learning with Diagnostic Feedback</p>
+            <p>Learn American Sign Language with Real-Time AI Feedback</p>
         </header>
 
         <!-- Tab Navigation -->
@@ -621,9 +899,7 @@
                 <!-- Sign List -->
                 <div class="panel">
                     <h3>Sign Library</h3>
-                    <input type="text" id="sign-search" placeholder="Search signs..."
-                           style="width: 100%; padding: 10px; border-radius: 8px; border: none;
-                                  background: rgba(255,255,255,0.1); color: #fff; margin-bottom: 15px;">
+                    <input type="text" id="sign-search" class="search-input" placeholder="Search signs...">
                     <div class="sign-list" id="sign-list">
                         <!-- Signs will be populated here -->
                     </div>
@@ -644,7 +920,7 @@
                         </div>
 
                         <div class="sign-tips" id="sign-tips">
-                            <h4>Tips for this sign:</h4>
+                            <h4>Tips for this sign</h4>
                             <ul id="tips-list">
                                 <li>Select a sign to see tips</li>
                             </ul>
@@ -662,7 +938,7 @@
                 <div class="panel" id="learn-empty-state">
                     <div class="empty-state">
                         <div class="icon">👈</div>
-                        <p>Select a sign from the list to learn how to perform it</p>
+                        <p>Select a sign from the library to learn how to perform it correctly</p>
                     </div>
                 </div>
             </div>
@@ -690,9 +966,8 @@
                         <div class="practice-controls">
                             <button class="btn btn-primary" id="start-btn">Start Camera</button>
                             <button class="btn btn-primary" id="predict-btn" disabled>Predict Now</button>
-                            <button class="btn btn-secondary" id="clear-btn">Clear</button>
-                            <select id="practice-sign-select" style="padding: 12px; border-radius: 10px;
-                                    background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                            <button class="btn btn-secondary" id="clear-btn">Clear Buffer</button>
+                            <select id="practice-sign-select" class="practice-select">
                                 <option value="">Free Practice</option>
                             </select>
                         </div>
@@ -703,7 +978,7 @@
                 <div>
                     <!-- Target Sign -->
                     <div class="target-sign-display" id="target-sign-display" style="display: none;">
-                        <div class="label">Currently practicing:</div>
+                        <div class="label">Currently practicing</div>
                         <div class="sign-name" id="target-sign-name">-</div>
                     </div>
 
@@ -712,13 +987,13 @@
                         <h3>📝 Feedback</h3>
                         <div class="feedback-content" id="feedback-content">
                             <div class="empty-state">
-                                <p>Start the camera and make a sign to receive feedback</p>
+                                <p>Start the camera and make a sign to receive real-time feedback</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Component Scores -->
-                    <div class="panel">
+                    <div class="panel" style="margin-top: 20px;">
                         <h3>Component Analysis</h3>
                         <div class="component-scores">
                             <div class="component-item">
@@ -727,7 +1002,7 @@
                                     <span class="component-value" id="handshape-value">-</span>
                                 </div>
                                 <div class="component-bar">
-                                    <div class="component-fill" id="handshape-bar" style="width: 0%; background: #00d4ff;"></div>
+                                    <div class="component-fill" id="handshape-bar" style="width: 0%; background: var(--accent-primary);"></div>
                                 </div>
                             </div>
                             <div class="component-item">
@@ -736,7 +1011,7 @@
                                     <span class="component-value" id="location-value">-</span>
                                 </div>
                                 <div class="component-bar">
-                                    <div class="component-fill" id="location-bar" style="width: 0%; background: #7b2cbf;"></div>
+                                    <div class="component-fill" id="location-bar" style="width: 0%; background: var(--accent-secondary);"></div>
                                 </div>
                             </div>
                             <div class="component-item">
@@ -745,7 +1020,7 @@
                                     <span class="component-value" id="movement-value">-</span>
                                 </div>
                                 <div class="component-bar">
-                                    <div class="component-fill" id="movement-bar" style="width: 0%; background: #27ae60;"></div>
+                                    <div class="component-fill" id="movement-bar" style="width: 0%; background: var(--accent-tertiary);"></div>
                                 </div>
                             </div>
                             <div class="component-item">
@@ -754,7 +1029,7 @@
                                     <span class="component-value" id="orientation-value">-</span>
                                 </div>
                                 <div class="component-bar">
-                                    <div class="component-fill" id="orientation-bar" style="width: 0%; background: #f39c12;"></div>
+                                    <div class="component-fill" id="orientation-bar" style="width: 0%; background: var(--text-secondary);"></div>
                                 </div>
                             </div>
                         </div>
@@ -781,11 +1056,11 @@
                 </div>
 
                 <!-- Practice History -->
-                <div class="panel" style="grid-column: span 2;">
+                <div class="panel half-width">
                     <h3>Recent Practice History</h3>
                     <div class="history-list" id="history-list">
                         <div class="empty-state">
-                            <p>No practice history yet. Start practicing to see your progress!</p>
+                            <p>No practice history yet. Start practicing to track your progress!</p>
                         </div>
                     </div>
                 </div>
@@ -1166,19 +1441,19 @@
             canvas.height = video.videoHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw landmarks
+            // Draw landmarks with updated colors
             if (results.poseLandmarks) {
-                drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#00FF00', lineWidth: 2 });
+                drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#2D5A4A', lineWidth: 2 });
             }
 
             if (results.leftHandLandmarks) {
-                drawConnectors(ctx, results.leftHandLandmarks, HAND_CONNECTIONS, { color: '#CC0000', lineWidth: 3 });
-                drawLandmarks(ctx, results.leftHandLandmarks, { color: '#FF0000', lineWidth: 1, radius: 4 });
+                drawConnectors(ctx, results.leftHandLandmarks, HAND_CONNECTIONS, { color: '#C75D4D', lineWidth: 3 });
+                drawLandmarks(ctx, results.leftHandLandmarks, { color: '#C75D4D', lineWidth: 1, radius: 4 });
             }
 
             if (results.rightHandLandmarks) {
-                drawConnectors(ctx, results.rightHandLandmarks, HAND_CONNECTIONS, { color: '#00CC00', lineWidth: 3 });
-                drawLandmarks(ctx, results.rightHandLandmarks, { color: '#00FF00', lineWidth: 1, radius: 4 });
+                drawConnectors(ctx, results.rightHandLandmarks, HAND_CONNECTIONS, { color: '#2D5A4A', lineWidth: 3 });
+                drawLandmarks(ctx, results.rightHandLandmarks, { color: '#2D5A4A', lineWidth: 1, radius: 4 });
             }
 
             // Send landmarks to server
@@ -1255,7 +1530,7 @@
                 // Update component scores
                 updateComponents(data.components);
 
-                // Display feedback - THIS IS THE MAIN FEEDBACK DISPLAY
+                // Display feedback
                 displayFeedback(data);
 
                 // Record in progress
@@ -1288,12 +1563,12 @@
                 if (isCorrect && confidence > 0.6) {
                     html += `<div class="feedback-item success">
                         <span class="icon">✓</span>
-                        <span>Correct! Great job with "${targetSign.toUpperCase()}"!</span>
+                        <span class="text">Excellent! That's a perfect "${targetSign.toUpperCase()}"!</span>
                     </div>`;
                 } else if (!isCorrect && topSign) {
                     html += `<div class="feedback-item warning">
                         <span class="icon">→</span>
-                        <span>That looked like "${topSign.toUpperCase()}". Keep practicing "${targetSign.toUpperCase()}".</span>
+                        <span class="text">That looked like "${topSign.toUpperCase()}". Keep practicing "${targetSign.toUpperCase()}".</span>
                     </div>`;
                 }
             }
@@ -1314,12 +1589,12 @@
 
                 html += `<div class="feedback-item ${type}">
                     <span class="icon">${icon}</span>
-                    <span>${msg}</span>
+                    <span class="text">${msg}</span>
                 </div>`;
             });
 
             if (!html) {
-                html = '<div class="feedback-item tip"><span class="icon">👍</span><span>Keep practicing!</span></div>';
+                html = '<div class="feedback-item tip"><span class="icon">👍</span><span class="text">Keep practicing!</span></div>';
             }
 
             feedbackContent.innerHTML = html;
@@ -1327,7 +1602,6 @@
 
         function updateComponents(componentData) {
             const components = ['handshape', 'location', 'movement', 'orientation'];
-            const colors = { handshape: '#00d4ff', location: '#7b2cbf', movement: '#27ae60', orientation: '#f39c12' };
 
             components.forEach(comp => {
                 const valueEl = document.getElementById(`${comp}-value`);
@@ -1344,11 +1618,11 @@
 
                     // Color based on score
                     if (score > 0.7) {
-                        barEl.style.background = '#27ae60';
+                        barEl.style.background = 'var(--accent-primary)';
                     } else if (score > 0.5) {
-                        barEl.style.background = '#f39c12';
+                        barEl.style.background = 'var(--accent-secondary)';
                     } else {
-                        barEl.style.background = '#e74c3c';
+                        barEl.style.background = 'var(--accent-tertiary)';
                     }
                 } else {
                     valueEl.textContent = '-';
