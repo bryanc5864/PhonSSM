@@ -391,12 +391,10 @@ function ProblemSection() {
                 {/* SignSense */}
                 <div className="space-y-4">
                   <div className="text-center p-4 bg-accent-primary/10 rounded-xl">
-                    <span className="text-4xl">🤟</span>
-                    <h4 className="font-semibold mt-2 text-accent-primary">SignSense</h4>
+                    <span className="text-2xl font-bold text-accent-primary">SignSense</span>
                   </div>
                   <div className="p-4 bg-accent-primary/5 rounded-lg">
-                    <span className="text-2xl text-success">✓</span>
-                    <p className="text-success font-semibold">Correct!</p>
+                    <p className="text-success font-bold text-lg">Correct!</p>
                     <div className="mt-3 space-y-2 text-sm">
                       {[
                         { label: "Handshape", value: 94 },
@@ -417,8 +415,8 @@ function ProblemSection() {
                         </div>
                       ))}
                     </div>
-                    <p className="mt-3 text-xs text-accent-primary bg-accent-primary/10 p-2 rounded">
-                      💡 Tip: Extend index finger more
+                    <p className="mt-3 text-xs text-accent-primary bg-accent-primary/10 p-2 rounded font-medium">
+                      Tip: Extend index finger more
                     </p>
                   </div>
                 </div>
@@ -695,12 +693,12 @@ function ArchitectureSection() {
         {/* Key insight callout */}
         <motion.div
           variants={fadeUpVariants}
-          className="mt-12 max-w-3xl mx-auto bg-accent-primary text-white rounded-2xl p-8 text-center"
+          className="mt-12 max-w-3xl mx-auto bg-accent-primary text-white rounded-2xl p-10 text-center"
         >
-          <span className="text-4xl mb-4 block">💡</span>
-          <p className="text-xl font-medium">
-            "By learning ~135 phonological primitives instead of 5,565 independent patterns,
-            PhonSSM achieves <strong>225% better accuracy</strong> on signs with limited training data."
+          <p className="text-sm uppercase tracking-widest mb-4 opacity-80">Key Insight</p>
+          <p className="text-2xl font-medium leading-relaxed">
+            By learning ~135 phonological primitives instead of 5,565 independent patterns,
+            PhonSSM achieves <strong className="text-accent-secondary">225% better accuracy</strong> on signs with limited training data.
           </p>
         </motion.div>
       </div>
@@ -711,29 +709,49 @@ function ArchitectureSection() {
 // Results Section
 function ResultsSection() {
   const stats = [
-    { value: 88.4, label: "WLASL100", suffix: "%" },
-    { value: 72.1, label: "WLASL2000", suffix: "%" },
-    { value: 25.2, label: "vs Prior Art", suffix: "pp" },
-    { value: 225, label: "Few-shot Gain", suffix: "%" },
+    { value: 88.4, label: "WLASL100 Accuracy", suffix: "%" },
+    { value: 72.1, label: "WLASL2000 Accuracy", suffix: "%" },
+    { value: 25.2, label: "Improvement Over Prior Art", suffix: "%" },
+    { value: 225, label: "Few-shot Learning Gain", suffix: "%" },
   ];
 
-  const comparisons = [
-    { method: "DSTA-SLR (Prior Best)", type: "Skeleton", w100: "63.2%", w2000: "53.7%" },
-    { method: "SignBERT", type: "RGB Video", w100: "79.4%", w2000: "—" },
-    { method: "I3D", type: "RGB Video", w100: "65.9%", w2000: "32.5%" },
-    { method: "SignSense (Ours)", type: "Skeleton", w100: "88.4%", w2000: "72.1%", highlight: true },
+  // Animated bar data for background
+  const bars = [
+    { width: "88%", delay: 0, label: "PhonSSM" },
+    { width: "63%", delay: 0.2, label: "Prior Best" },
+    { width: "74%", delay: 0.4, label: "WLASL300" },
+    { width: "72%", delay: 0.6, label: "WLASL2000" },
   ];
 
   return (
-    <Section className="py-32 bg-bg-primary" id="results">
-      <div className="max-w-7xl mx-auto px-6">
+    <Section className="py-32 bg-bg-primary relative overflow-hidden" id="results">
+      {/* Animated Background Bars */}
+      <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
+        {bars.map((bar, i) => (
+          <motion.div
+            key={i}
+            className="absolute h-24 bg-accent-primary rounded-r-full"
+            style={{ top: `${15 + i * 22}%` }}
+            initial={{ width: "0%", x: "-100%" }}
+            whileInView={{ width: bar.width, x: "0%" }}
+            transition={{
+              duration: 2,
+              delay: bar.delay,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
+            viewport={{ once: true }}
+          />
+        ))}
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <motion.span
+          <motion.p
             variants={fadeUpVariants}
-            className="inline-block text-accent-primary font-semibold tracking-widest text-sm uppercase mb-4"
+            className="text-accent-primary font-semibold tracking-widest text-sm uppercase mb-4"
           >
-            Results
-          </motion.span>
+            Benchmark Results
+          </motion.p>
           <motion.h2
             variants={fadeUpVariants}
             className="font-display text-h1 text-text-primary mb-6"
@@ -741,20 +759,34 @@ function ResultsSection() {
             State-of-the-Art Performance{" "}
             <span className="text-gradient">Across All Benchmarks</span>
           </motion.h2>
+          <motion.p
+            variants={fadeUpVariants}
+            className="text-xl text-text-secondary"
+          >
+            PhonSSM outperforms all previous skeleton-based methods on WLASL, achieving the highest accuracy ever reported.
+          </motion.p>
         </div>
 
-        {/* Big stats */}
+        {/* Big stats with animated bars behind */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
           {stats.map((stat, i) => (
             <motion.div
               key={i}
               variants={fadeUpVariants}
-              className="bg-white rounded-2xl p-8 text-center shadow-sm card-hover"
+              className="relative bg-white rounded-2xl p-8 text-center shadow-sm card-hover overflow-hidden"
             >
+              {/* Mini animated bar inside card */}
+              <motion.div
+                className="absolute bottom-0 left-0 h-1 bg-accent-primary/20"
+                initial={{ width: "0%" }}
+                whileInView={{ width: `${stat.value}%` }}
+                transition={{ duration: 1.5, delay: i * 0.15, ease: "easeOut" }}
+                viewport={{ once: true }}
+              />
               <div className="text-5xl md:text-6xl font-bold text-accent-primary stat-number">
                 <AnimatedCounter target={stat.value} suffix={stat.suffix} />
               </div>
-              <div className="text-text-secondary mt-2 font-medium">{stat.label}</div>
+              <div className="text-text-secondary mt-3 font-medium text-sm">{stat.label}</div>
             </motion.div>
           ))}
         </div>
@@ -819,40 +851,44 @@ function ResultsSection() {
 function ApplicationsSection() {
   const applications = [
     {
-      image: "/images/applications/education.jpg",
+      image: "/images/applications/classroom.jpg",
       title: "Classroom Learning",
-      desc: "Teachers assign practice exercises and students come prepared with specific questions about their technique.",
-      color: "from-accent-primary/80"
+      desc: "Students practice at their own pace with instant feedback",
     },
     {
-      image: "/images/applications/healthcare.jpg",
-      title: "Healthcare",
-      desc: "Hospital staff learn essential signs to communicate effectively with deaf and hard-of-hearing patients.",
-      color: "from-accent-secondary/80"
+      image: "/images/applications/medical.jpg",
+      title: "Healthcare Settings",
+      desc: "Medical staff communicate with deaf patients effectively",
     },
     {
-      image: "/images/applications/family.jpg",
+      image: "/images/applications/responders.png",
+      title: "First Responders",
+      desc: "Emergency personnel learn critical signs for crisis situations",
+    },
+    {
+      image: "/images/applications/communication.jpg",
       title: "Family Communication",
-      desc: "Families with deaf members learn together, building bridges and strengthening connections.",
-      color: "from-accent-primary/80"
-    },
-    {
-      image: "/images/applications/emergency.webp",
-      title: "Emergency Services",
-      desc: "First responders learn critical signs to assist deaf individuals during emergencies.",
-      color: "from-accent-tertiary/80"
+      desc: "Families connect through shared language learning",
     },
     {
       image: "/images/applications/interpreter.jpg",
-      title: "Interpreter Training",
-      desc: "Objective assessment tools help interpreters prepare for certification with measurable feedback.",
-      color: "from-accent-secondary/80"
+      title: "Professional Training",
+      desc: "Interpreters get objective assessment for certification",
     },
     {
       image: "/images/applications/research.png",
-      title: "Linguistic Research",
-      desc: "Standardized data collection for sign language studies and computational linguistics.",
-      color: "from-accent-primary/80"
+      title: "Research Applications",
+      desc: "Standardized data collection for linguistic studies",
+    },
+    {
+      image: "/images/applications/learning.jpg",
+      title: "Self-Paced Study",
+      desc: "Learn ASL anywhere with personalized guidance",
+    },
+    {
+      image: "/images/applications/project.png",
+      title: "Educational Programs",
+      desc: "Schools integrate ASL into curriculum effectively",
     },
   ];
 
@@ -881,7 +917,7 @@ function ApplicationsSection() {
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {applications.map((app, i) => (
             <motion.div
               key={i}
@@ -897,8 +933,7 @@ function ApplicationsSection() {
               />
 
               {/* Gradient Overlay */}
-              <div className={`absolute inset-0 bg-gradient-to-t ${app.color} via-transparent to-transparent opacity-90`} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
               {/* Content */}
               <div className="absolute inset-0 p-6 flex flex-col justify-end">
@@ -1073,11 +1108,10 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-3xl">🤟</span>
-              <span className="font-display text-2xl">SignSense</span>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="font-display text-3xl text-white">SignSense</span>
             </div>
-            <p className="text-white/60 max-w-md">
+            <p className="text-white/60 max-w-md leading-relaxed">
               AI-powered sign language learning platform using four specialized neural networks
               for real-time, component-specific feedback.
             </p>
