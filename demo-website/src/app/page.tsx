@@ -298,91 +298,144 @@ function HeroSection() {
             </motion.div>
           </div>
 
-          {/* Right Visual - Real Hand with Skeleton Overlay */}
+          {/* Right Visual - Real Hands with Skeleton Overlay */}
           <motion.div
             className="relative"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.4 }}
           >
-            <div className="relative w-full aspect-[4/5] max-w-md mx-auto">
+            <div className="relative w-full aspect-[4/3] max-w-xl mx-auto">
               {/* Glowing background */}
-              <div className="absolute inset-0 bg-gradient-radial from-accent-primary/15 via-accent-secondary/5 to-transparent rounded-3xl" />
+              <div className="absolute inset-0 bg-gradient-radial from-accent-primary/10 via-transparent to-transparent rounded-3xl" />
 
-              {/* Human hand image */}
+              {/* Human hands image */}
               <motion.img
                 src="/images/human-hand.jpg"
-                alt="Human hand with skeleton overlay"
+                alt="Both hands with skeleton tracking overlay"
                 className="absolute inset-0 w-full h-full object-contain rounded-2xl"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1, delay: 0.5 }}
               />
 
-              {/* Skeleton overlay with interactive joints */}
+              {/* Skeleton overlay for BOTH hands - viewBox matches image aspect ratio */}
               <svg
-                viewBox="0 0 400 500"
+                viewBox="0 0 800 600"
                 className="absolute inset-0 w-full h-full"
                 style={{ pointerEvents: "none" }}
+                preserveAspectRatio="xMidYMid meet"
               >
-                {/* Wrist */}
-                <SkeletonJoint cx={200} cy={420} label="Wrist" anatomy="Carpal bones - connects hand to forearm" delay={0.8} isTip={false} />
+                {/* ========== LEFT HAND (Palm view) ========== */}
+                {/* Left Wrist */}
+                <SkeletonJoint cx={185} cy={545} label="L. Wrist" anatomy="Left carpal bones" delay={0.8} isTip={false} />
 
-                {/* Thumb */}
-                <SkeletonBone x1={200} y1={420} x2={155} y2={385} delay={0.9} />
-                <SkeletonBone x1={155} y1={385} x2={120} y2={345} delay={1.0} />
-                <SkeletonBone x1={120} y1={345} x2={95} y2={305} delay={1.1} />
-                <SkeletonJoint cx={155} cy={385} label="CMC" anatomy="Carpometacarpal joint - thumb base" delay={1.0} isTip={false} />
-                <SkeletonJoint cx={120} cy={345} label="MCP" anatomy="Metacarpophalangeal - thumb knuckle" delay={1.1} isTip={false} />
-                <SkeletonJoint cx={95} cy={305} label="IP" anatomy="Interphalangeal - thumb tip joint" delay={1.2} isTip={true} />
+                {/* Left Thumb (on right side of left palm) */}
+                <SkeletonBone x1={185} y1={545} x2={245} y2={485} delay={0.9} />
+                <SkeletonBone x1={245} y1={485} x2={280} y2={430} delay={1.0} />
+                <SkeletonBone x1={280} y1={430} x2={300} y2={385} delay={1.1} />
+                <SkeletonJoint cx={245} cy={485} label="CMC" anatomy="Thumb base joint" delay={1.0} isTip={false} />
+                <SkeletonJoint cx={280} cy={430} label="MCP" anatomy="Thumb knuckle" delay={1.1} isTip={false} />
+                <SkeletonJoint cx={300} cy={385} label="Tip" anatomy="Thumb tip" delay={1.2} isTip={true} />
 
-                {/* Index finger */}
-                <SkeletonBone x1={200} y1={420} x2={180} y2={330} delay={1.0} />
-                <SkeletonBone x1={180} y1={330} x2={170} y2={250} delay={1.1} />
-                <SkeletonBone x1={170} y1={250} x2={165} y2={185} delay={1.2} />
-                <SkeletonBone x1={165} y1={185} x2={162} y2={130} delay={1.3} />
-                <SkeletonJoint cx={180} cy={330} label="MCP" anatomy="Metacarpophalangeal - index knuckle" delay={1.1} isTip={false} />
-                <SkeletonJoint cx={170} cy={250} label="PIP" anatomy="Proximal interphalangeal - first joint" delay={1.2} isTip={false} />
-                <SkeletonJoint cx={165} cy={185} label="DIP" anatomy="Distal interphalangeal - second joint" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={162} cy={130} label="Tip" anatomy="Index fingertip - precision grip" delay={1.4} isTip={true} />
+                {/* Left Index */}
+                <SkeletonBone x1={185} y1={545} x2={155} y2={420} delay={1.0} />
+                <SkeletonBone x1={155} y1={420} x2={135} y2={310} delay={1.1} />
+                <SkeletonBone x1={135} y1={310} x2={120} y2={210} delay={1.2} />
+                <SkeletonBone x1={120} y1={210} x2={110} y2={125} delay={1.3} />
+                <SkeletonJoint cx={155} cy={420} label="MCP" anatomy="Index knuckle" delay={1.1} isTip={false} />
+                <SkeletonJoint cx={135} cy={310} label="PIP" anatomy="First joint" delay={1.2} isTip={false} />
+                <SkeletonJoint cx={120} cy={210} label="DIP" anatomy="Second joint" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={110} cy={125} label="Tip" anatomy="Index tip" delay={1.4} isTip={true} />
 
-                {/* Middle finger */}
-                <SkeletonBone x1={200} y1={420} x2={210} y2={320} delay={1.1} />
-                <SkeletonBone x1={210} y1={320} x2={218} y2={235} delay={1.2} />
-                <SkeletonBone x1={218} y1={235} x2={222} y2={165} delay={1.3} />
-                <SkeletonBone x1={222} y1={165} x2={225} y2={105} delay={1.4} />
-                <SkeletonJoint cx={210} cy={320} label="MCP" anatomy="Metacarpophalangeal - middle knuckle" delay={1.2} isTip={false} />
-                <SkeletonJoint cx={218} cy={235} label="PIP" anatomy="Proximal interphalangeal - first joint" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={222} cy={165} label="DIP" anatomy="Distal interphalangeal - second joint" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={225} cy={105} label="Tip" anatomy="Middle fingertip - longest finger" delay={1.5} isTip={true} />
+                {/* Left Middle */}
+                <SkeletonBone x1={185} y1={545} x2={180} y2={410} delay={1.1} />
+                <SkeletonBone x1={180} y1={410} x2={175} y2={295} delay={1.2} />
+                <SkeletonBone x1={175} y1={295} x2={172} y2={190} delay={1.3} />
+                <SkeletonBone x1={172} y1={190} x2={170} y2={95} delay={1.4} />
+                <SkeletonJoint cx={180} cy={410} label="MCP" anatomy="Middle knuckle" delay={1.2} isTip={false} />
+                <SkeletonJoint cx={175} cy={295} label="PIP" anatomy="First joint" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={172} cy={190} label="DIP" anatomy="Second joint" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={170} cy={95} label="Tip" anatomy="Middle tip" delay={1.5} isTip={true} />
 
-                {/* Ring finger */}
-                <SkeletonBone x1={200} y1={420} x2={240} y2={325} delay={1.2} />
-                <SkeletonBone x1={240} y1={325} x2={262} y2={248} delay={1.3} />
-                <SkeletonBone x1={262} y1={248} x2={278} y2={185} delay={1.4} />
-                <SkeletonBone x1={278} y1={185} x2={290} y2={135} delay={1.5} />
-                <SkeletonJoint cx={240} cy={325} label="MCP" anatomy="Metacarpophalangeal - ring knuckle" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={262} cy={248} label="PIP" anatomy="Proximal interphalangeal - first joint" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={278} cy={185} label="DIP" anatomy="Distal interphalangeal - second joint" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={290} cy={135} label="Tip" anatomy="Ring fingertip" delay={1.6} isTip={true} />
+                {/* Left Ring */}
+                <SkeletonBone x1={185} y1={545} x2={210} y2={415} delay={1.2} />
+                <SkeletonBone x1={210} y1={415} x2={225} y2={305} delay={1.3} />
+                <SkeletonBone x1={225} y1={305} x2={235} y2={205} delay={1.4} />
+                <SkeletonBone x1={235} y1={205} x2={242} y2={115} delay={1.5} />
+                <SkeletonJoint cx={210} cy={415} label="MCP" anatomy="Ring knuckle" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={225} cy={305} label="PIP" anatomy="First joint" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={235} cy={205} label="DIP" anatomy="Second joint" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={242} cy={115} label="Tip" anatomy="Ring tip" delay={1.6} isTip={true} />
 
-                {/* Pinky */}
-                <SkeletonBone x1={200} y1={420} x2={265} y2={345} delay={1.3} />
-                <SkeletonBone x1={265} y1={345} x2={305} y2={290} delay={1.4} />
-                <SkeletonBone x1={305} y1={290} x2={335} y2={245} delay={1.5} />
-                <SkeletonBone x1={335} y1={245} x2={358} y2={205} delay={1.6} />
-                <SkeletonJoint cx={265} cy={345} label="MCP" anatomy="Metacarpophalangeal - pinky knuckle" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={305} cy={290} label="PIP" anatomy="Proximal interphalangeal - first joint" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={335} cy={245} label="DIP" anatomy="Distal interphalangeal - second joint" delay={1.6} isTip={false} />
-                <SkeletonJoint cx={358} cy={205} label="Tip" anatomy="Pinky fingertip - smallest digit" delay={1.7} isTip={true} />
+                {/* Left Pinky */}
+                <SkeletonBone x1={185} y1={545} x2={245} y2={430} delay={1.3} />
+                <SkeletonBone x1={245} y1={430} x2={275} y2={340} delay={1.4} />
+                <SkeletonBone x1={275} y1={340} x2={295} y2={260} delay={1.5} />
+                <SkeletonBone x1={295} y1={260} x2={310} y2={190} delay={1.6} />
+                <SkeletonJoint cx={245} cy={430} label="MCP" anatomy="Pinky knuckle" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={275} cy={340} label="PIP" anatomy="First joint" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={295} cy={260} label="DIP" anatomy="Second joint" delay={1.6} isTip={false} />
+                <SkeletonJoint cx={310} cy={190} label="Tip" anatomy="Pinky tip" delay={1.7} isTip={true} />
+
+                {/* ========== RIGHT HAND (Back view) ========== */}
+                {/* Right Wrist */}
+                <SkeletonJoint cx={605} cy={555} label="R. Wrist" anatomy="Right carpal bones" delay={1.0} isTip={false} />
+
+                {/* Right Thumb (on left side of right hand back) */}
+                <SkeletonBone x1={605} y1={555} x2={530} y2={490} delay={1.1} />
+                <SkeletonBone x1={530} y1={490} x2={480} y2={435} delay={1.2} />
+                <SkeletonBone x1={480} y1={435} x2={445} y2={390} delay={1.3} />
+                <SkeletonJoint cx={530} cy={490} label="CMC" anatomy="Thumb base" delay={1.2} isTip={false} />
+                <SkeletonJoint cx={480} cy={435} label="MCP" anatomy="Thumb knuckle" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={445} cy={390} label="Tip" anatomy="Thumb tip" delay={1.4} isTip={true} />
+
+                {/* Right Index */}
+                <SkeletonBone x1={605} y1={555} x2={555} y2={420} delay={1.2} />
+                <SkeletonBone x1={555} y1={420} x2={525} y2={305} delay={1.3} />
+                <SkeletonBone x1={525} y1={305} x2={505} y2={205} delay={1.4} />
+                <SkeletonBone x1={505} y1={205} x2={490} y2={115} delay={1.5} />
+                <SkeletonJoint cx={555} cy={420} label="MCP" anatomy="Index knuckle" delay={1.3} isTip={false} />
+                <SkeletonJoint cx={525} cy={305} label="PIP" anatomy="First joint" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={505} cy={205} label="DIP" anatomy="Second joint" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={490} cy={115} label="Tip" anatomy="Index tip" delay={1.6} isTip={true} />
+
+                {/* Right Middle */}
+                <SkeletonBone x1={605} y1={555} x2={600} y2={410} delay={1.3} />
+                <SkeletonBone x1={600} y1={410} x2={595} y2={290} delay={1.4} />
+                <SkeletonBone x1={595} y1={290} x2={592} y2={185} delay={1.5} />
+                <SkeletonBone x1={592} y1={185} x2={590} y2={90} delay={1.6} />
+                <SkeletonJoint cx={600} cy={410} label="MCP" anatomy="Middle knuckle" delay={1.4} isTip={false} />
+                <SkeletonJoint cx={595} cy={290} label="PIP" anatomy="First joint" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={592} cy={185} label="DIP" anatomy="Second joint" delay={1.6} isTip={false} />
+                <SkeletonJoint cx={590} cy={90} label="Tip" anatomy="Middle tip" delay={1.7} isTip={true} />
+
+                {/* Right Ring */}
+                <SkeletonBone x1={605} y1={555} x2={645} y2={415} delay={1.4} />
+                <SkeletonBone x1={645} y1={415} x2={665} y2={300} delay={1.5} />
+                <SkeletonBone x1={665} y1={300} x2={680} y2={200} delay={1.6} />
+                <SkeletonBone x1={680} y1={200} x2={690} y2={115} delay={1.7} />
+                <SkeletonJoint cx={645} cy={415} label="MCP" anatomy="Ring knuckle" delay={1.5} isTip={false} />
+                <SkeletonJoint cx={665} cy={300} label="PIP" anatomy="First joint" delay={1.6} isTip={false} />
+                <SkeletonJoint cx={680} cy={200} label="DIP" anatomy="Second joint" delay={1.7} isTip={false} />
+                <SkeletonJoint cx={690} cy={115} label="Tip" anatomy="Ring tip" delay={1.8} isTip={true} />
+
+                {/* Right Pinky */}
+                <SkeletonBone x1={605} y1={555} x2={680} y2={435} delay={1.5} />
+                <SkeletonBone x1={680} y1={435} x2={720} y2={350} delay={1.6} />
+                <SkeletonBone x1={720} y1={350} x2={750} y2={280} delay={1.7} />
+                <SkeletonBone x1={750} y1={280} x2={772} y2={220} delay={1.8} />
+                <SkeletonJoint cx={680} cy={435} label="MCP" anatomy="Pinky knuckle" delay={1.6} isTip={false} />
+                <SkeletonJoint cx={720} cy={350} label="PIP" anatomy="First joint" delay={1.7} isTip={false} />
+                <SkeletonJoint cx={750} cy={280} label="DIP" anatomy="Second joint" delay={1.8} isTip={false} />
+                <SkeletonJoint cx={772} cy={220} label="Tip" anatomy="Pinky tip" delay={1.9} isTip={true} />
               </svg>
 
               {/* Floating labels */}
               {[
-                { label: "Handshape", x: "5%", y: "15%", delay: 2 },
-                { label: "Location", x: "65%", y: "10%", delay: 2.2 },
-                { label: "Movement", x: "75%", y: "55%", delay: 2.4 },
-                { label: "Orientation", x: "0%", y: "65%", delay: 2.6 },
+                { label: "Palm View", x: "8%", y: "8%", delay: 2 },
+                { label: "Back View", x: "60%", y: "8%", delay: 2.2 },
+                { label: "42 hand landmarks", x: "35%", y: "92%", delay: 2.4 },
               ].map((item, i) => (
                 <motion.div
                   key={i}
@@ -442,20 +495,23 @@ function ProblemSection() {
 
             <motion.div variants={fadeUpVariants} className="space-y-6">
               {[
-                { icon: "🎓", title: "Limited Access", desc: "Qualified ASL instructors are scarce, especially outside urban areas" },
-                { icon: "🔇", title: "No Real-Time Feedback", desc: "Books and videos can't tell you if you're signing correctly" },
-                { icon: "❌", title: "Binary Assessment", desc: "Traditional apps only say 'right' or 'wrong' — not what to fix" },
+                { num: "1", color: "bg-accent-tertiary", title: "Limited Access", desc: "Qualified ASL instructors are scarce, especially outside urban areas" },
+                { num: "2", color: "bg-accent-secondary", title: "No Real-Time Feedback", desc: "Books and videos can't tell you if you're signing correctly" },
+                { num: "3", color: "bg-text-tertiary", title: "Binary Assessment", desc: "Traditional apps only say 'right' or 'wrong' — not what to fix" },
               ].map((item, i) => (
                 <motion.div
                   key={i}
-                  className="flex gap-4 p-4 bg-white rounded-xl shadow-sm"
+                  className="flex gap-4 p-5 bg-white rounded-xl shadow-sm border border-bg-tertiary"
                   variants={fadeUpVariants}
-                  whileHover={{ x: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
+                  whileHover={{ x: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.08)", borderColor: "rgba(45, 90, 74, 0.2)" }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <span className="text-3xl">{item.icon}</span>
+                  <div className={`w-12 h-12 ${item.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                    <span className="text-white font-bold text-lg">{item.num}</span>
+                  </div>
                   <div>
-                    <h4 className="font-semibold text-text-primary">{item.title}</h4>
-                    <p className="text-text-secondary">{item.desc}</p>
+                    <h4 className="font-semibold text-text-primary text-lg">{item.title}</h4>
+                    <p className="text-text-secondary mt-1">{item.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -464,6 +520,19 @@ function ProblemSection() {
 
           {/* Comparison Visual */}
           <motion.div variants={scaleUpVariants} className="relative">
+            {/* ASL Learning Image */}
+            <motion.div
+              className="mb-6 rounded-2xl overflow-hidden shadow-lg"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <img
+                src="/images/asl-learning.jpg"
+                alt="People learning sign language"
+                className="w-full h-48 object-cover"
+              />
+            </motion.div>
+
             <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
               <h3 className="font-display text-2xl text-center text-text-primary mb-8">
                 The SignSense Difference
@@ -473,11 +542,19 @@ function ProblemSection() {
                 {/* Traditional */}
                 <div className="space-y-4">
                   <div className="text-center p-4 bg-red-50 rounded-xl">
-                    <span className="text-4xl">📱</span>
-                    <h4 className="font-semibold mt-2 text-text-primary">Traditional Apps</h4>
+                    <div className="w-12 h-12 mx-auto bg-accent-tertiary/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-accent-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-semibold mt-3 text-text-primary">Traditional Apps</h4>
                   </div>
                   <div className="p-4 bg-red-100/50 rounded-lg text-center">
-                    <span className="text-4xl text-error">✗</span>
+                    <div className="w-10 h-10 mx-auto bg-error/20 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
                     <p className="text-error font-semibold mt-2">Wrong</p>
                     <p className="text-sm text-text-secondary mt-1">No explanation why</p>
                   </div>
@@ -712,7 +789,11 @@ function ArchitectureSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="text-2xl">📹</span>
+              <div className="w-10 h-10 mx-auto bg-accent-primary/20 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </div>
               <p className="font-medium text-text-primary mt-2">Input: 30 frames × 75 landmarks × 3 coordinates</p>
             </motion.div>
 
@@ -779,7 +860,11 @@ function ArchitectureSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 1.1 }}
             >
-              <span className="text-2xl">✨</span>
+              <div className="w-10 h-10 mx-auto bg-accent-primary rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
               <p className="font-medium text-accent-primary mt-2">Output: Sign + Component Scores + Actionable Feedback</p>
             </motion.div>
           </div>
@@ -975,16 +1060,6 @@ function ApplicationsSection() {
       title: "Research Applications",
       desc: "Standardized data collection for linguistic studies",
     },
-    {
-      image: "/images/applications/learning.jpg",
-      title: "Self-Paced Study",
-      desc: "Learn ASL anywhere with personalized guidance",
-    },
-    {
-      image: "/images/applications/project.png",
-      title: "Educational Programs",
-      desc: "Schools integrate ASL into curriculum effectively",
-    },
   ];
 
   return (
@@ -1012,13 +1087,15 @@ function ApplicationsSection() {
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {applications.map((app, i) => (
             <motion.div
               key={i}
               variants={fadeUpVariants}
-              className="group relative rounded-2xl overflow-hidden shadow-lg card-hover aspect-[4/3]"
+              className="group relative rounded-2xl overflow-hidden shadow-lg card-hover aspect-[3/2]"
               custom={i}
+              whileHover={{ y: -8 }}
+              transition={{ duration: 0.3 }}
             >
               {/* Background Image */}
               <img
@@ -1068,50 +1145,74 @@ function DemoSection() {
           </motion.h2>
         </div>
 
-        {/* Video placeholder */}
+        {/* Video placeholder with ASL preview */}
         <motion.div
           variants={scaleUpVariants}
           className="max-w-4xl mx-auto"
         >
-          <div className="relative aspect-video bg-text-primary rounded-3xl overflow-hidden shadow-2xl">
-            {/* Placeholder content */}
+          <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl">
+            {/* Background image */}
+            <img
+              src="/images/asl-examples.png"
+              alt="ASL sign examples grid"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            {/* Dark overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+
+            {/* Play button content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
               <motion.div
-                className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center mb-6 cursor-pointer"
-                whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,0.3)" }}
+                className="w-24 h-24 rounded-full bg-accent-primary/90 flex items-center justify-center mb-6 cursor-pointer shadow-xl"
+                whileHover={{ scale: 1.1, boxShadow: "0 25px 50px rgba(45, 90, 74, 0.4)" }}
                 whileTap={{ scale: 0.95 }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
               >
                 <svg className="w-12 h-12 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </motion.div>
-              <p className="text-xl font-medium">Demo Video</p>
-              <p className="text-white/60 mt-2">Coming Soon</p>
+              <p className="text-2xl font-display font-medium">Watch Demo</p>
+              <p className="text-white/70 mt-2">See SignSense in action</p>
             </div>
 
             {/* Decorative elements */}
             <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center text-white/60 text-sm">
               <span>0:00</span>
-              <div className="flex-1 mx-4 h-1 bg-white/20 rounded-full">
-                <div className="w-0 h-full bg-white rounded-full" />
+              <div className="flex-1 mx-4 h-1 bg-white/20 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-accent-primary rounded-full"
+                  initial={{ width: "0%" }}
+                  whileInView={{ width: "30%" }}
+                  transition={{ duration: 2, delay: 0.5 }}
+                  viewport={{ once: true }}
+                />
               </div>
               <span>2:30</span>
             </div>
           </div>
 
-          {/* Video chapters */}
+          {/* Video chapters with better styling */}
           <motion.div
             variants={fadeUpVariants}
-            className="mt-8 flex flex-wrap justify-center gap-4"
+            className="mt-8 flex flex-wrap justify-center gap-3"
           >
-            {["Introduction", "Practice Mode", "Component Feedback", "Error Correction", "Progress Tracking"].map((chapter, i) => (
-              <motion.span
+            {[
+              { name: "Introduction", time: "0:00" },
+              { name: "Practice Mode", time: "0:30" },
+              { name: "Component Feedback", time: "1:00" },
+              { name: "Error Correction", time: "1:45" },
+              { name: "Progress Tracking", time: "2:15" },
+            ].map((chapter, i) => (
+              <motion.div
                 key={i}
-                className="px-4 py-2 bg-bg-secondary rounded-full text-text-secondary text-sm hover:bg-accent-primary/10 hover:text-accent-primary cursor-pointer transition-colors"
-                whileHover={{ scale: 1.05 }}
+                className="px-4 py-2 bg-white rounded-full shadow-sm border border-bg-tertiary text-text-secondary text-sm hover:bg-accent-primary hover:text-white hover:border-accent-primary cursor-pointer transition-all flex items-center gap-2"
+                whileHover={{ scale: 1.05, y: -2 }}
               >
-                {chapter}
-              </motion.span>
+                <span className="text-xs text-text-tertiary">{chapter.time}</span>
+                <span>{chapter.name}</span>
+              </motion.div>
             ))}
           </motion.div>
         </motion.div>
@@ -1159,35 +1260,48 @@ function TechSpecsSection() {
           {/* Privacy callout */}
           <motion.div variants={fadeUpVariants}>
             <h3 className="font-display text-h2 text-text-primary mb-8">Privacy by Design</h3>
-            <div className="bg-accent-primary text-white rounded-2xl p-8 space-y-6">
-              <div className="flex items-start gap-4">
-                <span className="text-3xl">🔒</span>
-                <div>
-                  <h4 className="font-semibold text-lg">Skeleton-Only Processing</h4>
-                  <p className="text-white/80 mt-1">No video is ever stored — only skeleton landmarks</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="text-3xl">👤</span>
-                <div>
-                  <h4 className="font-semibold text-lg">No Facial Recognition</h4>
-                  <p className="text-white/80 mt-1">We don't need or use face data for recognition</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="text-3xl">💻</span>
-                <div>
-                  <h4 className="font-semibold text-lg">Runs Locally</h4>
-                  <p className="text-white/80 mt-1">All processing happens on your device — no cloud required</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="text-3xl">⚡</span>
-                <div>
-                  <h4 className="font-semibold text-lg">CPU-Only Capable</h4>
-                  <p className="text-white/80 mt-1">No GPU needed — works on any modern computer</p>
-                </div>
-              </div>
+            <div className="bg-accent-primary text-white rounded-2xl p-8 space-y-5">
+              {[
+                {
+                  icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />,
+                  title: "Skeleton-Only Processing",
+                  desc: "No video is ever stored — only skeleton landmarks"
+                },
+                {
+                  icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
+                  title: "No Facial Recognition",
+                  desc: "We don't need or use face data for recognition"
+                },
+                {
+                  icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />,
+                  title: "Runs Locally",
+                  desc: "All processing happens on your device — no cloud required"
+                },
+                {
+                  icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />,
+                  title: "CPU-Only Capable",
+                  desc: "No GPU needed — works on any modern computer"
+                },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  className="flex items-start gap-4"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {item.icon}
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-lg">{item.title}</h4>
+                    <p className="text-white/80 mt-1">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         </div>
