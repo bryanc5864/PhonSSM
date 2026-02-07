@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SignSense - AI-Powered ASL Learning</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -64,6 +65,11 @@
             height: 4px;
             background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
             border-radius: 2px;
+        }
+
+        .header-logo {
+            height: 50px;
+            margin-bottom: 12px;
         }
 
         header h1 {
@@ -876,7 +882,7 @@
 <body>
     <div class="app-container">
         <header>
-            <h1>SignSense</h1>
+            <img src="/static/logo.svg" alt="SignSense" class="header-logo">
             <p>Learn American Sign Language with Real-Time AI Feedback</p>
         </header>
 

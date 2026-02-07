@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   description: "Learn American Sign Language with real-time AI feedback. Four specialized neural networks work together to give you component-specific corrections and accelerate your learning.",
   keywords: ["sign language", "ASL", "AI", "machine learning", "accessibility", "education"],
   authors: [{ name: "SignSense Team" }],
+  icons: {
+    icon: "/favicon.svg",
+  },
   openGraph: {
     title: "SignSense | AI-Powered Sign Language Learning",
     description: "Learn ASL with real-time AI feedback from four specialized neural networks.",

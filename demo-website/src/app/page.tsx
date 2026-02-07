@@ -91,8 +91,7 @@ function Navigation() {
           className="flex items-center gap-2"
           whileHover={{ scale: 1.02 }}
         >
-          <span className="text-3xl">🤟</span>
-          <span className="font-display text-2xl text-accent-primary font-semibold">SignSense</span>
+          <img src="/logo.svg" alt="SignSense" className="h-10" />
         </motion.div>
         <div className="hidden md:flex items-center gap-8">
           {["Technology", "Results", "Applications", "Demo"].map((item) => (

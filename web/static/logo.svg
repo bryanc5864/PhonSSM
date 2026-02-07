@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- SignSense Logo - Primary Horizontal -->
+
+  <defs>
+    <linearGradient id="primaryGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2D5A4A"/>
+      <stop offset="100%" stop-color="#4A8B7A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hand Icon -->
+  <g transform="translate(0, 0) scale(0.7)">
+    <!-- Palm -->
+    <circle cx="40" cy="48" r="18" fill="url(#primaryGrad)"/>
+    <!-- Index finger -->
+    <rect x="28" y="16" width="8" height="28" rx="4" fill="url(#primaryGrad)"/>
+    <!-- Middle finger -->
+    <rect x="38" y="12" width="8" height="32" rx="4" fill="url(#primaryGrad)"/>
+    <!-- Ring finger -->
+    <rect x="48" y="24" width="7" height="20" rx="3.5" fill="url(#primaryGrad)" opacity="0.7"/>
+    <!-- Thumb -->
+    <rect x="16" y="28" width="6" height="20" rx="3" fill="url(#primaryGrad)" transform="rotate(-20 16 28)"/>
+    <!-- Pinky -->
+    <rect x="56" y="38" width="6" height="18" rx="3" fill="url(#primaryGrad)" transform="rotate(30 56 38)"/>
+    <!-- Knuckle highlights -->
+    <circle cx="32" cy="26" r="2.5" fill="#E8B86D"/>
+    <circle cx="42" cy="22" r="2.5" fill="#E8B86D"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="58" y="42" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="28" font-weight="600" letter-spacing="-0.02em">
+    <tspan fill="#1A1614">Sign</tspan><tspan fill="#2D5A4A">Sense</tspan>
+  </text>
+</svg>
