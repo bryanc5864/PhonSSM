@@ -1,0 +1,9 @@
+{
+  "dataset": "ASL_Citizen",
+  "num_classes": 2731,
+  "train_samples": 66719,
+  "val_samples": 8340,
+  "batch_size": 128,
+  "learning_rate": 0.0003,
+  "epochs": 100
+}

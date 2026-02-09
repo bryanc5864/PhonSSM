@@ -229,6 +229,20 @@ img[data-loading="true"] {
   outline-offset: 2px;
 }
 
+/* Video tile styles - optimized for performance */
+.video-tile {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+  contain: layout style paint;
+}
+
+.video-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,

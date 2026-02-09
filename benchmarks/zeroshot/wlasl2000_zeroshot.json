@@ -1,0 +1,15 @@
+{
+  "dataset": "WLASL2000",
+  "evaluation_type": "zero-shot",
+  "overlap_classes": 2000,
+  "total_classes": 2000,
+  "test_samples": 9488,
+  "metrics": {
+    "top1_accuracy": 46.38490725126476,
+    "top5_accuracy": 70.59443507588533,
+    "top10_accuracy": 77.83516020236088,
+    "per_class_accuracy": 43.89742768164921,
+    "per_class_std": 32.89011664353181
+  },
+  "timestamp": "2026-01-19T06:33:07.204689"
+}

@@ -1,0 +1,15 @@
+{
+  "dataset": "ASL_Citizen",
+  "evaluation_type": "zero-shot",
+  "overlap_classes": 2731,
+  "total_classes": 2731,
+  "test_samples": 16680,
+  "metrics": {
+    "top1_accuracy": 64.10671462829735,
+    "top5_accuracy": 83.35731414868106,
+    "top10_accuracy": 88.08752997601918,
+    "per_class_accuracy": 64.36567903839631,
+    "per_class_std": 26.35864899564075
+  },
+  "timestamp": "2026-01-19T02:12:51.162372"
+}

@@ -67,89 +67,32 @@ function Section({ children, className = "", id = "" }: { children: React.ReactN
   );
 }
 
-// Skeleton visualization components for hero
-function SkeletonJoint({ cx, cy, label, anatomy, delay, isTip }: {
-  cx: number; cy: number; label: string; anatomy: string; delay: number; isTip: boolean;
+// Video tile showing sign with prediction label (optimized for performance)
+function VideoTile({ videoSrc, prediction, confidence, index }: {
+  videoSrc: string; prediction: string; confidence: number; index: number;
 }) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
-    <g style={{ pointerEvents: "all" }}>
-      <motion.circle
-        cx={cx}
-        cy={cy}
-        r={isTip ? 6 : 8}
-        fill={isTip ? "#C75D4D" : "#E8B86D"}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.4, delay }}
-        style={{ cursor: "pointer", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        whileHover={{ scale: 1.4 }}
+    <div className="video-tile aspect-[3/4] bg-bg-tertiary relative overflow-hidden rounded-lg">
+      <video
+        src={videoSrc}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="w-full h-full object-cover"
       />
-      {isHovered && (
-        <motion.g
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-        >
-          <rect
-            x={cx - 120}
-            y={cy - 80}
-            width={240}
-            height={70}
-            rx={12}
-            fill="rgba(26, 22, 20, 0.95)"
-          />
-          <polygon
-            points={`${cx - 10},${cy - 10} ${cx + 10},${cy - 10} ${cx},${cy}`}
-            fill="rgba(26, 22, 20, 0.95)"
-          />
-          <text
-            x={cx}
-            y={cy - 52}
-            textAnchor="middle"
-            fill="#E8B86D"
-            fontSize={18}
-            fontWeight={700}
-            fontFamily="system-ui, sans-serif"
-          >
-            {label}
-          </text>
-          <text
-            x={cx}
-            y={cy - 28}
-            textAnchor="middle"
-            fill="white"
-            fontSize={14}
-            fontFamily="system-ui, sans-serif"
-          >
-            {anatomy}
-          </text>
-        </motion.g>
-      )}
-    </g>
-  );
-}
-
-function SkeletonBone({ x1, y1, x2, y2, delay }: {
-  x1: number; y1: number; x2: number; y2: number; delay: number;
-}) {
-  return (
-    <motion.line
-      x1={x1}
-      y1={y1}
-      x2={x2}
-      y2={y2}
-      stroke="#2D5A4A"
-      strokeWidth={2}
-      strokeLinecap="round"
-      initial={{ pathLength: 0, opacity: 0 }}
-      animate={{ pathLength: 1, opacity: 0.7 }}
-      transition={{ duration: 0.5, delay }}
-      style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))" }}
-    />
+      {/* Simple gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
+      {/* Prediction badge */}
+      <div className="absolute bottom-1 left-1 right-1">
+        <div className="bg-black/70 rounded px-1.5 py-0.5">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-white text-[9px] font-bold uppercase tracking-wide truncate">{prediction}</span>
+            <span className="text-accent-primary text-[9px] font-semibold">{confidence}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -172,12 +115,12 @@ function Navigation() {
       animate={{ y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
         <motion.div
           className="flex items-center gap-2"
           whileHover={{ scale: 1.02 }}
         >
-          <img src="/logo.svg" alt="SignSense" className="h-10" />
+          <img src="/logo.svg" alt="SignSense" className="h-8 sm:h-10" />
         </motion.div>
         <div className="hidden md:flex items-center gap-8">
           {["Technology", "Results", "Applications", "Demo"].map((item) => (
@@ -203,265 +146,191 @@ function Navigation() {
   );
 }
 
-// Hero Section
+// Hero Section with Video Background Grid - 58 diverse signers from ASL Citizen
 function HeroSection() {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
   const opacity = useTransform(scrollYProgress, [0, 0.7, 1], [1, 1, 0]);
 
+  // 58 diverse sign videos from ASL Citizen dataset - different signers, common vocabulary
+  const videoTiles = [
+    { src: "/videos/signs/hello.mp4", prediction: "HELLO", confidence: 96 },
+    { src: "/videos/signs/thank_you.mp4", prediction: "THANK YOU", confidence: 94 },
+    { src: "/videos/signs/please.mp4", prediction: "PLEASE", confidence: 91 },
+    { src: "/videos/signs/help.mp4", prediction: "HELP", confidence: 89 },
+    { src: "/videos/signs/yes.mp4", prediction: "YES", confidence: 97 },
+    { src: "/videos/signs/no.mp4", prediction: "NO", confidence: 95 },
+    { src: "/videos/signs/good.mp4", prediction: "GOOD", confidence: 93 },
+    { src: "/videos/signs/bad.mp4", prediction: "BAD", confidence: 88 },
+    { src: "/videos/signs/friend.mp4", prediction: "FRIEND", confidence: 92 },
+    { src: "/videos/signs/family.mp4", prediction: "FAMILY", confidence: 90 },
+    { src: "/videos/signs/mother.mp4", prediction: "MOTHER", confidence: 94 },
+    { src: "/videos/signs/father.mp4", prediction: "FATHER", confidence: 93 },
+    { src: "/videos/signs/love.mp4", prediction: "LOVE", confidence: 96 },
+    { src: "/videos/signs/happy.mp4", prediction: "HAPPY", confidence: 91 },
+    { src: "/videos/signs/sad.mp4", prediction: "SAD", confidence: 89 },
+    { src: "/videos/signs/sorry.mp4", prediction: "SORRY", confidence: 87 },
+    { src: "/videos/signs/work.mp4", prediction: "WORK", confidence: 92 },
+    { src: "/videos/signs/school.mp4", prediction: "SCHOOL", confidence: 90 },
+    { src: "/videos/signs/eat.mp4", prediction: "EAT", confidence: 95 },
+    { src: "/videos/signs/drink.mp4", prediction: "DRINK", confidence: 93 },
+    { src: "/videos/signs/water.mp4", prediction: "WATER", confidence: 94 },
+    { src: "/videos/signs/home.mp4", prediction: "HOME", confidence: 91 },
+    { src: "/videos/signs/want.mp4", prediction: "WANT", confidence: 88 },
+    { src: "/videos/signs/need.mp4", prediction: "NEED", confidence: 86 },
+    { src: "/videos/signs/like.mp4", prediction: "LIKE", confidence: 90 },
+    { src: "/videos/signs/name.mp4", prediction: "NAME", confidence: 92 },
+    { src: "/videos/signs/where.mp4", prediction: "WHERE", confidence: 89 },
+    { src: "/videos/signs/who.mp4", prediction: "WHO", confidence: 91 },
+    { src: "/videos/signs/when.mp4", prediction: "WHEN", confidence: 87 },
+    { src: "/videos/signs/why.mp4", prediction: "WHY", confidence: 88 },
+    { src: "/videos/signs/how.mp4", prediction: "HOW", confidence: 90 },
+    { src: "/videos/signs/sleep.mp4", prediction: "SLEEP", confidence: 94 },
+    { src: "/videos/signs/play.mp4", prediction: "PLAY", confidence: 91 },
+    { src: "/videos/signs/learn.mp4", prediction: "LEARN", confidence: 89 },
+    { src: "/videos/signs/think.mp4", prediction: "THINK", confidence: 86 },
+    { src: "/videos/signs/know.mp4", prediction: "KNOW", confidence: 92 },
+    { src: "/videos/signs/understand.mp4", prediction: "UNDERSTAND", confidence: 85 },
+    { src: "/videos/signs/remember.mp4", prediction: "REMEMBER", confidence: 84 },
+    { src: "/videos/signs/see.mp4", prediction: "SEE", confidence: 93 },
+    { src: "/videos/signs/feel.mp4", prediction: "FEEL", confidence: 87 },
+    { src: "/videos/signs/give.mp4", prediction: "GIVE", confidence: 91 },
+    { src: "/videos/signs/make.mp4", prediction: "MAKE", confidence: 88 },
+    { src: "/videos/signs/open.mp4", prediction: "OPEN", confidence: 90 },
+    { src: "/videos/signs/close.mp4", prediction: "CLOSE", confidence: 89 },
+    { src: "/videos/signs/start.mp4", prediction: "START", confidence: 87 },
+    { src: "/videos/signs/stop.mp4", prediction: "STOP", confidence: 94 },
+    { src: "/videos/signs/wait.mp4", prediction: "WAIT", confidence: 92 },
+    { src: "/videos/signs/finish.mp4", prediction: "FINISH", confidence: 90 },
+    { src: "/videos/signs/try.mp4", prediction: "TRY", confidence: 86 },
+    { src: "/videos/signs/find.mp4", prediction: "FIND", confidence: 88 },
+    { src: "/videos/signs/tell.mp4", prediction: "TELL", confidence: 89 },
+    { src: "/videos/signs/meet.mp4", prediction: "MEET", confidence: 91 },
+    { src: "/videos/signs/walk.mp4", prediction: "WALK", confidence: 93 },
+    { src: "/videos/signs/sit.mp4", prediction: "SIT", confidence: 95 },
+    { src: "/videos/signs/stand.mp4", prediction: "STAND", confidence: 92 },
+    { src: "/videos/signs/big.mp4", prediction: "BIG", confidence: 96 },
+    { src: "/videos/signs/small.mp4", prediction: "SMALL", confidence: 94 },
+    { src: "/videos/signs/funny.mp4", prediction: "FUNNY", confidence: 88 },
+  ];
+
   return (
-    <section ref={ref} className="min-h-screen relative overflow-hidden hero-pattern">
+    <section ref={ref} className="min-h-screen relative overflow-hidden">
+      {/* Video Grid Background - 58 diverse signers, GPU accelerated */}
+      <div className="absolute inset-0 z-0">
+        {/* Dark gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-bg-primary/90 via-bg-primary/70 to-bg-primary/90 z-10" />
+
+        {/* Video grid - responsive: 4 cols mobile, 6 tablet, 10 desktop */}
+        <div className="absolute inset-0 grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-10 gap-0.5 p-0.5 opacity-60">
+          {videoTiles.map((tile, i) => (
+            <VideoTile
+              key={i}
+              videoSrc={tile.src}
+              prediction={tile.prediction}
+              confidence={tile.confidence}
+              index={i}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Hero Content */}
       <motion.div
-        className="max-w-7xl mx-auto px-6 pt-32 pb-20 min-h-screen flex flex-col justify-center"
+        className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-16 sm:pb-20 min-h-screen flex flex-col justify-center"
         style={{ y, opacity }}
       >
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
-          <div className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <span className="inline-block px-4 py-2 bg-accent-primary/10 text-accent-primary rounded-full text-sm font-medium mb-6">
-                Toshiba Challenge 2026
-              </span>
-            </motion.div>
-
-            <motion.h1
-              className="font-display text-hero text-text-primary leading-tight"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-            >
-              Learn Sign Language with{" "}
-              <span className="text-gradient">AI That Actually Understands</span>
-            </motion.h1>
-
-            <motion.p
-              className="text-xl text-text-secondary max-w-xl leading-relaxed"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              SignSense uses <strong>four specialized neural networks</strong> working together
-              to give you real-time, component-specific feedback on your signing technique.
-              Not just "right" or "wrong" — but exactly what to fix.
-            </motion.p>
-
-            <motion.div
-              className="flex flex-wrap gap-4 pt-4"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              <motion.a
-                href="#demo"
-                className="inline-flex items-center gap-2 bg-accent-gradient text-white px-8 py-4 rounded-full font-semibold text-lg"
-                whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(45, 90, 74, 0.3)" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <span>Watch Demo</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </motion.a>
-              <motion.a
-                href="#technology"
-                className="inline-flex items-center gap-2 border-2 border-accent-primary text-accent-primary px-8 py-4 rounded-full font-semibold text-lg"
-                whileHover={{ backgroundColor: "rgba(45, 90, 74, 0.1)" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Explore Technology
-              </motion.a>
-            </motion.div>
-
-            {/* Quick Stats */}
-            <motion.div
-              className="flex gap-8 pt-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            >
-              {[
-                { value: "88.4", label: "% Accuracy" },
-                { value: "4", label: "AI Models" },
-                { value: "5,565", label: "Signs Supported" },
-              ].map((stat, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-3xl font-bold text-accent-primary">{stat.value}</div>
-                  <div className="text-sm text-text-tertiary">{stat.label}</div>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Right Visual - Real Hands with Skeleton Overlay */}
+        <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6 lg:space-y-8">
           <motion.div
-            className="relative"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.4 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <div className="relative w-full aspect-[4/3] max-w-xl mx-auto">
-              {/* Glowing background */}
-              <div className="absolute inset-0 bg-gradient-radial from-accent-primary/10 via-transparent to-transparent rounded-3xl" />
+            <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-accent-primary/10 backdrop-blur-sm text-accent-primary rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              Toshiba Challenge 2026
+            </span>
+          </motion.div>
 
-              {/* Human hands image */}
-              <motion.img
-                src="/images/human-hand.jpg"
-                alt="Both hands with skeleton tracking overlay"
-                className="absolute inset-0 w-full h-full object-contain rounded-2xl"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.5 }}
-              />
+          <motion.h1
+            className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-hero text-text-primary leading-tight px-2"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Learn Sign Language with{" "}
+            <span className="text-gradient">AI That Actually Understands</span>
+          </motion.h1>
 
-              {/* Skeleton overlay for BOTH hands - viewBox matches image aspect ratio */}
-              <svg
-                viewBox="0 0 800 530"
-                className="absolute inset-0 w-full h-full"
-                style={{ pointerEvents: "none" }}
-                preserveAspectRatio="xMidYMid meet"
-              >
-                {/* ========== LEFT HAND (Palm view) - fingers from left to right: pinky, ring, middle, index, thumb ========== */}
-                {/* Left Wrist */}
-                <SkeletonJoint cx={200} cy={500} label="L. Wrist" anatomy="Left carpal bones" delay={0.8} isTip={false} />
+          <motion.p
+            className="text-base sm:text-lg lg:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed px-2"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            SignSense uses <strong>four specialized neural networks</strong> working together
+            to give you real-time, component-specific feedback on your signing technique.
+            Not just "right" or "wrong" — but exactly what to fix.
+          </motion.p>
 
-                {/* Left Pinky (leftmost finger) */}
-                <SkeletonBone x1={200} y1={500} x2={125} y2={400} delay={0.9} />
-                <SkeletonBone x1={125} y1={400} x2={100} y2={290} delay={1.0} />
-                <SkeletonBone x1={100} y1={290} x2={90} y2={190} delay={1.1} />
-                <SkeletonBone x1={90} y1={190} x2={85} y2={105} delay={1.2} />
-                <SkeletonJoint cx={125} cy={400} label="MCP" anatomy="Pinky knuckle" delay={1.0} isTip={false} />
-                <SkeletonJoint cx={100} cy={290} label="PIP" anatomy="First joint" delay={1.1} isTip={false} />
-                <SkeletonJoint cx={90} cy={190} label="DIP" anatomy="Second joint" delay={1.2} isTip={false} />
-                <SkeletonJoint cx={85} cy={105} label="Tip" anatomy="Pinky tip" delay={1.3} isTip={true} />
-
-                {/* Left Ring */}
-                <SkeletonBone x1={200} y1={500} x2={158} y2={385} delay={1.0} />
-                <SkeletonBone x1={158} y1={385} x2={142} y2={265} delay={1.1} />
-                <SkeletonBone x1={142} y1={265} x2={135} y2={160} delay={1.2} />
-                <SkeletonBone x1={135} y1={160} x2={130} y2={70} delay={1.3} />
-                <SkeletonJoint cx={158} cy={385} label="MCP" anatomy="Ring knuckle" delay={1.1} isTip={false} />
-                <SkeletonJoint cx={142} cy={265} label="PIP" anatomy="First joint" delay={1.2} isTip={false} />
-                <SkeletonJoint cx={135} cy={160} label="DIP" anatomy="Second joint" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={130} cy={70} label="Tip" anatomy="Ring tip" delay={1.4} isTip={true} />
-
-                {/* Left Middle */}
-                <SkeletonBone x1={200} y1={500} x2={192} y2={380} delay={1.1} />
-                <SkeletonBone x1={192} y1={380} x2={185} y2={255} delay={1.2} />
-                <SkeletonBone x1={185} y1={255} x2={180} y2={145} delay={1.3} />
-                <SkeletonBone x1={180} y1={145} x2={178} y2={50} delay={1.4} />
-                <SkeletonJoint cx={192} cy={380} label="MCP" anatomy="Middle knuckle" delay={1.2} isTip={false} />
-                <SkeletonJoint cx={185} cy={255} label="PIP" anatomy="First joint" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={180} cy={145} label="DIP" anatomy="Second joint" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={178} cy={50} label="Tip" anatomy="Middle tip" delay={1.5} isTip={true} />
-
-                {/* Left Index */}
-                <SkeletonBone x1={200} y1={500} x2={228} y2={385} delay={1.2} />
-                <SkeletonBone x1={228} y1={385} x2={238} y2={270} delay={1.3} />
-                <SkeletonBone x1={238} y1={270} x2={245} y2={170} delay={1.4} />
-                <SkeletonBone x1={245} y1={170} x2={250} y2={85} delay={1.5} />
-                <SkeletonJoint cx={228} cy={385} label="MCP" anatomy="Index knuckle" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={238} cy={270} label="PIP" anatomy="First joint" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={245} cy={170} label="DIP" anatomy="Second joint" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={250} cy={85} label="Tip" anatomy="Index tip" delay={1.6} isTip={true} />
-
-                {/* Left Thumb (on right side of left palm) */}
-                <SkeletonBone x1={200} y1={500} x2={265} y2={450} delay={1.3} />
-                <SkeletonBone x1={265} y1={450} x2={295} y2={400} delay={1.4} />
-                <SkeletonBone x1={295} y1={400} x2={315} y2={360} delay={1.5} />
-                <SkeletonJoint cx={265} cy={450} label="CMC" anatomy="Thumb base" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={295} cy={400} label="MCP" anatomy="Thumb knuckle" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={315} cy={360} label="Tip" anatomy="Thumb tip" delay={1.6} isTip={true} />
-
-                {/* ========== RIGHT HAND (Back view) - fingers from left to right: thumb, index, middle, ring, pinky ========== */}
-                {/* Right Wrist */}
-                <SkeletonJoint cx={600} cy={505} label="R. Wrist" anatomy="Right carpal bones" delay={1.0} isTip={false} />
-
-                {/* Right Thumb (on left side of right hand) */}
-                <SkeletonBone x1={600} y1={505} x2={530} y2={455} delay={1.1} />
-                <SkeletonBone x1={530} y1={455} x2={490} y2={405} delay={1.2} />
-                <SkeletonBone x1={490} y1={405} x2={460} y2={365} delay={1.3} />
-                <SkeletonJoint cx={530} cy={455} label="CMC" anatomy="Thumb base" delay={1.2} isTip={false} />
-                <SkeletonJoint cx={490} cy={405} label="MCP" anatomy="Thumb knuckle" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={460} cy={365} label="Tip" anatomy="Thumb tip" delay={1.4} isTip={true} />
-
-                {/* Right Index */}
-                <SkeletonBone x1={600} y1={505} x2={548} y2={385} delay={1.2} />
-                <SkeletonBone x1={548} y1={385} x2={520} y2={270} delay={1.3} />
-                <SkeletonBone x1={520} y1={270} x2={505} y2={170} delay={1.4} />
-                <SkeletonBone x1={505} y1={170} x2={495} y2={90} delay={1.5} />
-                <SkeletonJoint cx={548} cy={385} label="MCP" anatomy="Index knuckle" delay={1.3} isTip={false} />
-                <SkeletonJoint cx={520} cy={270} label="PIP" anatomy="First joint" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={505} cy={170} label="DIP" anatomy="Second joint" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={495} cy={90} label="Tip" anatomy="Index tip" delay={1.6} isTip={true} />
-
-                {/* Right Middle */}
-                <SkeletonBone x1={600} y1={505} x2={595} y2={380} delay={1.3} />
-                <SkeletonBone x1={595} y1={380} x2={590} y2={260} delay={1.4} />
-                <SkeletonBone x1={590} y1={260} x2={587} y2={155} delay={1.5} />
-                <SkeletonBone x1={587} y1={155} x2={585} y2={65} delay={1.6} />
-                <SkeletonJoint cx={595} cy={380} label="MCP" anatomy="Middle knuckle" delay={1.4} isTip={false} />
-                <SkeletonJoint cx={590} cy={260} label="PIP" anatomy="First joint" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={587} cy={155} label="DIP" anatomy="Second joint" delay={1.6} isTip={false} />
-                <SkeletonJoint cx={585} cy={65} label="Tip" anatomy="Middle tip" delay={1.7} isTip={true} />
-
-                {/* Right Ring */}
-                <SkeletonBone x1={600} y1={505} x2={640} y2={385} delay={1.4} />
-                <SkeletonBone x1={640} y1={385} x2={660} y2={275} delay={1.5} />
-                <SkeletonBone x1={660} y1={275} x2={675} y2={175} delay={1.6} />
-                <SkeletonBone x1={675} y1={175} x2={685} y2={95} delay={1.7} />
-                <SkeletonJoint cx={640} cy={385} label="MCP" anatomy="Ring knuckle" delay={1.5} isTip={false} />
-                <SkeletonJoint cx={660} cy={275} label="PIP" anatomy="First joint" delay={1.6} isTip={false} />
-                <SkeletonJoint cx={675} cy={175} label="DIP" anatomy="Second joint" delay={1.7} isTip={false} />
-                <SkeletonJoint cx={685} cy={95} label="Tip" anatomy="Ring tip" delay={1.8} isTip={true} />
-
-                {/* Right Pinky (rightmost finger) */}
-                <SkeletonBone x1={600} y1={505} x2={675} y2={400} delay={1.5} />
-                <SkeletonBone x1={675} y1={400} x2={705} y2={310} delay={1.6} />
-                <SkeletonBone x1={705} y1={310} x2={725} y2={230} delay={1.7} />
-                <SkeletonBone x1={725} y1={230} x2={740} y2={160} delay={1.8} />
-                <SkeletonJoint cx={675} cy={400} label="MCP" anatomy="Pinky knuckle" delay={1.6} isTip={false} />
-                <SkeletonJoint cx={705} cy={310} label="PIP" anatomy="First joint" delay={1.7} isTip={false} />
-                <SkeletonJoint cx={725} cy={230} label="DIP" anatomy="Second joint" delay={1.8} isTip={false} />
-                <SkeletonJoint cx={740} cy={160} label="Tip" anatomy="Pinky tip" delay={1.9} isTip={true} />
+          <motion.div
+            className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 pt-2 sm:pt-4 justify-center px-4"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <motion.a
+              href="#demo"
+              className="inline-flex items-center justify-center gap-2 bg-accent-gradient text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg shadow-lg"
+              whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(45, 90, 74, 0.3)" }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span>Watch Demo</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
+            </motion.a>
+            <motion.a
+              href="#technology"
+              className="inline-flex items-center justify-center gap-2 border-2 border-accent-primary text-accent-primary px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg bg-white/80 backdrop-blur-sm"
+              whileHover={{ backgroundColor: "rgba(45, 90, 74, 0.1)" }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Explore Technology
+            </motion.a>
+          </motion.div>
 
-              {/* Floating labels */}
-              {[
-                { label: "Palm View", x: "8%", y: "8%", delay: 2 },
-                { label: "Back View", x: "60%", y: "8%", delay: 2.2 },
-                { label: "42 hand landmarks", x: "35%", y: "92%", delay: 2.4 },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-accent-primary shadow-lg"
-                  style={{ left: item.x, top: item.y }}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: item.delay }}
-                >
-                  {item.label}
-                </motion.div>
-              ))}
-            </div>
+          {/* Quick Stats */}
+          <motion.div
+            className="flex flex-wrap gap-3 sm:gap-4 lg:gap-8 pt-4 sm:pt-8 justify-center px-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          >
+            {[
+              { value: "88.4", label: "% Accuracy" },
+              { value: "4", label: "AI Models" },
+              { value: "5,565", label: "Signs" },
+            ].map((stat, i) => (
+              <div key={i} className="text-center bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 sm:px-5 lg:px-6 py-2 sm:py-3 lg:py-4 shadow-sm">
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-accent-primary">{stat.value}</div>
+                <div className="text-xs sm:text-sm text-text-tertiary">{stat.label}</div>
+              </div>
+            ))}
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
+        {/* Scroll indicator - hidden on mobile */}
         <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 hidden sm:block"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity, delay: 2 }}
         >
-          <div className="flex flex-col items-center text-text-tertiary">
-            <span className="text-sm mb-2">Scroll to explore</span>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex flex-col items-center text-text-tertiary bg-white/80 backdrop-blur-sm rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
+            <span className="text-xs sm:text-sm mb-1 sm:mb-2">Scroll to explore</span>
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
           </div>
@@ -474,26 +343,26 @@ function HeroSection() {
 // Problem Section
 function ProblemSection() {
   return (
-    <Section className="py-32 bg-bg-secondary" id="problem">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-8">
+    <Section className="py-16 sm:py-24 lg:py-32 bg-bg-secondary" id="problem">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
+          <div className="space-y-4 sm:space-y-6 lg:space-y-8">
             <motion.span
               variants={fadeUpVariants}
-              className="inline-block text-accent-primary font-semibold tracking-widest text-sm uppercase"
+              className="inline-block text-accent-primary font-semibold tracking-widest text-xs sm:text-sm uppercase"
             >
               The Challenge
             </motion.span>
 
             <motion.h2
               variants={fadeUpVariants}
-              className="font-display text-h1 text-text-primary"
+              className="font-display text-2xl sm:text-3xl lg:text-h1 text-text-primary"
             >
               70 Million People Use Sign Language.{" "}
               <span className="text-accent-tertiary">Learning It Shouldn't Be This Hard.</span>
             </motion.h2>
 
-            <motion.div variants={fadeUpVariants} className="space-y-6">
+            <motion.div variants={fadeUpVariants} className="space-y-3 sm:space-y-4 lg:space-y-6">
               {[
                 { num: "1", color: "bg-accent-tertiary", title: "Limited Access", desc: "Qualified ASL instructors are scarce, especially outside urban areas" },
                 { num: "2", color: "bg-accent-secondary", title: "No Real-Time Feedback", desc: "Books and videos can't tell you if you're signing correctly" },
@@ -501,17 +370,17 @@ function ProblemSection() {
               ].map((item, i) => (
                 <motion.div
                   key={i}
-                  className="flex gap-4 p-5 bg-white rounded-xl shadow-sm border border-bg-tertiary"
+                  className="flex gap-3 sm:gap-4 p-3 sm:p-4 lg:p-5 bg-white rounded-lg sm:rounded-xl shadow-sm border border-bg-tertiary"
                   variants={fadeUpVariants}
                   whileHover={{ x: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.08)", borderColor: "rgba(45, 90, 74, 0.2)" }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className={`w-12 h-12 ${item.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-white font-bold text-lg">{item.num}</span>
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 ${item.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                    <span className="text-white font-bold text-base sm:text-lg">{item.num}</span>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-text-primary text-lg">{item.title}</h4>
-                    <p className="text-text-secondary mt-1">{item.desc}</p>
+                    <h4 className="font-semibold text-text-primary text-base sm:text-lg">{item.title}</h4>
+                    <p className="text-text-secondary text-sm sm:text-base mt-0.5 sm:mt-1">{item.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -522,60 +391,60 @@ function ProblemSection() {
           <motion.div variants={scaleUpVariants} className="relative">
             {/* ASL Learning Image */}
             <motion.div
-              className="mb-6 rounded-2xl overflow-hidden shadow-lg"
+              className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
             >
               <img
                 src="/images/asl-learning.jpg"
                 alt="People learning sign language"
-                className="w-full h-64 object-cover"
+                className="w-full h-48 sm:h-56 lg:h-64 object-cover"
               />
             </motion.div>
 
-            <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-              <h3 className="font-display text-2xl text-center text-text-primary mb-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+              <h3 className="font-display text-lg sm:text-xl lg:text-2xl text-center text-text-primary mb-4 sm:mb-6 lg:mb-8">
                 The SignSense Difference
               </h3>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
                 {/* Traditional */}
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-red-50 rounded-xl">
-                    <div className="w-12 h-12 mx-auto bg-accent-tertiary/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-accent-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="text-center p-3 sm:p-4 bg-red-50 rounded-lg sm:rounded-xl">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-accent-tertiary/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-accent-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <h4 className="font-semibold mt-3 text-text-primary">Traditional Apps</h4>
+                    <h4 className="font-semibold mt-2 sm:mt-3 text-text-primary text-sm sm:text-base">Traditional Apps</h4>
                   </div>
-                  <div className="p-4 bg-red-100/50 rounded-lg text-center">
-                    <div className="w-10 h-10 mx-auto bg-error/20 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-3 sm:p-4 bg-red-100/50 rounded-lg text-center">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto bg-error/20 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </div>
-                    <p className="text-error font-semibold mt-2">Wrong</p>
-                    <p className="text-sm text-text-secondary mt-1">No explanation why</p>
+                    <p className="text-error font-semibold mt-1.5 sm:mt-2 text-sm sm:text-base">Wrong</p>
+                    <p className="text-xs sm:text-sm text-text-secondary mt-0.5 sm:mt-1">No explanation why</p>
                   </div>
                 </div>
 
                 {/* SignSense */}
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-accent-primary/10 rounded-xl">
-                    <span className="text-2xl font-bold text-accent-primary">SignSense</span>
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="text-center p-3 sm:p-4 bg-accent-primary/10 rounded-lg sm:rounded-xl">
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-accent-primary">SignSense</span>
                   </div>
-                  <div className="p-4 bg-accent-primary/5 rounded-lg">
-                    <p className="text-success font-bold text-lg">Correct!</p>
-                    <div className="mt-3 space-y-2 text-sm">
+                  <div className="p-3 sm:p-4 bg-accent-primary/5 rounded-lg">
+                    <p className="text-success font-bold text-sm sm:text-base lg:text-lg">Correct!</p>
+                    <div className="mt-2 sm:mt-3 space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                       {[
                         { label: "Handshape", value: 94 },
                         { label: "Location", value: 87 },
                         { label: "Movement", value: 91 },
                       ].map((item, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="text-text-secondary w-20">{item.label}</span>
-                          <div className="flex-1 bg-bg-tertiary rounded-full h-2">
+                        <div key={i} className="flex items-center gap-1 sm:gap-2">
+                          <span className="text-text-secondary w-14 sm:w-20 text-[10px] sm:text-xs">{item.label}</span>
+                          <div className="flex-1 bg-bg-tertiary rounded-full h-1.5 sm:h-2">
                             <motion.div
                               className="bg-accent-primary h-full rounded-full"
                               initial={{ width: 0 }}
@@ -583,11 +452,11 @@ function ProblemSection() {
                               transition={{ duration: 1, delay: i * 0.2 }}
                             />
                           </div>
-                          <span className="text-accent-primary font-medium w-10">{item.value}%</span>
+                          <span className="text-accent-primary font-medium w-7 sm:w-10 text-[10px] sm:text-xs">{item.value}%</span>
                         </div>
                       ))}
                     </div>
-                    <p className="mt-3 text-xs text-accent-primary bg-accent-primary/10 p-2 rounded font-medium">
+                    <p className="mt-2 sm:mt-3 text-[10px] sm:text-xs text-accent-primary bg-accent-primary/10 p-1.5 sm:p-2 rounded font-medium">
                       Tip: Extend index finger more
                     </p>
                   </div>
@@ -635,25 +504,25 @@ function SolutionSection() {
   ];
 
   return (
-    <Section className="py-32 bg-bg-primary" id="technology">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-3xl mx-auto mb-20">
+    <Section className="py-16 sm:py-24 lg:py-32 bg-bg-primary" id="technology">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16 lg:mb-20 px-2">
           <motion.span
             variants={fadeUpVariants}
-            className="inline-block text-accent-primary font-semibold tracking-widest text-sm uppercase mb-4"
+            className="inline-block text-accent-primary font-semibold tracking-widest text-xs sm:text-sm uppercase mb-2 sm:mb-4"
           >
             Our Approach
           </motion.span>
           <motion.h2
             variants={fadeUpVariants}
-            className="font-display text-h1 text-text-primary mb-6"
+            className="font-display text-2xl sm:text-3xl lg:text-h1 text-text-primary mb-4 sm:mb-6"
           >
             Four Specialized Models.{" "}
             <span className="text-gradient">One Seamless Experience.</span>
           </motion.h2>
           <motion.p
             variants={fadeUpVariants}
-            className="text-xl text-text-secondary"
+            className="text-base sm:text-lg lg:text-xl text-text-secondary"
           >
             Unlike simple classifiers, SignSense employs a diagnostic pipeline that identifies
             exactly what you need to fix — not just that something is wrong.
@@ -661,28 +530,28 @@ function SolutionSection() {
         </div>
 
         {/* Model cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10 sm:mb-16">
           {models.map((model, i) => (
             <motion.div
               key={i}
               variants={fadeUpVariants}
-              className="bg-white rounded-2xl p-6 shadow-sm card-hover border border-transparent hover:border-accent-primary/20"
+              className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm card-hover border border-transparent hover:border-accent-primary/20"
               custom={i}
             >
               <motion.div
-                className={`w-14 h-14 ${model.bgColor} rounded-xl flex items-center justify-center mb-4`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 ${model.bgColor} rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4`}
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <span className="text-white text-2xl font-bold">{model.num}</span>
+                <span className="text-white text-lg sm:text-xl lg:text-2xl font-bold">{model.num}</span>
               </motion.div>
-              <h3 className="text-sm font-bold tracking-wider text-accent-primary mb-1">
+              <h3 className="text-xs sm:text-sm font-bold tracking-wider text-accent-primary mb-0.5 sm:mb-1">
                 {model.title}
               </h3>
-              <h4 className="font-display text-xl text-text-primary mb-3">
+              <h4 className="font-display text-base sm:text-lg lg:text-xl text-text-primary mb-2 sm:mb-3">
                 {model.subtitle}
               </h4>
-              <p className="text-text-secondary text-sm leading-relaxed">
+              <p className="text-text-secondary text-xs sm:text-sm leading-relaxed">
                 {model.desc}
               </p>
             </motion.div>
@@ -704,7 +573,7 @@ function SolutionSection() {
         {/* Feedback Comparison */}
         <motion.div
           variants={fadeUpVariants}
-          className="mt-20"
+          className="mt-10 sm:mt-16 lg:mt-20"
         >
           <img
             src="/graphics/feedback-comparison.svg"
@@ -751,25 +620,25 @@ function ArchitectureSection() {
   ];
 
   return (
-    <Section className="py-32 bg-bg-secondary" id="architecture">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-3xl mx-auto mb-20">
+    <Section className="py-16 sm:py-24 lg:py-32 bg-bg-secondary" id="architecture">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16 lg:mb-20 px-2">
           <motion.span
             variants={fadeUpVariants}
-            className="inline-block text-accent-primary font-semibold tracking-widest text-sm uppercase mb-4"
+            className="inline-block text-accent-primary font-semibold tracking-widest text-xs sm:text-sm uppercase mb-2 sm:mb-4"
           >
             Core Technology
           </motion.span>
           <motion.h2
             variants={fadeUpVariants}
-            className="font-display text-h1 text-text-primary mb-6"
+            className="font-display text-2xl sm:text-3xl lg:text-h1 text-text-primary mb-4 sm:mb-6"
           >
             Built on 60 Years of{" "}
             <span className="text-gradient">Sign Language Linguistics</span>
           </motion.h2>
           <motion.p
             variants={fadeUpVariants}
-            className="text-xl text-text-secondary"
+            className="text-base sm:text-lg lg:text-xl text-text-secondary"
           >
             PhonSSM's architecture embeds Stokoe's phonological theory directly into the neural network,
             enabling unprecedented accuracy and interpretable feedback.
@@ -779,22 +648,22 @@ function ArchitectureSection() {
         {/* Architecture diagram */}
         <motion.div
           variants={scaleUpVariants}
-          className="bg-white rounded-3xl shadow-xl p-8 md:p-12 max-w-4xl mx-auto"
+          className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-8 md:p-12 max-w-4xl mx-auto"
         >
           <div className="space-y-4">
             {/* Input */}
             <motion.div
-              className="text-center p-4 bg-bg-secondary rounded-xl"
+              className="text-center p-3 sm:p-4 bg-bg-secondary rounded-lg sm:rounded-xl"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="w-10 h-10 mx-auto bg-accent-primary/20 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto bg-accent-primary/20 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
-              <p className="font-medium text-text-primary mt-2">Input: 30 frames × 75 landmarks × 3 coordinates</p>
+              <p className="font-medium text-text-primary mt-2 text-xs sm:text-sm lg:text-base">Input: 30 frames × 75 landmarks × 3 coordinates</p>
             </motion.div>
 
             {/* Arrow */}
@@ -811,23 +680,23 @@ function ArchitectureSection() {
             {components.map((comp, i) => (
               <div key={i}>
                 <motion.div
-                  className="architecture-box rounded-xl p-6"
+                  className="architecture-box rounded-lg sm:rounded-xl p-4 sm:p-6"
                   style={{ borderLeftColor: comp.color, borderLeftWidth: "4px" }}
                   initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 + i * 0.15 }}
                   whileHover={{ scale: 1.02 }}
                 >
-                  <div className="flex justify-between items-start flex-wrap gap-4">
-                    <div>
-                      <h4 className="font-bold text-accent-primary text-lg">{comp.name}</h4>
-                      <p className="text-text-secondary text-sm">{comp.full}</p>
+                  <div className="flex justify-between items-start flex-wrap gap-2 sm:gap-4">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-accent-primary text-base sm:text-lg">{comp.name}</h4>
+                      <p className="text-text-secondary text-xs sm:text-sm">{comp.full}</p>
                     </div>
-                    <span className="text-xs bg-bg-tertiary px-3 py-1 rounded-full text-text-secondary font-mono">
+                    <span className="text-[10px] sm:text-xs bg-bg-tertiary px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-text-secondary font-mono flex-shrink-0">
                       {comp.params}
                     </span>
                   </div>
-                  <p className="mt-3 text-text-primary">{comp.desc}</p>
+                  <p className="mt-2 sm:mt-3 text-text-primary text-sm sm:text-base">{comp.desc}</p>
                 </motion.div>
 
                 {i < components.length - 1 && (
@@ -855,17 +724,17 @@ function ArchitectureSection() {
 
             {/* Output */}
             <motion.div
-              className="text-center p-4 bg-accent-primary/10 rounded-xl border-2 border-accent-primary"
+              className="text-center p-3 sm:p-4 bg-accent-primary/10 rounded-lg sm:rounded-xl border-2 border-accent-primary"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 1.1 }}
             >
-              <div className="w-10 h-10 mx-auto bg-accent-primary rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto bg-accent-primary rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="font-medium text-accent-primary mt-2">Output: Sign + Component Scores + Actionable Feedback</p>
+              <p className="font-medium text-accent-primary mt-2 text-xs sm:text-sm lg:text-base">Output: Sign + Component Scores + Actionable Feedback</p>
             </motion.div>
           </div>
         </motion.div>
@@ -873,10 +742,10 @@ function ArchitectureSection() {
         {/* Key insight callout */}
         <motion.div
           variants={fadeUpVariants}
-          className="mt-12 max-w-3xl mx-auto bg-accent-primary text-white rounded-2xl p-10 text-center"
+          className="mt-8 sm:mt-12 max-w-3xl mx-auto bg-accent-primary text-white rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-10 text-center"
         >
-          <p className="text-sm uppercase tracking-widest mb-4 opacity-80">Key Insight</p>
-          <p className="text-2xl font-medium leading-relaxed">
+          <p className="text-xs sm:text-sm uppercase tracking-widest mb-2 sm:mb-4 opacity-80">Key Insight</p>
+          <p className="text-lg sm:text-xl lg:text-2xl font-medium leading-relaxed">
             By learning ~135 phonological primitives instead of 5,565 independent patterns,
             PhonSSM achieves <strong className="text-accent-secondary">225% better accuracy</strong> on signs with limited training data.
           </p>
@@ -907,7 +776,7 @@ function ResultsSection() {
   ];
 
   return (
-    <Section className="py-32 bg-bg-primary relative overflow-hidden" id="results">
+    <Section className="py-16 sm:py-24 lg:py-32 bg-bg-primary relative overflow-hidden" id="results">
       {/* Animated Background Bars - drifting chart effect */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {bars.map((bar, i) => (
@@ -927,17 +796,17 @@ function ResultsSection() {
         ))}
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16 lg:mb-20">
           <motion.p
             variants={fadeUpVariants}
-            className="text-accent-primary font-semibold tracking-widest text-sm uppercase mb-4"
+            className="text-accent-primary font-semibold tracking-widest text-xs sm:text-sm uppercase mb-2 sm:mb-4"
           >
             Benchmark Results
           </motion.p>
           <motion.h2
             variants={fadeUpVariants}
-            className="font-display text-h1 text-text-primary mb-6"
+            className="font-display text-2xl sm:text-3xl lg:text-h1 text-text-primary mb-4 sm:mb-6"
           >
             State-of-the-Art Performance{" "}
             <span className="text-gradient">Across All Benchmarks</span>
@@ -951,12 +820,12 @@ function ResultsSection() {
         </div>
 
         {/* Big stats with animated bars behind */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-10 sm:mb-16 lg:mb-20">
           {stats.map((stat, i) => (
             <motion.div
               key={i}
               variants={fadeUpVariants}
-              className="relative bg-white rounded-2xl p-8 text-center shadow-sm card-hover overflow-hidden"
+              className="relative bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-center shadow-sm card-hover overflow-hidden"
             >
               {/* Mini animated bar inside card */}
               <motion.div
@@ -966,10 +835,10 @@ function ResultsSection() {
                 transition={{ duration: 1.5, delay: i * 0.15, ease: "easeOut" }}
                 viewport={{ once: true }}
               />
-              <div className="text-5xl md:text-6xl font-bold text-accent-primary stat-number">
+              <div className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-accent-primary stat-number">
                 <AnimatedCounter target={stat.value} suffix={stat.suffix} />
               </div>
-              <div className="text-text-secondary mt-3 font-medium text-sm">{stat.label}</div>
+              <div className="text-text-secondary mt-2 sm:mt-3 font-medium text-xs sm:text-sm">{stat.label}</div>
             </motion.div>
           ))}
         </div>
@@ -989,40 +858,86 @@ function ResultsSection() {
         {/* Skeleton Hand Visualization */}
         <motion.div
           variants={fadeUpVariants}
-          className="mt-20 grid md:grid-cols-2 gap-12 items-center"
+          className="mt-10 sm:mt-16 lg:mt-20 grid md:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center"
         >
           <div>
-            <h3 className="font-display text-3xl text-text-primary mb-4">
+            <h3 className="font-display text-xl sm:text-2xl lg:text-3xl text-text-primary mb-3 sm:mb-4">
               75 Landmarks Per Frame
             </h3>
-            <p className="text-text-secondary text-lg leading-relaxed mb-6">
+            <p className="text-text-secondary text-sm sm:text-base lg:text-lg leading-relaxed mb-4 sm:mb-6">
               MediaPipe extracts precise 3D coordinates from your webcam feed — pose, hands, and fingertips.
               Our models analyze these landmarks in real-time to understand exactly what you're signing.
             </p>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3 text-text-secondary">
-                <span className="w-2 h-2 bg-accent-primary rounded-full"></span>
+            <ul className="space-y-2 sm:space-y-3">
+              <li className="flex items-center gap-2 sm:gap-3 text-text-secondary text-sm sm:text-base">
+                <span className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></span>
                 33 pose landmarks for body position
               </li>
-              <li className="flex items-center gap-3 text-text-secondary">
-                <span className="w-2 h-2 bg-accent-secondary rounded-full"></span>
+              <li className="flex items-center gap-2 sm:gap-3 text-text-secondary text-sm sm:text-base">
+                <span className="w-2 h-2 bg-accent-secondary rounded-full flex-shrink-0"></span>
                 21 landmarks per hand (42 total)
               </li>
-              <li className="flex items-center gap-3 text-text-secondary">
-                <span className="w-2 h-2 bg-accent-tertiary rounded-full"></span>
+              <li className="flex items-center gap-2 sm:gap-3 text-text-secondary text-sm sm:text-base">
+                <span className="w-2 h-2 bg-accent-tertiary rounded-full flex-shrink-0"></span>
                 Fingertips tracked for precision feedback
               </li>
             </ul>
           </div>
+          {/* Video demo without skeleton overlay */}
           <motion.div
             whileHover={{ scale: 1.02 }}
-            className="rounded-2xl overflow-hidden shadow-lg bg-white p-4"
+            className="rounded-2xl overflow-hidden shadow-xl bg-text-primary"
           >
-            <img
-              src="/graphics/skeleton-hand.svg"
-              alt="Hand skeleton tracking visualization"
-              className="w-full"
-            />
+            <div className="relative aspect-[4/3]">
+              <video
+                src="/videos/signs/good.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              {/* Prediction overlay */}
+              <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4">
+                <div className="bg-black/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-4">
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <span className="text-white font-bold text-sm sm:text-lg">GOOD</span>
+                    <span className="text-accent-primary font-bold text-sm sm:text-base">93%</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1 sm:gap-2 text-[8px] sm:text-xs">
+                    <div>
+                      <div className="text-text-tertiary truncate">Handshape</div>
+                      <div className="h-1 sm:h-1.5 bg-white/20 rounded mt-0.5 sm:mt-1">
+                        <div className="h-full bg-green-500 rounded" style={{ width: '95%' }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-text-tertiary truncate">Location</div>
+                      <div className="h-1 sm:h-1.5 bg-white/20 rounded mt-0.5 sm:mt-1">
+                        <div className="h-full bg-green-500 rounded" style={{ width: '91%' }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-text-tertiary truncate">Movement</div>
+                      <div className="h-1 sm:h-1.5 bg-white/20 rounded mt-0.5 sm:mt-1">
+                        <div className="h-full bg-green-500 rounded" style={{ width: '94%' }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-text-tertiary truncate">Orientation</div>
+                      <div className="h-1 sm:h-1.5 bg-white/20 rounded mt-0.5 sm:mt-1">
+                        <div className="h-full bg-green-500 rounded" style={{ width: '92%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Live indicator */}
+              <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex items-center gap-1.5 sm:gap-2 bg-black/60 backdrop-blur-sm rounded-full px-2 sm:px-3 py-1 sm:py-1.5">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full animate-pulse"></span>
+                <span className="text-white text-[10px] sm:text-xs font-medium">Real-time Analysis</span>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       </div>
@@ -1066,36 +981,36 @@ function ApplicationsSection() {
   ];
 
   return (
-    <Section className="py-32 bg-bg-secondary" id="applications">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-3xl mx-auto mb-20">
+    <Section className="py-16 sm:py-24 lg:py-32 bg-bg-secondary" id="applications">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16 lg:mb-20 px-2">
           <motion.span
             variants={fadeUpVariants}
-            className="inline-block text-accent-primary font-semibold tracking-widest text-sm uppercase mb-4"
+            className="inline-block text-accent-primary font-semibold tracking-widest text-xs sm:text-sm uppercase mb-2 sm:mb-4"
           >
             Real-World Impact
           </motion.span>
           <motion.h2
             variants={fadeUpVariants}
-            className="font-display text-h1 text-text-primary mb-6"
+            className="font-display text-2xl sm:text-3xl lg:text-h1 text-text-primary mb-4 sm:mb-6"
           >
             From Self-Study to{" "}
             <span className="text-gradient">Professional Training</span>
           </motion.h2>
           <motion.p
             variants={fadeUpVariants}
-            className="text-text-secondary text-lg"
+            className="text-text-secondary text-sm sm:text-base lg:text-lg"
           >
             SignSense adapts to diverse learning contexts, providing personalized feedback wherever sign language education happens.
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {applications.map((app, i) => (
             <motion.div
               key={i}
               variants={fadeUpVariants}
-              className="group relative rounded-2xl overflow-hidden shadow-lg card-hover aspect-[3/2]"
+              className="group relative rounded-xl sm:rounded-2xl overflow-hidden shadow-lg card-hover aspect-[3/2]"
               custom={i}
               whileHover={{ y: -8 }}
               transition={{ duration: 0.3 }}
@@ -1111,11 +1026,11 @@ function ApplicationsSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
               {/* Content */}
-              <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                <h3 className="font-display text-2xl text-white mb-2 group-hover:text-accent-secondary transition-colors">
+              <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-end">
+                <h3 className="font-display text-lg sm:text-xl lg:text-2xl text-white mb-1 sm:mb-2 group-hover:text-accent-secondary transition-colors">
                   {app.title}
                 </h3>
-                <p className="text-white/90 text-sm leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <p className="text-white/90 text-xs sm:text-sm leading-relaxed opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   {app.desc}
                 </p>
               </div>
@@ -1130,18 +1045,18 @@ function ApplicationsSection() {
 // Demo Section
 function DemoSection() {
   return (
-    <Section className="py-32 bg-bg-primary" id="demo">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+    <Section className="py-16 sm:py-24 lg:py-32 bg-bg-primary" id="demo">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 lg:mb-16 px-2">
           <motion.span
             variants={fadeUpVariants}
-            className="inline-block text-accent-primary font-semibold tracking-widest text-sm uppercase mb-4"
+            className="inline-block text-accent-primary font-semibold tracking-widest text-xs sm:text-sm uppercase mb-2 sm:mb-4"
           >
             See It In Action
           </motion.span>
           <motion.h2
             variants={fadeUpVariants}
-            className="font-display text-h1 text-text-primary mb-6"
+            className="font-display text-2xl sm:text-3xl lg:text-h1 text-text-primary mb-4 sm:mb-6"
           >
             Watch SignSense Give{" "}
             <span className="text-gradient">Real-Time Feedback</span>
@@ -1153,7 +1068,7 @@ function DemoSection() {
           variants={scaleUpVariants}
           className="max-w-4xl mx-auto"
         >
-          <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl">
+          <div className="relative aspect-video rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl">
             {/* Background image */}
             <img
               src="/images/asl-examples.png"
@@ -1166,24 +1081,24 @@ function DemoSection() {
             {/* Play button content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
               <motion.div
-                className="w-24 h-24 rounded-full bg-accent-primary/90 flex items-center justify-center mb-6 cursor-pointer shadow-xl"
+                className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-accent-primary/90 flex items-center justify-center mb-4 sm:mb-6 cursor-pointer shadow-xl"
                 whileHover={{ scale: 1.1, boxShadow: "0 25px 50px rgba(45, 90, 74, 0.4)" }}
                 whileTap={{ scale: 0.95 }}
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                <svg className="w-12 h-12 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white ml-0.5 sm:ml-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </motion.div>
-              <p className="text-2xl font-display font-medium">Watch Demo</p>
-              <p className="text-white/70 mt-2">See SignSense in action</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-display font-medium">Watch Demo</p>
+              <p className="text-white/70 mt-1 sm:mt-2 text-sm sm:text-base">See SignSense in action</p>
             </div>
 
             {/* Decorative elements */}
-            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center text-white/60 text-sm">
+            <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4 flex justify-between items-center text-white/60 text-xs sm:text-sm">
               <span>0:00</span>
-              <div className="flex-1 mx-4 h-1 bg-white/20 rounded-full overflow-hidden">
+              <div className="flex-1 mx-2 sm:mx-4 h-0.5 sm:h-1 bg-white/20 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-accent-primary rounded-full"
                   initial={{ width: "0%" }}
@@ -1199,7 +1114,7 @@ function DemoSection() {
           {/* Video chapters with better styling */}
           <motion.div
             variants={fadeUpVariants}
-            className="mt-8 flex flex-wrap justify-center gap-3"
+            className="mt-4 sm:mt-6 lg:mt-8 flex flex-wrap justify-center gap-2 sm:gap-3"
           >
             {[
               { name: "Introduction", time: "0:00" },
@@ -1210,10 +1125,10 @@ function DemoSection() {
             ].map((chapter, i) => (
               <motion.div
                 key={i}
-                className="px-4 py-2 bg-white rounded-full shadow-sm border border-bg-tertiary text-text-secondary text-sm hover:bg-accent-primary hover:text-white hover:border-accent-primary cursor-pointer transition-all flex items-center gap-2"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white rounded-full shadow-sm border border-bg-tertiary text-text-secondary text-xs sm:text-sm hover:bg-accent-primary hover:text-white hover:border-accent-primary cursor-pointer transition-all flex items-center gap-1.5 sm:gap-2"
                 whileHover={{ scale: 1.05, y: -2 }}
               >
-                <span className="text-xs text-text-tertiary">{chapter.time}</span>
+                <span className="text-[10px] sm:text-xs text-text-tertiary">{chapter.time}</span>
                 <span>{chapter.name}</span>
               </motion.div>
             ))}
@@ -1227,19 +1142,19 @@ function DemoSection() {
 // Tech Specs Section
 function TechSpecsSection() {
   return (
-    <Section className="py-32 bg-bg-secondary">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-12">
+    <Section className="py-16 sm:py-24 lg:py-32 bg-bg-secondary">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12">
           {/* Specs table */}
           <motion.div variants={fadeUpVariants}>
-            <h3 className="font-display text-h2 text-text-primary mb-8">Technical Specifications</h3>
-            <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-              <table className="w-full">
+            <h3 className="font-display text-xl sm:text-2xl lg:text-h2 text-text-primary mb-4 sm:mb-6 lg:mb-8">Technical Specifications</h3>
+            <div className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
+              <table className="w-full min-w-[300px]">
                 <thead className="bg-bg-tertiary">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-text-primary">Model</th>
-                    <th className="px-6 py-3 text-right text-sm font-semibold text-text-primary">Parameters</th>
-                    <th className="px-6 py-3 text-right text-sm font-semibold text-text-primary">Latency</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-text-primary">Model</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs sm:text-sm font-semibold text-text-primary">Parameters</th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs sm:text-sm font-semibold text-text-primary">Latency</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1250,9 +1165,9 @@ function TechSpecsSection() {
                     { model: "Feedback Ranker", params: "10K", latency: "<0.1ms" },
                   ].map((row, i) => (
                     <tr key={i} className="border-t border-bg-tertiary">
-                      <td className="px-6 py-4 font-medium text-text-primary">{row.model}</td>
-                      <td className="px-6 py-4 text-right text-text-secondary font-mono">{row.params}</td>
-                      <td className="px-6 py-4 text-right text-text-secondary font-mono">{row.latency}</td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 font-medium text-text-primary text-xs sm:text-sm">{row.model}</td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-right text-text-secondary font-mono text-xs sm:text-sm">{row.params}</td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-right text-text-secondary font-mono text-xs sm:text-sm">{row.latency}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1262,8 +1177,8 @@ function TechSpecsSection() {
 
           {/* Privacy callout */}
           <motion.div variants={fadeUpVariants}>
-            <h3 className="font-display text-h2 text-text-primary mb-8">Privacy by Design</h3>
-            <div className="bg-accent-primary text-white rounded-2xl p-8 space-y-5">
+            <h3 className="font-display text-xl sm:text-2xl lg:text-h2 text-text-primary mb-4 sm:mb-6 lg:mb-8">Privacy by Design</h3>
+            <div className="bg-accent-primary text-white rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 space-y-4 sm:space-y-5">
               {[
                 {
                   icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />,
@@ -1288,20 +1203,20 @@ function TechSpecsSection() {
               ].map((item, i) => (
                 <motion.div
                   key={i}
-                  className="flex items-start gap-4"
+                  className="flex items-start gap-3 sm:gap-4"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {item.icon}
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg">{item.title}</h4>
-                    <p className="text-white/80 mt-1">{item.desc}</p>
+                    <h4 className="font-semibold text-base sm:text-lg">{item.title}</h4>
+                    <p className="text-white/80 mt-0.5 sm:mt-1 text-sm sm:text-base">{item.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -1316,38 +1231,38 @@ function TechSpecsSection() {
 // Footer
 function Footer() {
   return (
-    <footer className="bg-text-primary text-white py-16">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="font-display text-3xl text-white">SignSense</span>
+    <footer className="bg-text-primary text-white py-10 sm:py-12 lg:py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 lg:gap-12 mb-8 sm:mb-12">
+          <div className="col-span-2">
+            <div className="flex items-center gap-3 mb-3 sm:mb-4">
+              <span className="font-display text-2xl sm:text-3xl text-white">SignSense</span>
             </div>
-            <p className="text-white/60 max-w-md leading-relaxed">
+            <p className="text-white/60 max-w-md leading-relaxed text-sm sm:text-base">
               AI-powered sign language learning platform using four specialized neural networks
               for real-time, component-specific feedback.
             </p>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Research</h4>
-            <ul className="space-y-2 text-white/60">
+            <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Research</h4>
+            <ul className="space-y-1.5 sm:space-y-2 text-white/60 text-sm">
               <li><a href="#" className="hover:text-white transition-colors">Paper (PDF)</a></li>
               <li><a href="#" className="hover:text-white transition-colors">GitHub</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Benchmarks</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Resources</h4>
-            <ul className="space-y-2 text-white/60">
+            <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Resources</h4>
+            <ul className="space-y-1.5 sm:space-y-2 text-white/60 text-sm">
               <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
               <li><a href="#" className="hover:text-white transition-colors">API Reference</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Tutorials</a></li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-white/40 text-sm">
+        <div className="border-t border-white/10 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 text-white/40 text-xs sm:text-sm">
           <p>© 2026 SignSense. Built for Toshiba Challenge.</p>
-          <div className="flex gap-6">
+          <div className="flex gap-4 sm:gap-6">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
           </div>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="500" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3D7A6A"/>
+      <stop offset="100%" stop-color="#2D5A4A"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8B86D" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#E8B86D" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#1A1614" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="200" cy="250" r="180" fill="#F7F5F3"/>
+
+  <!-- Robot Body -->
+  <g filter="url(#shadow)">
+    <!-- Torso -->
+    <rect x="140" y="200" width="120" height="150" rx="20" fill="url(#bodyGrad)"/>
+
+    <!-- Chest panel -->
+    <rect x="155" y="220" width="90" height="60" rx="10" fill="#1A1614"/>
+    <rect x="165" y="230" width="70" height="40" rx="5" fill="#2D5A4A"/>
+
+    <!-- Heart/Core light -->
+    <circle cx="200" cy="250" r="15" fill="#E8B86D" filter="url(#glow)"/>
+    <circle cx="200" cy="250" r="8" fill="#FDFCFB"/>
+
+    <!-- Head -->
+    <rect x="155" y="120" width="90" height="70" rx="15" fill="url(#bodyGrad)"/>
+
+    <!-- Face screen -->
+    <rect x="165" y="130" width="70" height="45" rx="8" fill="#1A1614"/>
+
+    <!-- Eyes -->
+    <circle cx="183" cy="150" r="8" fill="#E8B86D" filter="url(#glow)"/>
+    <circle cx="217" cy="150" r="8" fill="#E8B86D" filter="url(#glow)"/>
+    <circle cx="183" cy="150" r="4" fill="#FDFCFB"/>
+    <circle cx="217" cy="150" r="4" fill="#FDFCFB"/>
+
+    <!-- Mouth/speaker -->
+    <rect x="180" y="162" width="40" height="6" rx="3" fill="#5C5552"/>
+
+    <!-- Neck -->
+    <rect x="175" y="190" width="50" height="15" rx="5" fill="#3D7A6A"/>
+
+    <!-- Left Arm -->
+    <g>
+      <!-- Upper arm -->
+      <rect x="90" y="210" width="45" height="80" rx="12" fill="url(#bodyGrad)"/>
+      <!-- Elbow joint -->
+      <circle cx="112" cy="295" r="12" fill="#3D7A6A"/>
+      <!-- Forearm -->
+      <rect x="95" y="300" width="35" height="70" rx="10" fill="url(#bodyGrad)"/>
+
+      <!-- Left Hand (signing position) -->
+      <g transform="translate(85, 375)">
+        <!-- Palm -->
+        <rect x="0" y="0" width="55" height="45" rx="8" fill="#E8B86D"/>
+        <!-- Fingers -->
+        <rect x="5" y="-30" width="8" height="35" rx="4" fill="#E8B86D"/>
+        <rect x="16" y="-40" width="8" height="45" rx="4" fill="#E8B86D"/>
+        <rect x="27" y="-42" width="8" height="47" rx="4" fill="#E8B86D"/>
+        <rect x="38" y="-38" width="8" height="43" rx="4" fill="#E8B86D"/>
+        <!-- Thumb -->
+        <rect x="-8" y="5" width="15" height="8" rx="4" fill="#E8B86D" transform="rotate(-30 -8 5)"/>
+
+        <!-- Finger joints (showing articulation) -->
+        <circle cx="9" cy="-15" r="2" fill="#C75D4D"/>
+        <circle cx="20" cy="-20" r="2" fill="#C75D4D"/>
+        <circle cx="31" cy="-22" r="2" fill="#C75D4D"/>
+        <circle cx="42" cy="-18" r="2" fill="#C75D4D"/>
+      </g>
+    </g>
+
+    <!-- Right Arm -->
+    <g>
+      <!-- Upper arm -->
+      <rect x="265" y="210" width="45" height="80" rx="12" fill="url(#bodyGrad)"/>
+      <!-- Elbow joint -->
+      <circle cx="288" cy="295" r="12" fill="#3D7A6A"/>
+      <!-- Forearm -->
+      <rect x="270" y="300" width="35" height="70" rx="10" fill="url(#bodyGrad)"/>
+
+      <!-- Right Hand (signing position - different pose) -->
+      <g transform="translate(260, 375)">
+        <!-- Palm -->
+        <rect x="0" y="0" width="55" height="45" rx="8" fill="#E8B86D"/>
+        <!-- Fingers (slightly curled) -->
+        <rect x="5" y="-25" width="8" height="30" rx="4" fill="#E8B86D" transform="rotate(5 9 -10)"/>
+        <rect x="16" y="-35" width="8" height="40" rx="4" fill="#E8B86D"/>
+        <rect x="27" y="-38" width="8" height="43" rx="4" fill="#E8B86D"/>
+        <rect x="38" y="-32" width="8" height="37" rx="4" fill="#E8B86D" transform="rotate(-5 42 -15)"/>
+        <!-- Thumb -->
+        <rect x="48" y="5" width="15" height="8" rx="4" fill="#E8B86D" transform="rotate(30 55 9)"/>
+
+        <!-- Finger joints -->
+        <circle cx="9" cy="-12" r="2" fill="#C75D4D"/>
+        <circle cx="20" cy="-18" r="2" fill="#C75D4D"/>
+        <circle cx="31" cy="-20" r="2" fill="#C75D4D"/>
+        <circle cx="42" cy="-15" r="2" fill="#C75D4D"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- SignSense branding on chest -->
+  <text x="200" y="305" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#E8B86D">
+    SignSense
+  </text>
+
+  <!-- Connection lines (showing AI brain) -->
+  <g stroke="#E8B86D" stroke-width="1" stroke-dasharray="3 3" opacity="0.6">
+    <line x1="200" y1="150" x2="200" y2="235"/>
+    <line x1="200" y1="265" x2="112" y2="380"/>
+    <line x1="200" y1="265" x2="288" y2="380"/>
+  </g>
+
+  <!-- Decorative tech elements -->
+  <g fill="none" stroke="#2D5A4A" stroke-width="1" opacity="0.3">
+    <circle cx="200" cy="250" r="220" stroke-dasharray="10 5"/>
+    <circle cx="200" cy="250" r="200" stroke-dasharray="5 10"/>
+  </g>
+
+  <!-- Label -->
+  <text x="200" y="480" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#2D5A4A">
+    SignSense Companion Robot
+  </text>
+  <text x="200" y="495" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#5C5552">
+    Concept Design • Articulated ASL Hands
+  </text>
+</svg>

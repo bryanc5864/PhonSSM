@@ -49,7 +49,7 @@
 
       <text x="60" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1A1614">WLASL100</text>
       <rect x="32" y="322" width="60" height="26" rx="13" fill="#2D5A4A"/>
-      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+25.2pp</text>
+      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+25.2%</text>
     </g>
 
     <!-- WLASL300 -->
@@ -62,7 +62,7 @@
 
       <text x="60" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1A1614">WLASL300</text>
       <rect x="32" y="322" width="60" height="26" rx="13" fill="#2D5A4A"/>
-      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+16.0pp</text>
+      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+16.0%</text>
     </g>
 
     <!-- WLASL1000 -->
@@ -75,7 +75,7 @@
 
       <text x="60" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1A1614">WLASL1000</text>
       <rect x="32" y="322" width="60" height="26" rx="13" fill="#2D5A4A"/>
-      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+15.8pp</text>
+      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+15.8%</text>
     </g>
 
     <!-- WLASL2000 -->
@@ -88,7 +88,7 @@
 
       <text x="60" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#1A1614">WLASL2000</text>
       <rect x="32" y="322" width="60" height="26" rx="13" fill="#2D5A4A"/>
-      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+18.4pp</text>
+      <text x="62" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="white">+18.4%</text>
     </g>
 
     <!-- Legend -->
@@ -106,7 +106,7 @@
     <rect x="0" y="0" width="850" height="55" rx="14" fill="#2D5A4A" fill-opacity="0.08"/>
 
     <g transform="translate(110, 18)">
-      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#2D5A4A">+15.7pp</text>
+      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#2D5A4A">+15.7%</text>
       <text x="0" y="22" font-family="system-ui, sans-serif" font-size="12" fill="#5C5552">Avg. Improvement</text>
     </g>
 
