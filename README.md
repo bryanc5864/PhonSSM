@@ -15,7 +15,6 @@ A novel architecture for skeleton-based sign language recognition that achieves 
 | WLASL300 | 300 | **74.41%** | 58.42% (DSTA-SLR) | +15.99 pts |
 | WLASL1000 | 1,000 | **62.90%** | 47.14% (DSTA-SLR) | +15.76 pts |
 | WLASL2000 | 2,000 | **72.08%** | 53.70% (DSTA-SLR) | +18.38 pts |
-| Merged-5565 | 5,565 | **53.34%** | - | New benchmark |
 
 **Key advantages:**
 - **3.2M parameters** vs 25M+ for RGB-based methods
@@ -97,16 +96,9 @@ Input (Pose + Hands Landmarks)
 ## Installation
 
 ```bash
-# Clone repository
 git clone https://github.com/bryanc5864/PhonSSM.git
 cd PhonSSM
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Download large files (models, datasets)
-git lfs install
-git lfs pull
+pip install -e .
 ```
 
 **Requirements:** Python 3.8+, PyTorch 2.0+, CUDA recommended
@@ -120,9 +112,9 @@ from models.phonssm import PhonSSM, PhonSSMConfig
 import torch
 
 # Load model
-config = PhonSSMConfig.for_wlasl(100)  # or PhonSSMConfig(num_signs=5565)
+config = PhonSSMConfig.for_wlasl(100)
 model = PhonSSM(config)
-checkpoint = torch.load('models/phonssm/checkpoints/.../best_model.pt')
+checkpoint = torch.load('path/to/checkpoint.pt')
 model.load_state_dict(checkpoint['model_state_dict'])
 model.eval()
 
@@ -137,21 +129,11 @@ phonological = outputs['phonological_components']  # Interpretable features
 ### Training
 
 ```bash
-# Train on WLASL100
+# Train on WLASL
 python training/benchmark_external.py --dataset wlasl --subset 100 --epochs 100
-
-# Train on WLASL2000
-python training/benchmark_external.py --dataset wlasl --subset 2000 --epochs 100
 
 # Train on custom data
 python training/train_phonssm.py --epochs 100 --batch-size 32 --device cuda
-```
-
-### Demo Server
-
-```bash
-# Start real-time recognition server (default port 8000)
-python web/server.py
 ```
 
 ## Project Structure
@@ -160,10 +142,7 @@ python web/server.py
 phonssm/
 ├── models/phonssm/       # Core architecture (AGAN, PDM, BiSSM, HPC)
 ├── training/             # Training and benchmark scripts
-├── web/                  # FastAPI demo server
-├── data/processed/       # Preprocessed datasets (Git LFS)
-├── benchmarks/           # Benchmark results
-└── docs/                 # Additional documentation
+└── benchmarks/           # Benchmark results
 ```
 
 ## Input Format
@@ -176,12 +155,7 @@ PhonSSM accepts skeleton landmarks extracted via MediaPipe:
 - **Total**: 75 landmarks × 3 coordinates = 225 features per frame
 - **Sequence length**: 30 frames (uniformly sampled)
 
-Input shape: `(batch_size, 30, 225)`
-
-### Preprocessing
-1. Uniform temporal sampling to 30 frames
-2. Spatial normalization: center at wrist, scale by max landmark distance
-3. Missing landmarks filled via linear interpolation
+Input shape: `(batch_size, 30, 75, 3)` or `(batch_size, 30, 225)`
 
 ## Model Specifications
 
@@ -209,13 +183,6 @@ Input shape: `(batch_size, 30, 225)`
 | WLASL1000 | 1,000 | 5,628 | 62.90% | 82.60% | 86.35% |
 | WLASL2000 | 2,000 | 8,634 | 72.08% | 86.26% | 88.56% |
 
-### Large-Scale Benchmark: Merged-5565
-
-Combined dataset from WLASL, ASL Citizen, and SignBank:
-- **5,565 unique signs**
-- **260,000+ samples**
-- **Top-1 Accuracy: 53.34%**
-
 ### Comparison with Prior Work
 
 | Method | Input Type | Params | WLASL100 | WLASL2000 |
@@ -229,21 +196,12 @@ Combined dataset from WLASL, ASL Citizen, and SignBank:
 
 ### Few-Shot Performance
 
-PhonSSM excels on classes with limited training data:
-
 | Training Samples | Bi-LSTM Baseline | PhonSSM | Improvement |
 |------------------|------------------|---------|-------------|
 | 1-5 samples | 12.3% | 39.8% | +225% |
 | 6-10 samples | 34.7% | 58.2% | +68% |
 | 11-20 samples | 52.1% | 71.4% | +37% |
 | 20+ samples | 68.9% | 82.6% | +20% |
-
-### Key Findings
-
-1. **Skeleton-only superiority**: PhonSSM outperforms RGB video methods while using 8-25x fewer parameters
-2. **Linguistically meaningful errors**: Most confusion occurs between phonologically similar signs (e.g., minimal pairs differing in one component)
-3. **Phonological disentanglement**: t-SNE visualization shows clear clustering by handshape/location in respective subspaces
-4. **Efficient inference**: Real-time capable at 260 samples/sec on CPU
 
 ## Ablation Studies
 
@@ -257,12 +215,10 @@ PhonSSM excels on classes with limited training data:
 
 ## Citation
 
-If you use PhonSSM in your research, please cite:
-
 ```bibtex
 @inproceedings{phonssm2026,
   title={PhonSSM: A Phonology-Aware State Space Model for Sign Language Recognition},
-  author={[Authors]},
+  author={Zhang, Jasper and Cheng, Bryan and Jin, Austin},
   booktitle={ICLR 2026 Workshop},
   year={2026}
 }
