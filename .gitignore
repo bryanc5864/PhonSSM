@@ -1,47 +1,14 @@
-# Paper directory (kept locally, not in repo)
+# Paper (local only)
 paper/
 
-# Development files
-CLAUDE.md
-
-# Data files (raw)
-data/raw/
-data/processed/extended/
-data/processed/*.npy
-data/processed/*.json
-!data/processed/merged/
-# Allow ASL Citizen data (via Git LFS)
-!data/processed/X_asl_citizen.npy
-!data/processed/y_asl_citizen.npy
-!data/processed/asl_citizen_label_map.json
-!data/processed/asl_citizen_stats.json
-# Allow main training data (via Git LFS)
-!data/processed/X_train.npy
-!data/processed/X_test.npy
-!data/processed/X_train_with_errors.npy
-!data/processed/y_train_with_errors.npy
-!data/processed/component_scores_train.npy
-!data/processed/error_labels_train.npy
-!data/processed/is_correct_train.npy
-!data/processed/error_metadata.json
-!data/processed/label_map.json
-!data/processed/wlasl_label_map.json
-!data/processed/wlasl_pose_hands_label_map.json
-# Allow WLASL pose+hands data (via Git LFS)
-!data/processed/X_wlasl_pose_hands.npy
-!data/processed/y_wlasl_pose_hands.npy
+# Data files
+data/
+*.npy
 *.npz
 *.zip
 *.parquet
 
-# Models (except code and trained models)
-models/*
-!models/sign_classifier/
-!models/phonssm/
-!models/movement_analyzer/
-
 # Model weights (except trained checkpoints)
-*.task
 *.h5
 *.onnx
 *.pt
@@ -54,6 +21,9 @@ models/*
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
+dist/
+build/
 .env
 venv/
 .venv/
@@ -63,13 +33,11 @@ venv/
 .vscode/
 .idea/
 
-# Windows
-nul
+# OS
+.DS_Store
 Thumbs.db
 Desktop.ini
 
-# macOS
-.DS_Store
-
 # Temp files
-tmpclaude-*
+*.log
+*.tmp
