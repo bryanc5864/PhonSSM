@@ -1,3 +1,9 @@
+# Paper directory (kept locally, not in repo)
+paper/
+
+# Development files
+CLAUDE.md
+
 # Data files (raw)
 data/raw/
 data/processed/extended/

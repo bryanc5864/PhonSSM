@@ -1,5 +1,10 @@
 # PhonSSM: Phonological State Space Model for Sign Language Recognition
 
+[![ICLR 2026 Workshop](https://img.shields.io/badge/ICLR%202026-Workshop-blue)](https://iclr.cc/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
+
 A novel architecture for skeleton-based sign language recognition that achieves state-of-the-art performance using only pose landmarks (no RGB video). PhonSSM incorporates linguistic priors from sign language phonology to achieve superior accuracy with dramatically fewer parameters.
 
 ## Key Results
@@ -93,19 +98,43 @@ Input (Pose + Hands Landmarks)
 
 ```bash
 # Clone repository
-git clone https://github.com/anonymoussubmitter-167/phon-ssm.git
-cd phon-ssm
+git clone https://github.com/bryanc5864/PhonSSM.git
+cd PhonSSM
 
 # Install dependencies
-pip install torch>=2.0.0 numpy scikit-learn matplotlib seaborn
+pip install -r requirements.txt
 
-# For training diagnostics models (optional)
-pip install tensorflow>=2.15.0
+# Download large files (models, datasets)
+git lfs install
+git lfs pull
 ```
+
+**Requirements:** Python 3.8+, PyTorch 2.0+, CUDA recommended
 
 ## Quick Start
 
-### Training on WLASL
+### Inference
+
+```python
+from models.phonssm import PhonSSM, PhonSSMConfig
+import torch
+
+# Load model
+config = PhonSSMConfig.for_wlasl(100)  # or PhonSSMConfig(num_signs=5565)
+model = PhonSSM(config)
+checkpoint = torch.load('models/phonssm/checkpoints/.../best_model.pt')
+model.load_state_dict(checkpoint['model_state_dict'])
+model.eval()
+
+# Input: (batch, frames=30, landmarks, coords=3)
+x = torch.randn(1, 30, 75, 3)  # 75 landmarks for pose+hands
+outputs = model(x)
+
+predictions = outputs['logits'].argmax(dim=-1)
+phonological = outputs['phonological_components']  # Interpretable features
+```
+
+### Training
 
 ```bash
 # Train on WLASL100
@@ -114,54 +143,27 @@ python training/benchmark_external.py --dataset wlasl --subset 100 --epochs 100
 # Train on WLASL2000
 python training/benchmark_external.py --dataset wlasl --subset 2000 --epochs 100
 
-# Resume from checkpoint
-python training/benchmark_external.py --dataset wlasl --subset 2000 \
-    --resume benchmarks/external/wlasl2000/TIMESTAMP
+# Train on custom data
+python training/train_phonssm.py --epochs 100 --batch-size 32 --device cuda
 ```
 
-### Running Analysis
+### Demo Server
 
 ```bash
-# Confusion matrix analysis
-python analysis/confusion_matrix.py --subset 100
-
-# t-SNE visualization of phonological subspaces
-python analysis/tsne_phonology.py --subset 100
-
-# Attention heatmap visualization
-python analysis/attention_heatmap.py --subset 100
+# Start real-time recognition server (default port 8000)
+python web/server.py
 ```
 
 ## Project Structure
 
 ```
-phon-ssm/
-├── models/
-│   └── phonssm/
-│       ├── __init__.py          # PhonSSM model definition
-│       ├── agan.py              # Anatomical Graph Attention
-│       ├── pdm.py               # Phonological Disentanglement
-│       ├── bissm.py             # Bidirectional State Space
-│       └── hpc.py               # Hierarchical Prototypes
-├── training/
-│   ├── benchmark_external.py    # Main training script
-│   ├── train_diagnosis.py       # Error diagnosis model
-│   └── train_movement.py        # Movement analyzer model
-├── analysis/
-│   ├── confusion_matrix.py      # Confusion matrix analysis
-│   ├── tsne_phonology.py        # t-SNE visualization
-│   └── attention_heatmap.py     # Attention visualization
-├── benchmarks/
-│   └── external/
-│       ├── wlasl100/            # WLASL100 results
-│       ├── wlasl300/            # WLASL300 results
-│       ├── wlasl1000/           # WLASL1000 results
-│       └── wlasl2000/           # WLASL2000 results
-├── web/
-│   ├── server.py                # FastAPI web server
-│   └── static/index.html        # Web interface
-├── RESULTS.md                   # Detailed benchmark results
-└── README.md                    # This file
+phonssm/
+├── models/phonssm/       # Core architecture (AGAN, PDM, BiSSM, HPC)
+├── training/             # Training and benchmark scripts
+├── web/                  # FastAPI demo server
+├── data/processed/       # Preprocessed datasets (Git LFS)
+├── benchmarks/           # Benchmark results
+└── docs/                 # Additional documentation
 ```
 
 ## Input Format
@@ -255,15 +257,23 @@ PhonSSM excels on classes with limited training data:
 
 ## Citation
 
+If you use PhonSSM in your research, please cite:
+
 ```bibtex
-@article{phonssm2026,
-  title={PhonSSM: Phonological State Space Model for Sign Language Recognition},
-  author={Anonymous},
-  journal={Under Review},
+@inproceedings{phonssm2026,
+  title={PhonSSM: A Phonology-Aware State Space Model for Sign Language Recognition},
+  author={[Authors]},
+  booktitle={ICLR 2026 Workshop},
   year={2026}
 }
 ```
 
 ## License
 
-This project is released under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [WLASL Dataset](https://dxli94.github.io/WLASL/) for benchmark data
+- [MediaPipe](https://mediapipe.dev/) for pose estimation
+- [Mamba](https://github.com/state-spaces/mamba) for state space model inspiration
