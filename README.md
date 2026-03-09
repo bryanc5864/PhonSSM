@@ -217,7 +217,7 @@ Input shape: `(batch_size, 30, 75, 3)` or `(batch_size, 30, 225)`
 
 ```bibtex
 @inproceedings{phonssm2026,
-  title={PhonSSM: A Phonology-Aware State Space Model for Sign Language Recognition},
+  title={State Space Models are Effective Sign Language Learners: Exploiting Phonological Compositionality for Vocabulary-Scale Recognition},
   author={Zhang, Jasper and Cheng, Bryan and Jin, Austin},
   booktitle={ICLR 2026 Workshop},
   year={2026}
