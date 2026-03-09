@@ -9,9 +9,9 @@ description = "Phonology-Aware State Space Model for Sign Language Recognition"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Jasper Zhang"},
-    {name = "Bryan Cheng"},
-    {name = "Austin Jin"},
+    {name = "Jasper Zhang", email = "jasperzhang1001@gmail.com"},
+    {name = "Bryan Cheng", email = "bcbc7264@gmail.com"},
+    {name = "Austin Jin", email = "ahanchijin@gmail.com"},
 ]
 requires-python = ">=3.8"
 classifiers = [
