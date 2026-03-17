@@ -1,6 +1,3 @@
-# Paper (local only)
-paper/
-
 # Data files
 data/
 *.npy
