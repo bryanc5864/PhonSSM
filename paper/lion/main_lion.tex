@@ -138,7 +138,7 @@ We conduct \textbf{two independent evaluation tracks} using separate models trai
 
 \textbf{Track 1: WLASL Benchmarks} \cite{li2020word}. We train \textbf{four separate \phonssm{} models}, one for each WLASL vocabulary split (100, 300, 1000, 2000 signs). Each model is trained from scratch on only that split's training data, using pose+hand landmarks (33 body + 21 left + 21 right = 75 landmarks $\times$ 3 coords = 225 features). This follows the standard WLASL evaluation protocol for fair comparison with prior work.
 
-\textbf{Track 2: Merged-5565 (New Large-Scale Dataset)}. We train a \textbf{single separate model} on our new merged dataset to evaluate scalability to realistic vocabulary sizes. Merged-5565 combines six ASL sources: ASL Citizen \cite{desai2024asl}, WLASL, MVP (Kaggle ASL-Signs), and three fingerspelling datasets. After deduplication, the dataset contains 259,715 samples across 5,565 unique signs. This model uses \textit{dominant hand only} (21 landmarks $\times$ 3 coords = 63 features) because: (1) fingerspelling datasets (27\% of samples) contain only hand landmarks without pose; (2) MVP provides inconsistent pose quality; (3) dominant-hand normalization enables consistent representation across sources.
+\textbf{Track 2: Merged-5565 (New Large-Scale Dataset)}. We train a \textbf{single separate model} on our new merged dataset to evaluate scalability to realistic vocabulary sizes. Merged-5565 combines six ASL sources: ASL Citizen \cite{desai2023asl}, WLASL, MVP (Kaggle ASL-Signs), and three fingerspelling datasets. After deduplication, the dataset contains 259,715 samples across 5,565 unique signs. This model uses \textit{dominant hand only} (21 landmarks $\times$ 3 coords = 63 features) because: (1) fingerspelling datasets (27\% of samples) contain only hand landmarks without pose; (2) MVP provides inconsistent pose quality; (3) dominant-hand normalization enables consistent representation across sources.
 
 \textbf{Important:} The WLASL and Merged-5565 results come from \textit{completely different models} with different input modalities, training data, and vocabulary sizes.
 
@@ -213,7 +213,7 @@ Samples/Sign & Bi-LSTM & \phonssm{} & Gain \\
 \end{minipage}
 \end{figure}
 
-Phonological decomposition enables few-shot learning (Table~\ref{tab:generalization}): for signs with 1--5 samples, 13.27\% vs 4.08\% (+225\%). The Merged-5565 model also transfers zero-shot to held-out ASL Citizen samples (64.1\% on overlapping vocabulary), compared to the RGB-based baseline of 63.2\% reported in \cite{desai2024asl} which requires full supervision.
+Phonological decomposition enables few-shot learning (Table~\ref{tab:generalization}): for signs with 1--5 samples, 13.27\% vs 4.08\% (+225\%). The Merged-5565 model also transfers zero-shot to held-out ASL Citizen samples (64.1\% on overlapping vocabulary), compared to the RGB-based baseline of 63.2\% reported in \cite{desai2023asl} which requires full supervision.
 
 \subsection{Analysis}
 
