@@ -269,7 +269,7 @@ We evaluate on one established benchmark family and one new large-scale dataset 
 
 \textbf{WLASL Benchmarks} \citep{li2020word}: The Word-Level American Sign Language dataset provides videos of isolated signs with four vocabulary sizes (100, 300, 1000, 2000 signs). Following prior work, we use \textit{pose and hand landmarks} (33 body + 42 hand = 75 landmarks $\times$ 3 coordinates = 225 features) to enable direct comparison with published results. Models are trained separately on each WLASL split.
 
-\textbf{Merged-5565 (New)}: To evaluate scalability to realistic vocabulary sizes, we construct a large-scale dataset by merging six ASL sources: ASL Citizen \citep{desai2024asl}, WLASL, MVP (Kaggle ASL-Signs), and three fingerspelling datasets (ASL Alphabet, ASL MNIST, ChicagoFSWild). After deduplication and quality filtering, the dataset contains 259,715 samples across 5,565 unique signs---nearly 3$\times$ larger than WLASL2000. We use \textit{dominant hand only} (21 landmarks $\times$ 3 = 63 features) for this evaluation. A single model is trained on the full merged dataset.
+\textbf{Merged-5565 (New)}: To evaluate scalability to realistic vocabulary sizes, we construct a large-scale dataset by merging six ASL sources: ASL Citizen \citep{desai2023asl}, WLASL, MVP (Kaggle ASL-Signs), and three fingerspelling datasets (ASL Alphabet, ASL MNIST, ChicagoFSWild). After deduplication and quality filtering, the dataset contains 259,715 samples across 5,565 unique signs---nearly 3$\times$ larger than WLASL2000. We use \textit{dominant hand only} (21 landmarks $\times$ 3 = 63 features) for this evaluation. A single model is trained on the full merged dataset.
 
 \textbf{Why different input modalities?} WLASL evaluation requires pose context for fair comparison to prior methods that use full-body information. For Merged-5565, we use dominant-hand input because the source datasets vary in available modalities, and dominant hand provides a consistent representation across all sources.
 
@@ -575,7 +575,7 @@ $\lambda_{\text{div}}$ & 0.01 \\
 \toprule
 Source Dataset & Samples & Signs & Type \\
 \midrule
-ASL Citizen \citep{desai2024asl} & 83,399 & 2,731 & Isolated \\
+ASL Citizen \citep{desai2023asl} & 83,399 & 2,731 & Isolated \\
 WLASL \citep{li2020word} & 21,083 & 2,000 & Isolated \\
 MVP/Kaggle ASL-Signs & 94,477 & 250 & Isolated \\
 \addlinespace

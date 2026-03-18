@@ -108,7 +108,7 @@ Consider the contrast between two strategies. \textit{Flat representations} assi
 \section{Experiments}
 \label{sec:experiments}
 
-\textbf{Datasets.} We evaluate on two tracks: (1)~\textit{WLASL} \citep{li2020word}: standard benchmarks with 100/300/1000/2000 sign splits, using pose+hands (75 landmarks). We train separate models for each split. (2)~\textit{Merged-5565}: our new large-scale dataset combining 259,715 samples across 5,565 signs from ASL Citizen \citep{desai2024asl}, WLASL, and fingerspelling datasets; uses dominant hand only (21 landmarks) for consistency across sources.
+\textbf{Datasets.} We evaluate on two tracks: (1)~\textit{WLASL} \citep{li2020word}: standard benchmarks with 100/300/1000/2000 sign splits, using pose+hands (75 landmarks). We train separate models for each split. (2)~\textit{Merged-5565}: our new large-scale dataset combining 259,715 samples across 5,565 signs from ASL Citizen \citep{desai2023asl}, WLASL, and fingerspelling datasets; uses dominant hand only (21 landmarks) for consistency across sources.
 
 \textbf{Implementation.} \phonssm{} uses model dimension $D{=}128$, component dimension $D_c{=}32$, 4 GAT attention heads, 4 BiSSM layers with expansion factor 2 (3.2M total parameters). Training: AdamW with lr $3{\times}10^{-4}$, cosine decay, batch size 128, 100 epochs. All results are mean over 3 seeds.
 
@@ -137,7 +137,7 @@ Merged-5565 & -- & -- & \textbf{53.34} \\
 
 \textbf{Main Results} (Table~\ref{tab:datasets}). On WLASL100, \phonssm{} reaches 88.37\% (+4.8pp over DSTA-SLR). On WLASL2000, we achieve \textbf{72.1\% vs 53.7\%} (+18.4pp). DSTA-SLR outperforms on mid-range splits (WLASL300/1000) due to \textit{minimal pair density}: mid-range vocabularies contain disproportionately more phonologically similar signs, favoring DSTA-SLR's fine-grained attention. At large vocabularies, compositional generalization dominates. On Merged-5565: 53.3\% vs 27.4\% Bi-LSTM (+26pp, $p{<}0.001$).
 
-\textbf{Few-Shot Performance.} Phonological decomposition enables strong few-shot learning: for signs with 1--5 training samples, 13.3\% vs 4.1\% (+225\% relative gain). The model also transfers zero-shot to held-out ASL Citizen samples: 64.1\% on overlapping vocabulary (vs 63.2\% supervised RGB baseline from \citet{desai2024asl}).
+\textbf{Few-Shot Performance.} Phonological decomposition enables strong few-shot learning: for signs with 1--5 training samples, 13.3\% vs 4.1\% (+225\% relative gain). The model also transfers zero-shot to held-out ASL Citizen samples: 64.1\% on overlapping vocabulary (vs 63.2\% supervised RGB baseline from \citet{desai2023asl}).
 
 \textbf{Analysis.} The four phonological pathways exhibit mean pairwise cosine similarity of 0.12 (vs 0.67 without $\mathcal{L}_{\text{ortho}}$), confirming orthogonality. Causal evidence for compositionality: swapping component embeddings for minimal pairs flips predictions to the partner sign 73.2\% of the time vs 12.4\% for controls ($p{<}0.001$). Additionally, 72\% of errors involve signs sharing 2+ phonological components (vs 8\% expected by chance).
 
@@ -564,7 +564,7 @@ $\lambda_{\text{div}}$ & 0.01 \\
 \toprule
 Source Dataset & Samples & Signs & Type \\
 \midrule
-ASL Citizen \citep{desai2024asl} & 83,399 & 2,731 & Isolated \\
+ASL Citizen \citep{desai2023asl} & 83,399 & 2,731 & Isolated \\
 WLASL \citep{li2020word} & 21,083 & 2,000 & Isolated \\
 MVP/Kaggle ASL-Signs$^a$ & 94,477 & 250 & Isolated \\
 \addlinespace
