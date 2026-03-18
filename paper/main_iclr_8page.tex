@@ -47,12 +47,7 @@
 \newcommand{\bissm}{\textsc{BiSSM}}
 \newcommand{\hpc}{\textsc{HPC}}
 
-
 \title{State Space Models are Effective Sign Language Learners:\\Exploiting Phonological Compositionality for Vocabulary-Scale Recognition}
-
-% Authors must not appear in the submitted version. They should be hidden
-% as long as the \iclrfinalcopy macro remains commented out below.
-% Non-anonymous submissions will be rejected without review.
 
 \author{Jasper Zhang\thanks{Equal contribution.} \& Bryan Cheng$^*$ \\
 Cold Spring Harbor Laboratory\\
@@ -309,14 +304,14 @@ BiSSM $\rightarrow$ LSTM & 82.17 & $-$6.2 \\
 
 \textbf{The compositional bottleneck principle.} Vocabulary scaling failures arise from \textit{representational mismatch}---flat representations have $O(K)$ capacity while compositional domains have $O(M^c)$ structure. The solution is inductive biases that compile domain structure into architecture.
 
-\textbf{Key findings.} (1) The precision-generalization tradeoff is fundamental: compositional models excel at diverse vocabularies, discriminative models at dense minimal pairs. (2) Compositionality is learnable but not emergent---explicit constraints are necessary. (3) Structure beats bandwidth: \phonssm{} (3.2M, skeleton) outperforms I3D (12.3M, video) by 40pp.
+\textbf{Key findings.} (1) The precision-generalization tradeoff is fundamental: compositional models excel at diverse vocabularies, discriminative models at dense minimal pairs. (2) Compositionality is learnable but not emergent---explicit constraints are necessary. (3) Structure beats bandwidth: \phonssm{} (3.2M, skeleton) outperforms I3D (12.3M, video) by 39.6pp.
 
 \textbf{Results.} SOTA on WLASL100 (\textbf{88.4\%}) and WLASL2000 (\textbf{72.1\%}, +18.4pp); competitive on mid-range splits. On Merged-5565: 53.3\% with +225\% few-shot improvement.
 
 \textbf{Limitations.} Isolated signs only; fixed phonological categories; ASL-only evaluation.
 
-\bibliography{references}
 \bibliographystyle{iclr2026_conference}
+\bibliography{references}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
