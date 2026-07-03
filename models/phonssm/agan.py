@@ -369,6 +369,20 @@ class AnatomicalGraphAttention(nn.Module):
         B, T, N, C = x.shape
 
         # Compute adaptive adjacency
+        # KNOWN ISSUE (anatomical mask is a NO-OP): sigmoid(A_learn)*0.5 is in
+        # (0, 0.5) for EVERY entry, so A is strictly positive everywhere. The
+        # GATLayer masks with (adj == 0), which is therefore never true -> the
+        # attention is fully-connected dense self-attention, NOT the anatomical
+        # masked graph attention the paper describes (and the "-AGAN" ablation
+        # measures MLP-vs-dense-attention, not vs anatomical masking).
+        # To realize anatomical masking, restrict the learnable term to existing
+        # skeletal edges so structural zeros stay zero, e.g.:
+        #     edge = (self.A_anat > 0).float()
+        #     A = self.A_anat + torch.sigmoid(self.A_learn) * 0.5 * edge
+        # NOTE: applying that fix CHANGES the model and requires retraining; it is
+        # intentionally left unchanged here so the honest re-evaluation measures
+        # the model exactly as published. Decide: fix+retrain, or correct the
+        # paper's wording to "adaptive dense attention with an anatomical prior".
         A = self.A_anat + torch.sigmoid(self.A_learn) * 0.5
         A = A / (A.sum(dim=-1, keepdim=True) + 1e-6)  # Normalize
 

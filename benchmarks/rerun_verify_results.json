@@ -1,0 +1,23 @@
+[
+  {
+    "split": 300,
+    "stored": 75.5,
+    "rerun_val": 75.5,
+    "rerun_test": 74.95,
+    "paper": 74.41
+  },
+  {
+    "split": 1000,
+    "stored": 62.86,
+    "rerun_val": 62.86,
+    "rerun_test": 62.9,
+    "paper": 62.9
+  },
+  {
+    "split": 2000,
+    "stored": 71.52,
+    "rerun_val": 71.52,
+    "rerun_test": 71.79,
+    "paper": 72.08
+  }
+]

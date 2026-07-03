@@ -38,117 +38,52 @@ from models.phonssm import PhonSSM, PhonSSMConfig
 
 
 def load_wlasl_splits(subset_size=100, use_pose_hands=True):
-    """Load WLASL data with official train/val/test splits.
+    """Load WLASL data honoring the OFFICIAL per-video train/val/test split.
 
-    Args:
-        subset_size: Number of classes (100/300/1000/2000)
-        use_pose_hands: If True, use pose+hands features (75 landmarks = 225 features)
-                       If False, use single hand (21 landmarks = 63 features)
+    FIXED (data-leakage): the previous implementation loaded the official split
+    only to compute train/val RATIOS, then discarded it and partitioned the
+    pooled (triplicated V1/V2/V3) array with a RANDOM stratified train_test_split.
+    That scattered near-identical copies of the same recording across train and
+    test, inflating accuracy, and made the result non-comparable to published
+    WLASL baselines. We now load the leakage-free official-split data produced by
+    ``training/build_wlasl_official.py`` (partitioned by instance['split'], with
+    the test set deduplicated to one copy per source video and a train/test
+    video-id overlap assertion).
     """
-    mode_str = "pose+hands" if use_pose_hands else "single hand"
-    print(f"Loading WLASL{subset_size} with official splits ({mode_str})...")
-
-    # Load the WLASL JSON with split info
-    wlasl_json_path = PROJECT_ROOT / "data" / "raw" / "wlasl" / "start_kit" / "WLASL_v0.3.json"
-    with open(wlasl_json_path) as f:
-        wlasl_data = json.load(f)
-
-    # Get top-K glosses for the subset
-    subset_glosses = [entry['gloss'] for entry in wlasl_data[:subset_size]]
-    gloss_to_idx = {g: i for i, g in enumerate(subset_glosses)}
-
-    # Build split information from JSON
-    split_info = {'train': [], 'val': [], 'test': []}
-    for gloss_idx, entry in enumerate(wlasl_data[:subset_size]):
-        gloss = entry['gloss']
-        for instance in entry['instances']:
-            split = instance.get('split', 'train')
-            video_id = instance['video_id']
-            split_info[split].append({
-                'gloss': gloss,
-                'gloss_idx': gloss_idx,
-                'video_id': video_id
-            })
-
-    print(f"  Official splits - Train: {len(split_info['train'])}, Val: {len(split_info['val'])}, Test: {len(split_info['test'])}")
-
-    # Load our preprocessed WLASL data
-    if use_pose_hands:
-        data_file = PROJECT_ROOT / "data" / "processed" / "X_wlasl_pose_hands.npy"
-        label_file = PROJECT_ROOT / "data" / "processed" / "y_wlasl_pose_hands.npy"
-        map_file = PROJECT_ROOT / "data" / "processed" / "wlasl_pose_hands_label_map.json"
-
-        if not data_file.exists():
-            print(f"\n  WARNING: Pose+hands data not found at {data_file}")
-            print(f"  Run: python training/preprocess_wlasl_full.py")
-            print(f"  Falling back to single hand data...\n")
-            use_pose_hands = False
-
     if not use_pose_hands:
-        data_file = PROJECT_ROOT / "data" / "processed" / "X_wlasl.npy"
-        label_file = PROJECT_ROOT / "data" / "processed" / "y_wlasl.npy"
-        map_file = PROJECT_ROOT / "data" / "processed" / "wlasl_label_map.json"
+        raise NotImplementedError(
+            "Only pose+hands (75-landmark) official splits are supported by the "
+            "leakage-free loader. Build them with build_wlasl_official.py.")
 
-    X_all = np.load(data_file, allow_pickle=True)
-    y_all = np.load(label_file, allow_pickle=True)
+    split_dir = PROJECT_ROOT / "data" / "processed" / "wlasl_official" / f"wlasl{subset_size}"
+    if not (split_dir / "X_train.npy").exists():
+        raise FileNotFoundError(
+            f"Official-split data not found at {split_dir}.\n"
+            f"Build it (leakage-free) with:\n"
+            f"    python training/build_wlasl_official.py --subset {subset_size}\n"
+            f"NOTE: the old random-split path was removed because it leaked "
+            f"near-duplicate video copies across train/test.")
 
-    with open(map_file) as f:
-        full_label_map = json.load(f)
+    print(f"Loading WLASL{subset_size} OFFICIAL splits from {split_dir} ...")
+    X_train = np.load(split_dir / "X_train.npy"); y_train = np.load(split_dir / "y_train.npy")
+    X_val = np.load(split_dir / "X_val.npy"); y_val = np.load(split_dir / "y_val.npy")
+    X_test = np.load(split_dir / "X_test.npy"); y_test = np.load(split_dir / "y_test.npy")
+    print(f"  Official splits - Train: {len(y_train)}, Val: {len(y_val)}, Test: {len(y_test)} "
+          f"(test = unique videos, official split, no train/test leakage)")
 
-    print(f"  Loaded data: {X_all.shape} ({X_all.shape[-1]} features per frame)")
-
-    # Reverse map: idx -> gloss
-    idx_to_gloss = {v: k for k, v in full_label_map.items()}
-
-    # Filter to subset glosses and remap labels
-    mask = np.array([idx_to_gloss.get(int(label), '') in gloss_to_idx for label in y_all])
-    X_subset = X_all[mask]
-    y_subset_orig = y_all[mask]
-
-    # Remap labels to new indices (0 to subset_size-1)
-    y_subset = np.array([gloss_to_idx[idx_to_gloss[int(label)]] for label in y_subset_orig])
-
-    print(f"  Filtered data: {X_subset.shape[0]} samples for {subset_size} glosses")
-
-    # Create train/val/test splits based on sample distribution
-    from sklearn.model_selection import train_test_split
-
-    # Use approximate ratios from official split
-    train_ratio = len(split_info['train']) / (len(split_info['train']) + len(split_info['val']) + len(split_info['test']))
-    val_ratio = len(split_info['val']) / (len(split_info['train']) + len(split_info['val']) + len(split_info['test']))
-
-    # Split data
-    X_train, X_temp, y_train, y_temp = train_test_split(
-        X_subset, y_subset, test_size=1-train_ratio, stratify=y_subset, random_state=42
-    )
-
-    val_test_ratio = val_ratio / (1 - train_ratio)
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp, test_size=1-val_test_ratio, stratify=y_temp, random_state=42
-    )
-
-    print(f"  Final splits - Train: {len(X_train)}, Val: {len(X_val)}, Test: {len(X_test)}")
-
-    # Class counts
     class_counts = defaultdict(int)
     for label in y_train:
         class_counts[int(label)] += 1
 
-    # Determine input mode based on feature count
     num_features = X_train.shape[-1]
-    if num_features == 225:  # 75 * 3
-        input_mode = "pose_hands"
-    elif num_features == 126:  # 42 * 3
-        input_mode = "both_hands"
-    else:  # 63 = 21 * 3
-        input_mode = "single_hand"
+    input_mode = "pose_hands" if num_features == 225 else ("both_hands" if num_features == 126 else "single_hand")
 
     return {
         'X_train': X_train, 'y_train': y_train,
         'X_val': X_val, 'y_val': y_val,
         'X_test': X_test, 'y_test': y_test,
         'num_classes': subset_size,
-        'label_map': gloss_to_idx,
+        'label_map': None,
         'class_counts': dict(class_counts),
         'dataset_name': f'WLASL{subset_size}',
         'input_mode': input_mode,

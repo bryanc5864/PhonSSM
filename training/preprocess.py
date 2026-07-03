@@ -199,13 +199,18 @@ if __name__ == "__main__":
     y = np.load(input_dir / 'y_raw.npy')
     print(f"Loaded: X={X.shape}, y={y.shape}")
 
-    # Augment if requested
-    if not args.no_augment:
-        X, y = augment_dataset(X, y, augmentation_factor=args.augment_factor)
-
-    # Create splits
-    print("\nCreating train/val/test splits...")
+    # FIXED (data-leakage): split BEFORE augmenting. The previous code augmented
+    # the full array (factor 5) and THEN split, so ~4 near-identical siblings of
+    # every val/test sample landed in train, and val/test were themselves
+    # augmented rather than raw — inflating accuracy. Now we split raw data first
+    # and augment the TRAIN split only; val/test stay raw and leakage-free.
+    print("\nCreating train/val/test splits (on raw data)...")
     splits = create_splits(X, y)
+
+    if not args.no_augment:
+        print(f"Augmenting TRAIN split only (factor {args.augment_factor}); val/test left raw...")
+        splits['X_train'], splits['y_train'] = augment_dataset(
+            splits['X_train'], splits['y_train'], augmentation_factor=args.augment_factor)
 
     # Save
     print("\nSaving splits...")

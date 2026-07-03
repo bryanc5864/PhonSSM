@@ -163,13 +163,23 @@ def merge_all_datasets(processed_dir, output_dir=None):
             y_list.append(all_datasets[key]['y'])
 
     # Split and add other datasets (80/10/10)
+    # FIXED (reproducibility): use a SEEDED RNG so the split can be regenerated
+    # (the previous np.random.permutation was unseeded, so the exact 76/12/12
+    # partition behind the reported Merged-5565 number could never be reproduced).
+    # KNOWN LIMITATION (signer leakage): ASL Citizen ships an OFFICIAL
+    # signer-independent train/val/test split, but process_asl_citizen.py drops
+    # the split label, so we fall back to a random 80/10/10 here — this mixes the
+    # same signers/glosses across splits and inflates accuracy. To fully fix,
+    # carry instance['split'] through preprocessing and partition by it (and by
+    # signer) instead of the random split below.
+    split_rng = np.random.default_rng(42)
     for name in ['asl_citizen', 'asl_alphabet', 'asl_mnist', 'chicagofswild']:
         if name in all_datasets:
             X = all_datasets[name]['X']
             y = all_datasets[name]['y']
 
             n_total = len(X)
-            indices = np.random.permutation(n_total)
+            indices = split_rng.permutation(n_total)
             X = X[indices]
             y = y[indices]
 
