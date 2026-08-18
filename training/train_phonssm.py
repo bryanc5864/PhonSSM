@@ -1,22 +1,8 @@
-"""
-PhonSSM Training Script
-=======================
-Train the Phonology-Aware State Space Model for sign language recognition.
+"""train PhonSSM (AGAN -> PDM -> BiSSM -> HPC) on the merged 5565-class set.
 
-Architecture:
-    AGAN → PDM → BiSSM → HPC
-    Input: (30 frames, 21 landmarks, 3 coords)
-    Output: 5565 sign classes
+input (30 frames, 21 landmarks, 3 coords), ~2-3M params.
 
-Target metrics:
-    - Top-1 accuracy: >40% (vs 28% baseline)
-    - Top-5 accuracy: >70%
-    - Parameters: ~2-3M
-
-Usage:
-    python training/train_phonssm.py
-    python training/train_phonssm.py --epochs 100 --batch-size 32
-    python training/train_phonssm.py --device cuda
+    python training/train_phonssm.py [--epochs 100 --batch-size 32 --device cuda]
 """
 
 import os
@@ -34,13 +20,13 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
 
-# Add project root to path
+# add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from models.phonssm import PhonSSM, PhonSSMConfig
 
-# Paths
+# paths
 DATA_DIR = PROJECT_ROOT / "data" / "processed" / "merged"
 MODEL_DIR = PROJECT_ROOT / "models" / "phonssm" / "checkpoints"
 
@@ -64,7 +50,7 @@ def load_data(data_dir: Path):
     print(f"Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}")
     print(f"Classes: {num_classes}")
 
-    # Convert to PyTorch tensors
+    # convert to PyTorch tensors
     X_train = torch.FloatTensor(X_train)
     y_train = torch.LongTensor(y_train)
     X_val = torch.FloatTensor(X_val)
@@ -106,22 +92,21 @@ def train_epoch(model, dataloader, optimizer, device, config):
 
         optimizer.zero_grad()
 
-        # Forward pass
+        # forward pass
         outputs = model(X_batch)
 
-        # Compute loss
         losses = model.compute_loss(outputs, y_batch, config.label_smoothing)
         loss = losses['total']
 
-        # Backward pass
+        # backward pass
         loss.backward()
 
-        # Gradient clipping
+        # gradient clipping
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
         optimizer.step()
 
-        # Metrics
+        # metrics
         total_loss += loss.item()
         accs = calculate_accuracy(outputs['logits'], y_batch)
         for k in total_acc:
@@ -176,18 +161,16 @@ def train(args):
     print("PHONSSM TRAINING")
     print("=" * 60)
 
-    # Device
     device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
     print(f"Device: {device}")
     if device.type == 'cuda':
         print(f"GPU: {torch.cuda.get_device_name(0)}")
 
-    # Load data
     X_train, y_train, X_val, y_val, X_test, y_test, num_classes, label_map = load_data(
         Path(args.data_dir)
     )
 
-    # Create config
+    # create config
     config = PhonSSMConfig(
         num_signs=num_classes,
         num_frames=X_train.shape[1],  # 30
@@ -195,7 +178,7 @@ def train(args):
         label_smoothing=args.label_smoothing
     )
 
-    # Create dataloaders
+    # create dataloaders
     train_dataset = TensorDataset(X_train, y_train)
     val_dataset = TensorDataset(X_val, y_val)
     test_dataset = TensorDataset(X_test, y_test)
@@ -220,24 +203,22 @@ def train(args):
         pin_memory=True if device.type == 'cuda' else False
     )
 
-    # Create model
+    # create model
     print("\nBuilding PhonSSM model...")
     model = PhonSSM(config).to(device)
 
-    # Print parameter counts
+    # print parameter counts
     param_counts = model.count_parameters()
     print(f"\nParameter counts:")
     for name, count in param_counts.items():
         print(f"  {name}: {count:,}")
 
-    # Optimizer
     optimizer = optim.AdamW(
         model.parameters(),
         lr=args.learning_rate,
         weight_decay=args.weight_decay
     )
 
-    # Scheduler
     if args.scheduler == 'plateau':
         scheduler = ReduceLROnPlateau(
             optimizer,
@@ -253,17 +234,17 @@ def train(args):
             T_mult=2
         )
 
-    # Create checkpoint directory
+    # create checkpoint directory
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir = MODEL_DIR / timestamp
     run_dir.mkdir(exist_ok=True)
 
-    # Save config
+    # save config
     with open(run_dir / 'config.json', 'w') as f:
         json.dump(vars(config), f, indent=2)
 
-    # Training loop
+    # training loop
     print(f"\nTraining for up to {args.epochs} epochs...")
     print(f"Batch size: {args.batch_size}")
     print(f"Learning rate: {args.learning_rate}")
@@ -276,21 +257,19 @@ def train(args):
         print(f"\nEpoch {epoch + 1}/{args.epochs}")
         print("-" * 40)
 
-        # Train
         train_metrics = train_epoch(model, train_loader, optimizer, device, config)
         history['train'].append(train_metrics)
 
-        # Validate
+        # validate
         val_metrics = evaluate(model, val_loader, device, config)
         history['val'].append(val_metrics)
 
-        # Update scheduler
+        # update scheduler
         if args.scheduler == 'plateau':
             scheduler.step(val_metrics['top1'])
         else:
             scheduler.step()
 
-        # Print metrics
         print(f"Train - Loss: {train_metrics['loss']:.4f}, "
               f"Top-1: {train_metrics['top1']*100:.2f}%, "
               f"Top-5: {train_metrics['top5']*100:.2f}%")
@@ -298,7 +277,7 @@ def train(args):
               f"Top-1: {val_metrics['top1']*100:.2f}%, "
               f"Top-5: {val_metrics['top5']*100:.2f}%")
 
-        # Save best model
+        # save best model
         if val_metrics['top1'] > best_val_acc:
             best_val_acc = val_metrics['top1']
             patience_counter = 0
@@ -314,12 +293,12 @@ def train(args):
         else:
             patience_counter += 1
 
-        # Early stopping
+        # early stopping
         if patience_counter >= args.patience:
             print(f"\nEarly stopping after {epoch + 1} epochs")
             break
 
-        # Periodic checkpoint
+        # periodic checkpoint
         if (epoch + 1) % 10 == 0:
             torch.save({
                 'epoch': epoch,
@@ -329,7 +308,7 @@ def train(args):
                 'config': vars(config)
             }, run_dir / f'checkpoint_epoch_{epoch+1}.pt')
 
-    # Load best model for evaluation
+    # load best model for evaluation
     print("\n" + "=" * 60)
     print("EVALUATION")
     print("=" * 60)
@@ -344,7 +323,7 @@ def train(args):
     print(f"  Top-3 Accuracy: {test_metrics['top3']*100:.2f}%")
     print(f"  Top-5 Accuracy: {test_metrics['top5']*100:.2f}%")
 
-    # Save final results
+    # save final results
     results = {
         'test_metrics': test_metrics,
         'best_val_acc': best_val_acc,
@@ -355,7 +334,7 @@ def train(args):
     with open(run_dir / 'results.json', 'w') as f:
         json.dump(results, f, indent=2, default=lambda x: float(x) if isinstance(x, (np.floating, torch.Tensor)) else x)
 
-    # Save training history
+    # save training history
     with open(run_dir / 'history.json', 'w') as f:
         json.dump(history, f, indent=2, default=lambda x: float(x))
 

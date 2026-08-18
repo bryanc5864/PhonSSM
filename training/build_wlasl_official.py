@@ -15,7 +15,8 @@ from tqdm import tqdm
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
-from training.preprocess_wlasl_full import extract_pose_and_hands, normalize_pose_hands, pad_or_truncate
+from training.preprocess_wlasl_full import (extract_pose_and_hands, normalize_pose_hands,
+                                            pad_or_truncate, temporal_impute)
 
 LM_DIR = ROOT / 'data' / 'raw' / 'wlasl-landmarks'
 OUT = ROOT / 'data' / 'processed' / 'wlasl_official'
@@ -28,8 +29,8 @@ def video_id_of(entry):
 
 def build(subset_size, max_frames=30, dedup_test=True):
     parsed = json.load(open(LM_DIR / 'WLASL_parsed_data.json'))
-    # Top-N glosses by first appearance order = WLASL_v0.3 top-N convention.
-    # Match benchmark_external: it used WLASL_v0.3.json[:subset] gloss order.
+    # top-N glosses by first appearance order = WLASL_v0.3 top-N convention.
+    # match benchmark_external: it used WLASL_v0.3.json[:subset] gloss order.
     v03 = json.load(open(ROOT / 'data' / 'raw' / 'wlasl' / 'start_kit' / 'WLASL_v0.3.json'))
     subset_glosses = [e['gloss'].lower() for e in v03[:subset_size]]
     gloss_to_idx = {g: i for i, g in enumerate(subset_glosses)}
@@ -49,10 +50,17 @@ def build(subset_size, max_frames=30, dedup_test=True):
             if g not in gloss_to_idx:
                 continue
             split = e.get('split', 'train')
-            lm = data[key]
+            lm = np.asarray(data[key])
             if len(lm) == 0:
                 continue
-            ph = pad_or_truncate(normalize_pose_hands(np.nan_to_num(extract_pose_and_hands(lm), nan=0.0)), max_frames)
+            # landmark-ordering guard: extract_pose_and_hands assumes the 180-pt
+            # MediaPipe-Holistic layout (pose 0-32, L-hand 33-53, R-hand 54-74,
+            # face 75-179). Other formats (e.g. the 553-pt V3 file) would silently
+            # slice the wrong joints, so skip anything that is not 180-wide.
+            if lm.ndim != 3 or lm.shape[1] < 75:
+                continue
+            raw = temporal_impute(np.nan_to_num(extract_pose_and_hands(lm), nan=0.0))
+            ph = pad_or_truncate(normalize_pose_hands(raw), max_frames)
             rows[split][video_id_of(e)].append((gloss_to_idx[g], ph.reshape(max_frames, -1).astype(np.float32)))
             counts[split] += 1
 
@@ -70,11 +78,13 @@ def build(subset_size, max_frames=30, dedup_test=True):
     Xva, yva, vva = pack('val', dedup=True)
     Xte, yte, vte = pack('test', dedup=dedup_test)
 
-    # Leakage guard: no video_id shared across train/test
+    # leakage guard: no video_id shared across train/test
     inter = set(vtr) & set(vte)
     assert not inter, f"LEAK: {len(inter)} video_ids in both train and test"
 
-    d = OUT / f'wlasl{subset_size}'
+    out_root = OUT if max_frames == 30 else OUT.parent / f'wlasl_official_f{max_frames}'
+    out_root.mkdir(parents=True, exist_ok=True)
+    d = out_root / f'wlasl{subset_size}'
     d.mkdir(exist_ok=True)
     np.save(d / 'X_train.npy', Xtr); np.save(d / 'y_train.npy', ytr)
     np.save(d / 'X_val.npy', Xva); np.save(d / 'y_val.npy', yva)
@@ -93,5 +103,6 @@ def build(subset_size, max_frames=30, dedup_test=True):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--subset', type=int, default=100)
+    ap.add_argument('--frames', type=int, default=30)
     a = ap.parse_args()
-    build(a.subset)
+    build(a.subset, max_frames=a.frames)

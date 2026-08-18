@@ -1,8 +1,6 @@
-"""
-Anatomical Graph Attention Network (AGAN)
-=========================================
-Graph Attention Network that respects hand/body skeleton topology.
-Supports multiple input modes: single_hand, both_hands, pose_hands, full.
+"""AGAN: graph attention over the hand/body skeleton topology.
+
+input modes: single_hand, both_hands, pose_hands, full, sign27.
 """
 import torch
 import torch.nn as nn
@@ -10,7 +8,7 @@ import torch.nn.functional as F
 from typing import Literal
 
 
-def create_adjacency(mode: Literal["single_hand", "both_hands", "pose_hands", "full"] = "single_hand") -> torch.Tensor:
+def create_adjacency(mode: str = "single_hand") -> torch.Tensor:
     """Create adjacency matrix based on input mode."""
     if mode == "single_hand":
         return create_hand_adjacency()
@@ -20,8 +18,28 @@ def create_adjacency(mode: Literal["single_hand", "both_hands", "pose_hands", "f
         return create_pose_hands_adjacency()
     elif mode == "full":
         return create_full_adjacency()
+    elif mode == "sign27":
+        return create_sign27_adjacency()
     else:
         raise ValueError(f"Unknown mode: {mode}")
+
+
+def create_sign27_adjacency() -> torch.Tensor:
+    """SAM-SLR / DSTA-SLR 27-joint skeleton (7 upper-body + 10 left-hand +
+    10 right-hand), the HRNet whole-body layout behind pose-only WLASL SOTA.
+    Node order: 0 nose, 1/2 L/R shoulder, 3/4 L/R elbow, 5/6 L/R wrist,
+    7-16 left hand, 17-26 right hand. Edge list from DSTA-SLR graph/sign_27.py."""
+    edges = [(0, 1), (0, 2), (1, 3), (3, 5), (2, 4), (4, 6),
+             (7, 8), (7, 9), (7, 11), (7, 13), (7, 15), (9, 10), (11, 12),
+             (13, 14), (15, 16),
+             (17, 18), (17, 19), (17, 21), (17, 23), (17, 25), (19, 20),
+             (21, 22), (23, 24), (25, 26),
+             (5, 7), (6, 17)]  # wrist -> hand root (left, right)
+    A = torch.zeros(27, 27)
+    for i, j in edges:
+        A[i, j] = 1.0
+        A[j, i] = 1.0
+    return A
 
 
 def create_hand_adjacency() -> torch.Tensor:
@@ -38,33 +56,33 @@ def create_hand_adjacency() -> torch.Tensor:
     """
     A = torch.zeros(21, 21)
 
-    # Finger chains
+    # finger chains
     fingers = [
-        [0, 1, 2, 3, 4],       # Thumb
-        [0, 5, 6, 7, 8],       # Index
-        [0, 9, 10, 11, 12],    # Middle
-        [0, 13, 14, 15, 16],   # Ring
-        [0, 17, 18, 19, 20],   # Pinky
+        [0, 1, 2, 3, 4],       # thumb
+        [0, 5, 6, 7, 8],       # index
+        [0, 9, 10, 11, 12],    # middle
+        [0, 13, 14, 15, 16],   # ring
+        [0, 17, 18, 19, 20],   # pinky
     ]
 
     for finger in fingers:
         for i in range(len(finger) - 1):
             A[finger[i], finger[i + 1]] = 1
-            A[finger[i + 1], finger[i]] = 1  # Symmetric
+            A[finger[i + 1], finger[i]] = 1  # symmetric
 
-    # Cross-finger connections (MCP joints)
+    # cross-finger connections (MCP joints)
     mcp_joints = [5, 9, 13, 17]
     for i in range(len(mcp_joints) - 1):
         A[mcp_joints[i], mcp_joints[i + 1]] = 1
         A[mcp_joints[i + 1], mcp_joints[i]] = 1
 
-    # Fingertip connections (optional - helps with spread detection)
+    # fingertip connections (optional - helps with spread detection)
     fingertips = [4, 8, 12, 16, 20]
     for i in range(len(fingertips) - 1):
-        A[fingertips[i], fingertips[i + 1]] = 0.5  # Weaker connection
+        A[fingertips[i], fingertips[i + 1]] = 0.5  # weaker connection
         A[fingertips[i + 1], fingertips[i]] = 0.5
 
-    # Self-loops
+    # self-loops
     A = A + torch.eye(21)
 
     return A
@@ -77,14 +95,14 @@ def create_both_hands_adjacency() -> torch.Tensor:
     """
     A = torch.zeros(42, 42)
 
-    # Left hand (indices 0-20)
+    # left hand (indices 0-20)
     left_hand = create_hand_adjacency()
     A[:21, :21] = left_hand
 
-    # Right hand (indices 21-41)
-    A[21:42, 21:42] = left_hand  # Same topology
+    # right hand (indices 21-41)
+    A[21:42, 21:42] = left_hand  # same topology
 
-    # Cross-hand connections (wrist to wrist, weak)
+    # cross-hand connections (wrist to wrist, weak)
     A[0, 21] = 0.3
     A[21, 0] = 0.3
 
@@ -109,26 +127,25 @@ def create_pose_hands_adjacency() -> torch.Tensor:
     """
     A = torch.zeros(75, 75)
 
-    # === Pose skeleton (0-32) ===
-    # Face
+    # pose skeleton (0-32)
     face_connections = [
-        (0, 1), (0, 2), (1, 3), (2, 4),  # Nose to eyes to ears
-        (0, 5), (0, 6),  # Nose to mouth
+        (0, 1), (0, 2), (1, 3), (2, 4),  # nose to eyes to ears
+        (0, 5), (0, 6),  # nose to mouth
     ]
 
-    # Upper body
+    # upper body
     body_connections = [
-        (9, 10),  # Shoulders
-        (9, 11), (11, 13),  # Left arm: shoulder -> elbow -> wrist
-        (10, 12), (12, 14),  # Right arm: shoulder -> elbow -> wrist
-        (9, 23), (10, 24),  # Shoulders to hips
-        (23, 24),  # Hips
+        (9, 10),  # shoulders
+        (9, 11), (11, 13),  # left arm: shoulder -> elbow -> wrist
+        (10, 12), (12, 14),  # right arm: shoulder -> elbow -> wrist
+        (9, 23), (10, 24),  # shoulders to hips
+        (23, 24),  # hips
     ]
 
-    # Lower body (optional, less important for signs)
+    # lower body (optional, less important for signs)
     lower_body = [
-        (23, 25), (25, 27),  # Left leg
-        (24, 26), (26, 28),  # Right leg
+        (23, 25), (25, 27),  # left leg
+        (24, 26), (26, 28),  # right leg
     ]
 
     for i, j in face_connections + body_connections + lower_body:
@@ -136,27 +153,27 @@ def create_pose_hands_adjacency() -> torch.Tensor:
             A[i, j] = 1
             A[j, i] = 1
 
-    # === Left hand (33-53) ===
+    # left hand (33-53)
     left_hand = create_hand_adjacency()
     A[33:54, 33:54] = left_hand
 
-    # === Right hand (54-74) ===
+    # right hand (54-74)
     A[54:75, 54:75] = left_hand
 
-    # === Connect hands to pose wrists ===
-    # Pose left wrist (13) to left hand wrist (33)
+    # connect hands to pose wrists
+    # pose left wrist (13) to left hand wrist (33)
     A[13, 33] = 1
     A[33, 13] = 1
 
-    # Pose right wrist (14) to right hand wrist (54)
+    # pose right wrist (14) to right hand wrist (54)
     A[14, 54] = 1
     A[54, 14] = 1
 
-    # Cross-hand connection (weak)
+    # cross-hand connection (weak)
     A[33, 54] = 0.3
     A[54, 33] = 0.3
 
-    # Self-loops
+    # self-loops
     A = A + torch.eye(75)
 
     return A
@@ -174,39 +191,39 @@ def create_full_adjacency() -> torch.Tensor:
     """
     A = torch.zeros(130, 130)
 
-    # Start with pose_hands adjacency
+    # start with pose_hands adjacency
     pose_hands = create_pose_hands_adjacency()
     A[:75, :75] = pose_hands
 
-    # Face mesh key points (simplified connections)
-    # Key facial landmarks for expression recognition
-    # Eyebrows, eyes, nose, mouth outline
+    # face mesh key points (simplified connections)
+    # key facial landmarks for expression recognition
+    # eyebrows, eyes, nose, mouth outline
     face_start = 75
 
-    # Connect face points in a mesh-like pattern (simplified)
-    # Upper face (eyebrows + eyes): 0-19
+    # connect face points in a mesh-like pattern (simplified)
+    # upper face (eyebrows + eyes): 0-19
     for i in range(19):
         A[face_start + i, face_start + i + 1] = 0.5
         A[face_start + i + 1, face_start + i] = 0.5
 
-    # Nose: 20-29
+    # nose: 20-29
     for i in range(20, 29):
         A[face_start + i, face_start + i + 1] = 0.5
         A[face_start + i + 1, face_start + i] = 0.5
 
-    # Mouth: 30-54
+    # mouth: 30-54
     for i in range(30, 54):
         A[face_start + i, face_start + i + 1] = 0.5
         A[face_start + i + 1, face_start + i] = 0.5
-    # Close mouth loop
+    # close mouth loop
     A[face_start + 30, face_start + 54] = 0.5
     A[face_start + 54, face_start + 30] = 0.5
 
-    # Connect face to pose nose
-    A[0, face_start + 25] = 0.5  # Pose nose to face nose center
+    # connect face to pose nose
+    A[0, face_start + 25] = 0.5  # pose nose to face nose center
     A[face_start + 25, 0] = 0.5
 
-    # Self-loops
+    # self-loops
     A = A + torch.eye(130)
 
     return A
@@ -228,10 +245,10 @@ class GraphAttentionLayer(nn.Module):
         self.out_features = out_features
         self.concat = concat
 
-        # Linear transformations for each head
+        # linear transformations for each head
         self.W = nn.Linear(in_features, out_features * num_heads, bias=False)
 
-        # Attention parameters
+        # attention parameters
         self.a_src = nn.Parameter(torch.empty(num_heads, out_features))
         self.a_dst = nn.Parameter(torch.empty(num_heads, out_features))
 
@@ -251,20 +268,20 @@ class GraphAttentionLayer(nn.Module):
         """
         B, N, _ = x.shape
 
-        # Linear transformation
+        # linear transformation
         h = self.W(x)  # (B, N, num_heads * out_features)
         h = h.view(B, N, self.num_heads, self.out_features)  # (B, N, H, F)
 
-        # Compute attention scores using additive attention
+        # compute attention scores using additive attention
         # e_ij = LeakyReLU(a_src @ h_i + a_dst @ h_j)
         attn_src = (h * self.a_src).sum(dim=-1)  # (B, N, H)
         attn_dst = (h * self.a_dst).sum(dim=-1)  # (B, N, H)
 
-        # Broadcast to get pairwise scores
+        # broadcast to get pairwise scores
         attn = attn_src.unsqueeze(2) + attn_dst.unsqueeze(1)  # (B, N, N, H)
         attn = self.leaky_relu(attn)
 
-        # Mask with adjacency (only attend to neighbors)
+        # mask with adjacency (only attend to neighbors)
         mask = (adj == 0).unsqueeze(0).unsqueeze(-1)  # (1, N, N, 1)
         attn = attn.masked_fill(mask, float('-inf'))
 
@@ -272,7 +289,7 @@ class GraphAttentionLayer(nn.Module):
         attn = F.softmax(attn, dim=2)  # (B, N, N, H)
         attn = self.dropout(attn)
 
-        # Aggregate neighbor features
+        # aggregate neighbor features
         h = h.permute(0, 2, 1, 3)  # (B, H, N, F)
         attn = attn.permute(0, 3, 1, 2)  # (B, H, N, N)
         out = torch.matmul(attn, h)  # (B, H, N, F)
@@ -285,15 +302,12 @@ class GraphAttentionLayer(nn.Module):
 
 
 class AnatomicalGraphAttention(nn.Module):
-    """
-    Graph Attention Network respecting hand/body skeleton topology.
+    """graph attention over hand/body skeleton topology.
 
-    Key innovations:
-    1. Anatomical prior in adjacency matrix
-    2. Learnable edge weights for adaptive connections
-    3. Multi-head attention for different relationship types
+    anatomical prior in the adjacency, learnable edge weights on top, multi-head
+    attention for different relationship types.
 
-    Supports multiple input modes:
+    input modes:
     - single_hand: 21 landmarks (original, for webcam)
     - both_hands: 42 landmarks
     - pose_hands: 75 landmarks (pose + both hands)
@@ -314,13 +328,13 @@ class AnatomicalGraphAttention(nn.Module):
         self.input_mode = input_mode
         self.num_nodes = num_nodes
 
-        # Fixed anatomical adjacency based on input mode
+        # fixed anatomical adjacency based on input mode
         self.register_buffer('A_anat', create_adjacency(input_mode))
 
-        # Learnable adjacency residual (discovers non-obvious connections)
+        # learnable adjacency residual (discovers non-obvious connections)
         self.A_learn = nn.Parameter(torch.zeros(num_nodes, num_nodes))
 
-        # Input projection
+        # input projection
         self.input_proj = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
@@ -328,7 +342,7 @@ class AnatomicalGraphAttention(nn.Module):
             nn.Dropout(dropout)
         )
 
-        # Graph attention layers
+        # graph attention layers
         self.gat1 = GraphAttentionLayer(
             in_features=hidden_dim,
             out_features=hidden_dim,
@@ -345,19 +359,17 @@ class AnatomicalGraphAttention(nn.Module):
             concat=False
         )
 
-        # Layer norms
+        # layer norms
         self.norm1 = nn.LayerNorm(hidden_dim * num_heads)
         self.norm2 = nn.LayerNorm(out_dim)
 
-        # Node pooling to single vector
-        self.node_pool = nn.Sequential(
-            nn.Linear(num_nodes * out_dim, out_dim * 2),
-            nn.LayerNorm(out_dim * 2),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(out_dim * 2, out_dim),
-            nn.LayerNorm(out_dim)
-        )
+        # attention pooling over nodes (replaces the old flatten-Linear pool,
+        # which was Linear(num_nodes*out_dim, ...) — 2.46M params / 57% of the
+        # whole model — and destroyed permutation structure). A learned query
+        # attends over the N node embeddings; O(out_dim) params, keeps spatial
+        # invariance, and frees capacity for a wider encoder.
+        self.pool_query = nn.Parameter(torch.randn(out_dim) * 0.02)
+        self.pool_out = nn.Sequential(nn.LayerNorm(out_dim), nn.GELU(), nn.Dropout(dropout))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -368,38 +380,31 @@ class AnatomicalGraphAttention(nn.Module):
         """
         B, T, N, C = x.shape
 
-        # Compute adaptive adjacency
-        # KNOWN ISSUE (anatomical mask is a NO-OP): sigmoid(A_learn)*0.5 is in
-        # (0, 0.5) for EVERY entry, so A is strictly positive everywhere. The
-        # GATLayer masks with (adj == 0), which is therefore never true -> the
-        # attention is fully-connected dense self-attention, NOT the anatomical
-        # masked graph attention the paper describes (and the "-AGAN" ablation
-        # measures MLP-vs-dense-attention, not vs anatomical masking).
-        # To realize anatomical masking, restrict the learnable term to existing
-        # skeletal edges so structural zeros stay zero, e.g.:
-        #     edge = (self.A_anat > 0).float()
-        #     A = self.A_anat + torch.sigmoid(self.A_learn) * 0.5 * edge
-        # NOTE: applying that fix CHANGES the model and requires retraining; it is
-        # intentionally left unchanged here so the honest re-evaluation measures
-        # the model exactly as published. Decide: fix+retrain, or correct the
-        # paper's wording to "adaptive dense attention with an anatomical prior".
-        A = self.A_anat + torch.sigmoid(self.A_learn) * 0.5
-        A = A / (A.sum(dim=-1, keepdim=True) + 1e-6)  # Normalize
+        # the learnable residual is masked to real skeletal edges. without the
+        # mask sigmoid()*0.5 is positive everywhere, A never hits 0, and
+        # GATLayer's (adj==0) test never fires — that was dense attention, not
+        # the anatomical masking the paper claims. published checkpoints predate
+        # this fix. self-loop so every node attends to itself.
+        edge = (self.A_anat > 0).float()
+        eye = torch.eye(self.num_nodes, device=self.A_anat.device)
+        A = self.A_anat + torch.sigmoid(self.A_learn) * 0.5 * edge + eye
+        A = A / (A.sum(dim=-1, keepdim=True) + 1e-6)  # normalize
 
-        # Reshape for batch processing
+        # reshape for batch processing
         x = x.view(B * T, N, C)
         x = self.input_proj(x)  # (B*T, N, hidden)
 
-        # Graph attention layers with residual connections
+        # graph attention layers with residual connections
         h = self.gat1(x, A)  # (B*T, N, hidden*heads)
         h = self.norm1(F.elu(h))
 
         h = self.gat2(h, A)  # (B*T, N, out_dim)
         h = self.norm2(F.elu(h))
 
-        # Pool nodes to single vector per frame
-        h = h.view(B * T, -1)  # (B*T, N*out_dim)
-        h = self.node_pool(h)  # (B*T, out_dim)
-        h = h.view(B, T, -1)   # (B, T, out_dim)
-
+        # attention-pool nodes to one vector per frame
+        scores = (h @ self.pool_query) / (h.shape[-1] ** 0.5)  # (B*T, N)
+        w = F.softmax(scores, dim=1).unsqueeze(-1)              # (B*T, N, 1)
+        h = (h * w).sum(dim=1)                                  # (B*T, out_dim)
+        h = self.pool_out(h)
+        h = h.view(B, T, -1)                                   # (B, T, out_dim)
         return h

@@ -1,0 +1,12 @@
+{
+  "subset": 100,
+  "streams": "bonemotion",
+  "tag": "b96",
+  "seed": 3,
+  "test_top1": 43.41,
+  "test_top5": 68.22,
+  "test_perclass": 43.07,
+  "best_val": 52.07,
+  "test_n": 258,
+  "epochs": 250
+}

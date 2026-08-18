@@ -1,6 +1,4 @@
-"""
-PhonSSM: Phonology-Aware State Space Model for Sign Language Recognition
-"""
+"""PhonSSM: phonology-aware state space model for sign recognition."""
 from .config import PhonSSMConfig
 from .agan import (
     AnatomicalGraphAttention,

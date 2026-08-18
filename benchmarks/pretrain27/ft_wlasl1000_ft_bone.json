@@ -1,0 +1,9 @@
+{
+  "subset": 1000,
+  "tag": "ft_bone",
+  "test_top1": 40.94,
+  "test_top5": 69.08,
+  "test_perclass": 40.94,
+  "best_val": 44.22,
+  "test_n": 1876
+}

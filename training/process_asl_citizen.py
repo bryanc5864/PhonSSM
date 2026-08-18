@@ -1,16 +1,12 @@
-"""
-ASL Citizen Video Processing Script
-Extracts MediaPipe hand landmarks from ASL Citizen videos.
+"""extract MediaPipe hand landmarks from ASL Citizen videos.
 
-Requirements:
-    pip install mediapipe opencv-python tqdm
+needs mediapipe, opencv-python, tqdm.
 
-Usage:
     python process_asl_citizen.py --video-dir /path/to/videos --output-dir data/processed
 """
 
 import os
-# Suppress TensorFlow/MediaPipe warnings
+# suppress TensorFlow/MediaPipe warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -23,7 +19,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import argparse
 import urllib.request
 
-# Suppress absl logging
+# suppress absl logging
 import absl.logging
 absl.logging.set_verbosity(absl.logging.ERROR)
 
@@ -33,7 +29,7 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
 
-# Model paths
+# model paths
 MODEL_DIR = Path(__file__).parent.parent / "models" / "mediapipe"
 HAND_MODEL_PATH = MODEL_DIR / "hand_landmarker.task"
 HAND_MODEL_URL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
@@ -89,20 +85,20 @@ def extract_landmarks_from_video(video_path, max_frames=None):
             if max_frames and frame_count >= max_frames:
                 break
 
-            # Convert BGR to RGB
+            # convert BGR to RGB
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            # Create MediaPipe Image
+            # wrap as a MediaPipe Image
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
-            # Detect hands
+            # detect hands
             result = landmarker.detect(mp_image)
 
-            # Extract hand landmarks (42 total: 21 left + 21 right)
+            # extract hand landmarks (42 total: 21 left + 21 right)
             frame_landmarks = np.zeros((42, 3), dtype=np.float32)
 
             for hand_idx, hand_landmarks in enumerate(result.hand_landmarks):
-                # Determine if left or right hand
+                # determine if left or right hand
                 handedness = result.handedness[hand_idx][0].category_name
 
                 offset = 0 if handedness == "Left" else 21
@@ -138,11 +134,11 @@ def normalize_landmarks(landmarks):
             normalized.append(np.zeros_like(frame))
             continue
 
-        # Center at wrist (landmark 0)
+        # center at wrist (landmark 0)
         wrist = frame[0]
         centered = frame - wrist
 
-        # Scale by max distance from wrist
+        # scale by max distance from wrist
         distances = np.linalg.norm(centered, axis=1)
         scale = distances.max()
 
@@ -195,14 +191,8 @@ def get_dominant_hand(landmarks):
 
 
 def process_single_video(args):
-    """
-    Worker function to process a single video (for multiprocessing).
-
-    Args:
-        args: Tuple of (video_path, gloss, label_idx, max_frames)
-
-    Returns:
-        Tuple of (features, label_idx) or None if failed
+    """multiprocessing worker: (video_path, gloss, label_idx, max_frames) ->
+    (features, label_idx), or None if the video failed.
     """
     video_path, gloss, label_idx, max_frames = args
 
@@ -232,14 +222,14 @@ def find_videos_in_directory(video_dir):
     video_dir = Path(video_dir)
     videos = []
 
-    # Find all video files
+    # find all video files
     for ext in ['*.mp4', '*.avi', '*.mov', '*.MP4', '*.AVI', '*.MOV']:
         for video_path in video_dir.rglob(ext):
-            # Try to extract gloss from path
-            # Option 1: Folder structure /gloss/video.mp4
+            # try to extract gloss from path
+            # option 1: Folder structure /gloss/video.mp4
             if video_path.parent.name != video_dir.name:
                 gloss = video_path.parent.name.lower()
-            # Option 2: Filename {gloss}_{id}.mp4
+            # option 2: Filename {gloss}_{id}.mp4
             else:
                 parts = video_path.stem.split('_')
                 gloss = parts[0].lower() if parts else video_path.stem.lower()
@@ -306,16 +296,7 @@ def process_asl_citizen(
     batch_size=100
 ):
     """
-    Process ASL Citizen videos and extract landmarks.
-
-    Args:
-        video_dir: Directory containing videos (ASL_Citizen/videos/)
-        output_dir: Output directory for processed data
-        metadata_path: Path to metadata file (optional)
-        splits_dir: Path to ASL Citizen splits directory (ASL_Citizen/splits/)
-        max_frames: Target sequence length
-        num_workers: Number of parallel workers for multiprocessing
-        batch_size: Save intermediate results every N videos
+    extract landmarks from the ASL Citizen videos, saving every batch_size clips.
     """
     video_dir = Path(video_dir)
     output_dir = Path(output_dir)
@@ -326,16 +307,16 @@ def process_asl_citizen(
     print("=" * 60)
     print(f"Parallel workers: {num_workers}")
 
-    # Download model first
+    # download model first
     print("\n0. Checking MediaPipe model...")
     download_model()
 
-    # Find videos
+    # find videos
     print(f"\n1. Scanning for videos in {video_dir}...")
 
-    # Try to auto-detect ASL Citizen structure
+    # try to auto-detect ASL Citizen structure
     if splits_dir is None:
-        # Check if video_dir is ASL_Citizen root or videos subfolder
+        # check if video_dir is ASL_Citizen root or videos subfolder
         if (video_dir.parent / 'splits').exists():
             splits_dir = video_dir.parent / 'splits'
         elif (video_dir / 'splits').exists():
@@ -343,7 +324,7 @@ def process_asl_citizen(
             video_dir = video_dir / 'videos'
 
     if splits_dir and Path(splits_dir).exists():
-        # Use official ASL Citizen splits
+        # use official ASL Citizen splits
         print(f"   Using ASL Citizen splits from {splits_dir}")
         video_metadata = load_asl_citizen_splits(splits_dir)
         videos = []
@@ -363,7 +344,7 @@ def process_asl_citizen(
             video_id = entry.get('video_id', entry.get('filename', ''))
             gloss = entry.get('gloss', entry.get('label', 'unknown'))
 
-            # Find video file
+            # find video file
             for ext in ['.mp4', '.avi', '.mov', '.MP4']:
                 video_path = video_dir / f"{video_id}{ext}"
                 if video_path.exists():
@@ -382,18 +363,18 @@ def process_asl_citizen(
         print("   No videos found!")
         return
 
-    # Get unique glosses
+    # get unique glosses
     glosses = sorted(set(v['gloss'] for v in videos))
     print(f"   Unique signs: {len(glosses)}")
 
-    # Create label map
+    # create label map
     sign_to_idx = {g: i for i, g in enumerate(glosses)}
 
-    # Save label map early (needed for resume)
+    # save label map early (needed for resume)
     with open(output_dir / 'asl_citizen_label_map.json', 'w') as f:
         json.dump(sign_to_idx, f, indent=2)
 
-    # Check for checkpoint to resume from
+    # check for checkpoint to resume from
     checkpoint_X = output_dir / 'X_asl_citizen_temp.npy'
     checkpoint_y = output_dir / 'y_asl_citizen_temp.npy'
     checkpoint_processed = output_dir / 'processed_videos.json'
@@ -411,14 +392,14 @@ def process_asl_citizen(
         print(f"   Loaded {len(X_data)} samples from checkpoint")
         print(f"   Skipping {len(processed_paths)} already processed videos")
 
-    # Filter out already processed videos
+    # filter out already processed videos
     remaining_videos = [v for v in videos if v['video_path'] not in processed_paths]
 
-    # Process videos with multiprocessing
+    # process videos with multiprocessing
     print(f"\n2. Processing videos with {num_workers} workers...")
     print(f"   Remaining: {len(remaining_videos)} / {len(videos)} videos")
 
-    # Prepare work items
+    # prepare work items
     work_items = [
         (v['video_path'], v['gloss'], sign_to_idx[v['gloss']], max_frames)
         for v in remaining_videos
@@ -428,7 +409,7 @@ def process_asl_citizen(
     failed = 0
 
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        # Submit all tasks and process results as they complete
+        # submit all tasks and process results as they complete
         futures = {executor.submit(process_single_video, item): item for item in work_items}
 
         for future in tqdm(as_completed(futures), total=len(futures), desc="Processing", initial=0):
@@ -446,7 +427,7 @@ def process_asl_citizen(
             else:
                 failed += 1
 
-            # Save intermediate results
+            # save intermediate results
             if processed > 0 and processed % batch_size == 0:
                 print(f"\n   Checkpoint: {processed} processed, {failed} failed")
                 X_temp = np.array(X_data, dtype=np.float32)
@@ -462,7 +443,7 @@ def process_asl_citizen(
         print("   No videos successfully processed!")
         return
 
-    # Convert to arrays
+    # convert to arrays
     X = np.array(X_data, dtype=np.float32)
     y = np.array(y_data, dtype=np.int32)
 
@@ -471,14 +452,13 @@ def process_asl_citizen(
     print(f"   y shape: {y.shape}")
     print(f"   Unique labels: {len(set(y))}")
 
-    # Save
     np.save(output_dir / 'X_asl_citizen.npy', X)
     np.save(output_dir / 'y_asl_citizen.npy', y)
 
     with open(output_dir / 'asl_citizen_label_map.json', 'w') as f:
         json.dump(sign_to_idx, f, indent=2)
 
-    # Remove temp files
+    # remove temp files
     temp_files = [
         output_dir / 'X_asl_citizen_temp.npy',
         output_dir / 'y_asl_citizen_temp.npy',
@@ -488,7 +468,7 @@ def process_asl_citizen(
         if f.exists():
             f.unlink()
 
-    # Save processing stats
+    # save processing stats
     stats = {
         'total_videos': len(videos),
         'processed': processed,
@@ -502,7 +482,7 @@ def process_asl_citizen(
 
     print(f"\n   Saved to {output_dir}")
 
-    # Summary
+    # summary
     print("\n" + "=" * 60)
     print("PROCESSING COMPLETE")
     print("=" * 60)

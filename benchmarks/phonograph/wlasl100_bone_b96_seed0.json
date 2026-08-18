@@ -1,0 +1,12 @@
+{
+  "subset": 100,
+  "streams": "bone",
+  "tag": "b96",
+  "seed": 0,
+  "test_top1": 62.79,
+  "test_top5": 88.76,
+  "test_perclass": 63.02,
+  "best_val": 64.2,
+  "test_n": 258,
+  "epochs": 250
+}

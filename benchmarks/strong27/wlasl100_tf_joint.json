@@ -1,0 +1,10 @@
+{
+  "subset": 100,
+  "streams": "joint",
+  "tag": "tf_joint",
+  "test_top1": 52.71,
+  "test_top5": 79.07,
+  "test_perclass": 52.82,
+  "best_val": 56.21,
+  "test_n": 258
+}

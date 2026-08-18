@@ -1,0 +1,10 @@
+{
+  "subset": 100,
+  "streams": "motion",
+  "tag": "s2_motion",
+  "test_top1": 41.47,
+  "test_top5": 62.79,
+  "test_perclass": 40.65,
+  "best_val": 50.0,
+  "test_n": 258
+}

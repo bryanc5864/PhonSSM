@@ -1,7 +1,4 @@
-"""
-SignSense Data Preprocessing Module
-Augmentation and train/val/test splitting.
-"""
+"""augmentation and train/val/test splitting."""
 
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -23,10 +20,10 @@ def augment_landmarks(landmarks, seed=None):
     if seed is not None:
         np.random.seed(seed)
 
-    # Reshape to (30, 21, 3)
+    # reshape to (30, 21, 3)
     augmented = landmarks.copy().reshape(-1, 21, 3)
 
-    # Random rotation around Z-axis (±15 degrees)
+    # random rotation around Z-axis (±15 degrees)
     angle = np.random.uniform(-15, 15) * np.pi / 180
     cos_a, sin_a = np.cos(angle), np.sin(angle)
     rotation = np.array([
@@ -36,19 +33,19 @@ def augment_landmarks(landmarks, seed=None):
     ])
     augmented = np.dot(augmented, rotation.T)
 
-    # Random scaling (0.9-1.1x)
+    # random scaling (0.9-1.1x)
     scale = np.random.uniform(0.9, 1.1)
     augmented = augmented * scale
 
-    # Random translation (small shift)
+    # random translation (small shift)
     shift = np.random.uniform(-0.05, 0.05, size=3)
     augmented = augmented + shift
 
-    # Gaussian noise
+    # gaussian noise
     noise = np.random.normal(0, 0.01, augmented.shape)
     augmented = augmented + noise
 
-    # Temporal jitter (small frame shifts)
+    # temporal jitter (small frame shifts)
     if np.random.random() > 0.5:
         shift_frames = np.random.randint(-2, 3)
         augmented = np.roll(augmented, shift_frames, axis=0)
@@ -97,29 +94,17 @@ def augment_dataset(X, y, augmentation_factor=5, verbose=True):
 
 
 def create_splits(X, y, test_size=0.15, val_size=0.15, random_state=42):
-    """
-    Create stratified train/val/test splits.
-
-    Args:
-        X: Feature array
-        y: Label array
-        test_size: Fraction for test set
-        val_size: Fraction for validation set
-        random_state: Random seed
-
-    Returns:
-        Dictionary with train/val/test arrays
-    """
-    # Check if stratification is possible
+    """stratified train/val/test split; returns a dict of arrays."""
+    # check if stratification is possible
     from collections import Counter
     class_counts = Counter(y)
     min_count = min(class_counts.values())
-    use_stratify = min_count >= 3  # Need at least 3 samples per class for stratified split
+    use_stratify = min_count >= 3  # need at least 3 samples per class for stratified split
 
     if not use_stratify:
         print(f"Warning: Some classes have <3 samples. Using non-stratified split.")
 
-    # First split: train+val vs test
+    # first split: train+val vs test
     X_trainval, X_test, y_trainval, y_test = train_test_split(
         X, y,
         test_size=test_size,
@@ -127,10 +112,10 @@ def create_splits(X, y, test_size=0.15, val_size=0.15, random_state=42):
         random_state=random_state
     )
 
-    # Second split: train vs val
+    # second split: train vs val
     val_ratio = val_size / (1 - test_size)
 
-    # Re-check stratification for second split
+    # re-check stratification for second split
     class_counts_trainval = Counter(y_trainval)
     min_count_trainval = min(class_counts_trainval.values())
     use_stratify_trainval = min_count_trainval >= 2
@@ -193,17 +178,15 @@ if __name__ == "__main__":
     input_dir = Path(args.input_dir)
     output_dir = Path(args.output_dir)
 
-    # Load raw data
+    # load raw data
     print("Loading raw data...")
     X = np.load(input_dir / 'X_raw.npy')
     y = np.load(input_dir / 'y_raw.npy')
     print(f"Loaded: X={X.shape}, y={y.shape}")
 
-    # FIXED (data-leakage): split BEFORE augmenting. The previous code augmented
-    # the full array (factor 5) and THEN split, so ~4 near-identical siblings of
-    # every val/test sample landed in train, and val/test were themselves
-    # augmented rather than raw — inflating accuracy. Now we split raw data first
-    # and augment the TRAIN split only; val/test stay raw and leakage-free.
+    # split before augmenting. the old order augmented 5x then split, so four
+    # near-identical siblings of every val/test sample sat in train. train only
+    # gets augmented now; val/test stay raw.
     print("\nCreating train/val/test splits (on raw data)...")
     splits = create_splits(X, y)
 
@@ -212,11 +195,11 @@ if __name__ == "__main__":
         splits['X_train'], splits['y_train'] = augment_dataset(
             splits['X_train'], splits['y_train'], augmentation_factor=args.augment_factor)
 
-    # Save
+    # save
     print("\nSaving splits...")
     save_splits(splits, output_dir)
 
-    # Compute and save class weights
+    # compute and save class weights
     weights = compute_class_weights(splits['y_train'])
     with open(output_dir / 'class_weights.json', 'w') as f:
         json.dump({int(k): v for k, v in weights.items()}, f, indent=2)

@@ -1,8 +1,4 @@
-"""
-AGAN Attention Heatmap Visualization
-=====================================
-Extracts graph attention weights and visualizes on skeleton.
-"""
+"""pull AGAN attention weights out and draw them on the skeleton."""
 
 import os
 import sys
@@ -23,22 +19,22 @@ from sklearn.model_selection import train_test_split
 from models.phonssm import PhonSSM, PhonSSMConfig
 
 
-# Landmark indices for pose+hands (75 total)
+# landmark indices for pose+hands (75 total)
 POSE_LANDMARKS = list(range(33))  # MediaPipe pose
 LEFT_HAND_LANDMARKS = list(range(33, 54))  # 21 landmarks
 RIGHT_HAND_LANDMARKS = list(range(54, 75))  # 21 landmarks
 
-# Body part groupings
+# body part groupings
 BODY_PARTS = {
-    'face': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # Face landmarks
-    'torso': [11, 12, 23, 24],  # Shoulders and hips
-    'left_arm': [13, 15, 17, 19, 21],  # Left arm
-    'right_arm': [14, 16, 18, 20, 22],  # Right arm
+    'face': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # face landmarks
+    'torso': [11, 12, 23, 24],  # shoulders and hips
+    'left_arm': [13, 15, 17, 19, 21],  # left arm
+    'right_arm': [14, 16, 18, 20, 22],  # right arm
     'left_hand': LEFT_HAND_LANDMARKS,
     'right_hand': RIGHT_HAND_LANDMARKS,
 }
 
-# Hand landmark names
+# hand landmark names
 HAND_LANDMARKS = [
     'wrist',
     'thumb_cmc', 'thumb_mcp', 'thumb_ip', 'thumb_tip',
@@ -58,7 +54,7 @@ def load_model_and_data(subset=100):
     else:
         ckpt_path = PROJECT_ROOT / "benchmarks/external/wlasl2000/20260119_020829/best_model.pt"
 
-    # Load data
+    # load data
     wlasl_json = PROJECT_ROOT / "data/raw/wlasl/start_kit/WLASL_v0.3.json"
     with open(wlasl_json) as f:
         wlasl_data = json.load(f)
@@ -79,7 +75,7 @@ def load_model_and_data(subset=100):
     X_subset = X_all[mask]
     y_subset = np.array([gloss_to_idx[idx_to_gloss[int(label)]] for label in y_all[mask]])
 
-    # Create model
+    # create model
     config = PhonSSMConfig(
         num_signs=subset,
         input_mode="pose_hands",
@@ -98,7 +94,7 @@ def extract_attention_weights(model, x, device):
     """Extract attention weights from AGAN module."""
     model.eval()
 
-    # Hook to capture attention weights
+    # hook to capture attention weights
     attention_weights = []
 
     def hook_fn(module, input, output):
@@ -106,24 +102,24 @@ def extract_attention_weights(model, x, device):
         if hasattr(module, 'att_weights'):
             attention_weights.append(module.att_weights.detach().cpu())
 
-    # Register hooks on attention layers
+    # register hooks on attention layers
     hooks = []
     for name, module in model.named_modules():
         if 'agan' in name.lower() and hasattr(module, 'attention'):
             hooks.append(module.attention.register_forward_hook(hook_fn))
 
-    # Forward pass
+    # forward pass
     with torch.no_grad():
         x_tensor = torch.FloatTensor(x).unsqueeze(0).to(device)
         outputs = model(x_tensor)
 
-    # Remove hooks
+    # remove hooks
     for h in hooks:
         h.remove()
 
-    # If no attention weights captured, compute from model directly
+    # if no attention weights captured, compute from model directly
     if not attention_weights:
-        # Extract from AGAN module manually
+        # extract from AGAN module manually
         attention_weights = extract_agan_attention(model, x, device)
 
     return attention_weights, outputs
@@ -133,7 +129,7 @@ def extract_agan_attention(model, x, device):
     """Extract attention from AGAN by analyzing intermediate outputs."""
     model.eval()
 
-    # Get AGAN module
+    # get AGAN module
     agan = model.agan if hasattr(model, 'agan') else None
     if agan is None:
         return None
@@ -141,19 +137,19 @@ def extract_agan_attention(model, x, device):
     with torch.no_grad():
         x_tensor = torch.FloatTensor(x).unsqueeze(0).to(device)
 
-        # Reshape for AGAN: (B, T, 225) -> (B, T, 75, 3)
+        # reshape for AGAN: (B, T, 225) -> (B, T, 75, 3)
         B, T, F = x_tensor.shape
         x_reshaped = x_tensor.view(B, T, 75, 3)
 
-        # Get attention scores if available
+        # get attention scores if available
         if hasattr(agan, 'get_attention_weights'):
             return agan.get_attention_weights(x_reshaped)
 
-        # Otherwise, compute node importance from output gradients
+        # otherwise, compute node importance from output gradients
         x_reshaped.requires_grad_(True)
         out = agan(x_reshaped)
 
-        # Compute importance as gradient magnitude
+        # compute importance as gradient magnitude
         importance = torch.zeros(75)
         for i in range(75):
             if out.grad_fn is not None:
@@ -169,7 +165,7 @@ def compute_landmark_importance(model, X_samples, y_samples, device, n_samples=1
     """Compute average landmark importance across samples."""
     model.eval()
 
-    # Sample data
+    # sample data
     if len(X_samples) > n_samples:
         indices = np.random.choice(len(X_samples), n_samples, replace=False)
         X_samples = X_samples[indices]
@@ -187,16 +183,16 @@ def compute_landmark_importance(model, X_samples, y_samples, device, n_samples=1
             outputs = model(x_tensor)
             logits = outputs['logits']
 
-            # Get gradient w.r.t. predicted class
+            # get gradient w.r.t. predicted class
             pred_class = logits.argmax(dim=-1)
             loss = logits[0, pred_class]
             loss.backward()
 
-            # Compute importance from gradients
+            # compute importance from gradients
             grad = x_tensor.grad.detach().cpu().numpy()[0]  # (30, 225)
             grad = grad.reshape(30, 75, 3)  # (30, 75, 3)
 
-            # Average over time and coordinates
+            # average over time and coordinates
             sample_importance = np.abs(grad).mean(axis=(0, 2))  # (75,)
             importance_scores += sample_importance
             count += 1
@@ -211,17 +207,17 @@ def plot_skeleton_heatmap(importance, output_path, title="Landmark Importance"):
     """Plot importance scores on a simplified skeleton diagram."""
     fig, axes = plt.subplots(1, 3, figsize=(15, 6))
 
-    # Normalize importance
+    # normalize importance
     importance = (importance - importance.min()) / (importance.max() - importance.min() + 1e-8)
 
-    # Body part importance
+    # body part importance
     body_importance = {}
     for part, indices in BODY_PARTS.items():
         valid_indices = [i for i in indices if i < len(importance)]
         if valid_indices:
             body_importance[part] = importance[valid_indices].mean()
 
-    # Plot 1: Body part bar chart
+    # plot 1: Body part bar chart
     ax1 = axes[0]
     parts = list(body_importance.keys())
     values = [body_importance[p] for p in parts]
@@ -231,7 +227,7 @@ def plot_skeleton_heatmap(importance, output_path, title="Landmark Importance"):
     ax1.set_title('Body Part Importance')
     ax1.set_xlim(0, 1)
 
-    # Plot 2: Right hand detail
+    # plot 2: Right hand detail
     ax2 = axes[1]
     right_hand_imp = importance[RIGHT_HAND_LANDMARKS]
     finger_groups = {
@@ -251,7 +247,7 @@ def plot_skeleton_heatmap(importance, output_path, title="Landmark Importance"):
     ax2.set_title('Right Hand - Finger Importance')
     ax2.set_xlim(0, 1)
 
-    # Plot 3: Left hand detail
+    # plot 3: Left hand detail
     ax3 = axes[2]
     left_hand_imp = importance[LEFT_HAND_LANDMARKS]
     finger_imp = {k: left_hand_imp[v].mean() for k, v in finger_groups.items()}
@@ -272,7 +268,7 @@ def plot_skeleton_heatmap(importance, output_path, title="Landmark Importance"):
 
 def plot_per_class_attention(importance_by_class, idx_to_label, output_path, top_n=10):
     """Plot attention patterns for different sign classes."""
-    # Select diverse classes
+    # select diverse classes
     classes = list(importance_by_class.keys())[:top_n]
 
     fig, axes = plt.subplots(2, 5, figsize=(20, 8))
@@ -282,7 +278,7 @@ def plot_per_class_attention(importance_by_class, idx_to_label, output_path, top
         ax = axes[idx]
         imp = importance_by_class[cls]
 
-        # Body part aggregation
+        # body part aggregation
         body_imp = {}
         for part, indices in BODY_PARTS.items():
             valid_indices = [i for i in indices if i < len(imp)]
@@ -292,7 +288,7 @@ def plot_per_class_attention(importance_by_class, idx_to_label, output_path, top
         parts = list(body_imp.keys())
         values = [body_imp[p] for p in parts]
 
-        # Normalize
+        # normalize
         values = np.array(values)
         values = (values - values.min()) / (values.max() - values.min() + 1e-8)
 
@@ -322,24 +318,23 @@ def main():
     output_dir = PROJECT_ROOT / "analysis" / "results"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load model and data
     model, X, y, idx_to_label, device = load_model_and_data(args.subset)
 
-    # Compute overall landmark importance
+    # compute overall landmark importance
     print("\nComputing landmark importance (this may take a moment)...")
     importance = compute_landmark_importance(model, X, y, device, n_samples=200)
 
-    # Plot overall heatmap
+    # plot overall heatmap
     plot_skeleton_heatmap(
         importance,
         output_dir / f"attention_heatmap_wlasl{args.subset}.png",
         f"PhonSSM Attention - WLASL{args.subset}"
     )
 
-    # Compute per-class importance
+    # compute per-class importance
     print("\nComputing per-class attention patterns...")
     importance_by_class = {}
-    unique_classes = np.unique(y)[:20]  # Top 20 classes
+    unique_classes = np.unique(y)[:20]  # top 20 classes
 
     for cls in unique_classes:
         mask = y == cls
@@ -350,7 +345,7 @@ def main():
                 model, X_cls, y_cls, device, n_samples=min(20, len(X_cls))
             )
 
-    # Plot per-class attention
+    # plot per-class attention
     if importance_by_class:
         plot_per_class_attention(
             importance_by_class, idx_to_label,

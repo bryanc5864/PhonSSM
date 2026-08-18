@@ -1,0 +1,12 @@
+{
+  "subset": 100,
+  "streams": "motion",
+  "tag": "b96",
+  "seed": 1,
+  "test_top1": 43.02,
+  "test_top5": 67.83,
+  "test_perclass": 42.62,
+  "best_val": 52.07,
+  "test_n": 258,
+  "epochs": 250
+}

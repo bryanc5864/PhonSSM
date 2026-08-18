@@ -1,0 +1,15 @@
+{
+  "subset": 1000,
+  "protocol": "official_split",
+  "tag": "v3_wide",
+  "test_top1": 19.56,
+  "test_top5": 40.25,
+  "test_perclass": 19.31,
+  "best_val_top1": 21.83,
+  "test_n": 1876,
+  "aug": true,
+  "ema": 0.99,
+  "epochs": 200,
+  "seed": 0,
+  "test_videos": 1876
+}

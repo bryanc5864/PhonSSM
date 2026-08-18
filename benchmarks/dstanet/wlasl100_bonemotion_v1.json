@@ -1,0 +1,11 @@
+{
+  "subset": 100,
+  "streams": "bonemotion",
+  "tag": "v1",
+  "test_top1": 45.74,
+  "test_top5": 70.54,
+  "test_perclass": 45.9,
+  "best_val": 47.93,
+  "test_n": 258,
+  "epochs": 250
+}

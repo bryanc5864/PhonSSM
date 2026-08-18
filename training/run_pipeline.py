@@ -1,25 +1,16 @@
 """
-SignSense Data Processing Pipeline
-Run the complete data processing pipeline.
+run the whole Kaggle ASL-Signs pipeline end to end: load, filter to the 50
+target signs, normalize, augment 5x, add synthetic errors 3x, split, save to
+data/processed/.
 
-Usage:
     python training/run_pipeline.py --data-dir data/raw/asl-signs
-
-This will:
-1. Load and preprocess Kaggle ASL-Signs data
-2. Filter to 50 target signs
-3. Normalize landmarks
-4. Augment data (5x)
-5. Generate synthetic errors (3x)
-6. Create train/val/test splits
-7. Save all processed data to data/processed/
 """
 
 import argparse
 import sys
 from pathlib import Path
 
-# Add training directory to path
+# add training directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from load_data import load_kaggle_data, save_label_map, TARGET_SIGNS
@@ -40,17 +31,7 @@ def run_pipeline(
     skip_errors: bool = False
 ):
     """
-    Run the complete data processing pipeline.
-
-    Args:
-        data_dir: Path to asl-signs dataset
-        output_dir: Output directory for processed data
-        target_signs: List of signs to include (None = default 50)
-        max_samples: Max samples to load (None = all)
-        augment_factor: Data augmentation factor
-        errors_per_sample: Synthetic errors per sample
-        skip_augment: Skip augmentation step
-        skip_errors: Skip error generation step
+    load -> normalize -> augment -> synthetic errors -> split -> save.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -59,7 +40,7 @@ def run_pipeline(
     print("SIGNSENSE DATA PROCESSING PIPELINE")
     print("=" * 60)
 
-    # Step 1: Load data
+    # load data
     print("\n[1/5] Loading Kaggle ASL-Signs data...")
     print("-" * 40)
 
@@ -69,15 +50,14 @@ def run_pipeline(
         max_samples=max_samples
     )
 
-    # Save label map
     save_label_map(sign_to_idx, output_dir / 'label_map.json')
 
-    # Save raw data
+    # save raw data
     np.save(output_dir / 'X_raw.npy', X)
     np.save(output_dir / 'y_raw.npy', y)
     print(f"Saved raw data: X={X.shape}, y={y.shape}")
 
-    # Step 2: Augment (optional)
+    # augment (optional)
     if not skip_augment:
         print("\n[2/5] Augmenting data...")
         print("-" * 40)
@@ -85,13 +65,13 @@ def run_pipeline(
     else:
         print("\n[2/5] Skipping augmentation...")
 
-    # Step 3: Create splits
+    # create splits
     print("\n[3/5] Creating train/val/test splits...")
     print("-" * 40)
     splits = create_splits(X, y)
     save_splits(splits, output_dir)
 
-    # Step 4: Generate errors (optional)
+    # generate errors (optional)
     if not skip_errors:
         print("\n[4/5] Generating synthetic errors...")
         print("-" * 40)
@@ -104,7 +84,7 @@ def run_pipeline(
             errors_per_sample=errors_per_sample
         )
 
-        # Save error-augmented training data
+        # save error-augmented training data
         np.save(output_dir / 'X_train_with_errors.npy', X_with_errors)
         np.save(output_dir / 'y_train_with_errors.npy', y_with_errors)
         np.save(output_dir / 'is_correct_train.npy', is_correct)
@@ -120,7 +100,7 @@ def run_pipeline(
     else:
         print("\n[4/5] Skipping error generation...")
 
-    # Step 5: Summary
+    # summary
     print("\n[5/5] Pipeline complete!")
     print("-" * 40)
     print(f"\nOutput directory: {output_dir}")

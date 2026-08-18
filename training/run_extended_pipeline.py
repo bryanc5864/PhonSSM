@@ -1,13 +1,10 @@
-"""
-SignSense Extended Pipeline
-Processes WLASL data and creates extended dataset combining MVP + WLASL.
-"""
+"""process WLASL and build the combined MVP + WLASL dataset."""
 
 import sys
 import os
 from pathlib import Path
 
-# Add parent directory to path for imports
+# add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
 from load_wlasl import load_wlasl_data
@@ -20,12 +17,8 @@ def run_extended_pipeline(
     processed_dir='data/processed',
     generate_errors=True
 ):
-    """
-    Run the full extended dataset pipeline.
-
-    1. Process WLASL landmarks data
-    2. Create extended dataset (MVP + WLASL)
-    3. Optionally generate synthetic errors for extended dataset
+    """process WLASL landmarks, build the MVP + WLASL extended set, and
+    optionally add synthetic errors on top.
     """
     wlasl_dir = Path(wlasl_dir)
     processed_dir = Path(processed_dir)
@@ -35,7 +28,7 @@ def run_extended_pipeline(
     print("SIGNSENSE EXTENDED PIPELINE")
     print("=" * 60)
 
-    # Step 1: Process WLASL data
+    # process WLASL data
     print("\n" + "=" * 60)
     print("STEP 1: Processing WLASL Data")
     print("=" * 60)
@@ -46,7 +39,7 @@ def run_extended_pipeline(
             max_frames=30
         )
 
-        # Save WLASL data
+        # save WLASL data
         import numpy as np
         np.save(processed_dir / 'X_wlasl.npy', X_wlasl)
         np.save(processed_dir / 'y_wlasl.npy', y_wlasl)
@@ -56,7 +49,7 @@ def run_extended_pipeline(
         print(f"Error processing WLASL: {e}")
         print("Continuing with MVP data only...")
 
-    # Step 2: Create extended dataset
+    # create extended dataset
     print("\n" + "=" * 60)
     print("STEP 2: Creating Extended Dataset")
     print("=" * 60)
@@ -66,7 +59,7 @@ def run_extended_pipeline(
         extended_dir
     )
 
-    # Step 3: Generate errors for extended dataset
+    # generate errors for extended dataset
     if generate_errors:
         print("\n" + "=" * 60)
         print("STEP 3: Generating Synthetic Errors for Extended Dataset")
@@ -83,7 +76,7 @@ def run_extended_pipeline(
             augmentations_per_sample=3
         )
 
-        # Save error-augmented extended data
+        # save error-augmented extended data
         np.save(extended_dir / 'X_train_with_errors.npy', error_result['X'])
         np.save(extended_dir / 'y_train_with_errors.npy', error_result['y'])
         np.save(extended_dir / 'error_labels_train.npy', error_result['error_labels'])
@@ -98,7 +91,7 @@ def run_extended_pipeline(
         print(f"  X_train_with_errors: {error_result['X'].shape}")
         print(f"  error_labels: {error_result['error_labels'].shape}")
 
-    # Final summary
+    # final summary
     print("\n" + "=" * 60)
     print("EXTENDED PIPELINE COMPLETE")
     print("=" * 60)

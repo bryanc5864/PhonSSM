@@ -1,7 +1,4 @@
-"""
-SignSense Data Loading Module
-Loads and preprocesses Kaggle ASL-Signs dataset.
-"""
+"""load and preprocess the Kaggle ASL-Signs dataset."""
 
 import numpy as np
 import pandas as pd
@@ -11,25 +8,25 @@ import json
 
 
 # 50 Target Signs - from Kaggle ASL-Signs dataset
-# Selected for practical daily use and learning progression
+# selected for practical daily use and learning progression
 TARGET_SIGNS = [
-    # Greetings & Basics (6)
+    # greetings & Basics (6)
     'hello', 'bye', 'please', 'thankyou', 'yes', 'no',
-    # Family (10)
+    # family (10)
     'mom', 'dad', 'grandma', 'grandpa', 'brother', 'aunt', 'uncle',
     'boy', 'girl', 'child',
-    # Feelings (7)
+    # feelings (7)
     'happy', 'sad', 'mad', 'sick', 'hungry', 'thirsty', 'sleepy',
-    # Actions (12)
+    # actions (12)
     'go', 'wait', 'finish', 'give', 'like', 'have', 'look', 'listen',
     'read', 'drink', 'sleep', 'wake',
-    # Objects & Places (6)
+    # objects & Places (6)
     'home', 'bed', 'book', 'water', 'food', 'milk',
-    # Time (5)
+    # time (5)
     'morning', 'night', 'now', 'tomorrow', 'yesterday',
-    # Questions (3)
+    # questions (3)
     'where', 'who', 'why',
-    # Other useful (1)
+    # other useful (1)
     'all'
 ]
 
@@ -65,16 +62,16 @@ def normalize_landmarks(landmarks):
     normalized = []
 
     for frame in landmarks:
-        # Skip empty frames
+        # skip empty frames
         if np.all(frame == 0) or np.all(np.isnan(frame)):
             normalized.append(np.zeros_like(frame))
             continue
 
-        # Center at wrist (landmark 0)
+        # center at wrist (landmark 0)
         wrist = frame[0]
         centered = frame - wrist
 
-        # Scale by max distance from wrist
+        # scale by max distance from wrist
         distances = np.linalg.norm(centered, axis=1)
         scale = distances.max()
 
@@ -102,12 +99,12 @@ def pad_or_truncate(sequence, target_length=30):
     if current_length == target_length:
         return sequence
     elif current_length < target_length:
-        # Pad with edge replication
+        # pad with edge replication
         pad_length = target_length - current_length
         padding = np.repeat(sequence[-1:], pad_length, axis=0)
         return np.concatenate([sequence, padding], axis=0)
     else:
-        # Subsample to target length
+        # subsample to target length
         indices = np.linspace(0, current_length - 1, target_length).astype(int)
         return sequence[indices]
 
@@ -125,15 +122,15 @@ def get_dominant_hand(landmarks):
     left_hand = landmarks[:, :21, :]
     right_hand = landmarks[:, 21:, :]
 
-    # Calculate motion magnitude (std of positions over time)
+    # calculate motion magnitude (std of positions over time)
     left_motion = np.nanstd(left_hand)
     right_motion = np.nanstd(right_hand)
 
-    # Also check for presence (non-zero values)
+    # also check for presence (non-zero values)
     left_present = np.sum(~np.isnan(left_hand) & (left_hand != 0))
     right_present = np.sum(~np.isnan(right_hand) & (right_hand != 0))
 
-    # Prefer hand with more presence and motion
+    # prefer hand with more presence and motion
     left_score = left_motion * left_present
     right_score = right_motion * right_present
 
@@ -155,28 +152,28 @@ def load_parquet_file(parquet_path):
     """
     df = pd.read_parquet(parquet_path)
 
-    # Filter to hand landmarks only
+    # filter to hand landmarks only
     hand_df = df[df['type'].isin(['left_hand', 'right_hand'])].copy()
 
     if len(hand_df) == 0:
         raise ValueError(f"No hand landmarks found in {parquet_path}")
 
-    # Get unique frames
+    # get unique frames
     frames = sorted(hand_df['frame'].unique())
     n_frames = len(frames)
 
-    # Initialize output array: (n_frames, 42 landmarks, 3 coords)
+    # initialize output array: (n_frames, 42 landmarks, 3 coords)
     # 42 = 21 left + 21 right
     landmarks = np.zeros((n_frames, 42, 3), dtype=np.float32)
 
-    # Fill in landmarks
+    # fill in landmarks
     for i, frame_num in enumerate(frames):
         frame_data = hand_df[hand_df['frame'] == frame_num]
 
         for _, row in frame_data.iterrows():
             lm_idx = int(row['landmark_index'])
 
-            # Left hand: indices 0-20, Right hand: indices 21-41
+            # left hand: indices 0-20, Right hand: indices 21-41
             if row['type'] == 'left_hand':
                 idx = lm_idx
             else:  # right_hand
@@ -186,7 +183,7 @@ def load_parquet_file(parquet_path):
             landmarks[i, idx, 1] = row['y']
             landmarks[i, idx, 2] = row['z']
 
-    # Handle NaN
+    # handle NaN
     landmarks = np.nan_to_num(landmarks, nan=0.0)
 
     return landmarks
@@ -210,21 +207,20 @@ def load_kaggle_data(data_dir, target_signs=None, max_frames=30, max_samples=Non
     """
     data_dir = Path(data_dir)
 
-    # Load metadata
+    # load metadata
     train_df = pd.read_csv(data_dir / 'train.csv')
     print(f"Total samples in dataset: {len(train_df)}")
 
-    # Filter to only participants whose folders exist
+    # filter to only participants whose folders exist
     landmark_dir = data_dir / 'train_landmark_files'
     existing_participants = [int(p.name) for p in landmark_dir.iterdir() if p.is_dir()]
     train_df = train_df[train_df['participant_id'].isin(existing_participants)]
     print(f"Samples from existing participants: {len(train_df)}")
 
-    # Get available signs
     available_signs = get_available_signs(data_dir)
     print(f"Available signs: {len(available_signs)}")
 
-    # Filter to target signs
+    # filter to target signs
     if target_signs is None:
         target_signs = filter_target_signs(available_signs)
     else:
@@ -232,7 +228,7 @@ def load_kaggle_data(data_dir, target_signs=None, max_frames=30, max_samples=Non
 
     print(f"Using {len(target_signs)} target signs")
 
-    # Filter dataframe
+    # filter dataframe
     train_df = train_df[train_df['sign'].isin(target_signs)]
     print(f"Filtered samples: {len(train_df)}")
 
@@ -240,7 +236,7 @@ def load_kaggle_data(data_dir, target_signs=None, max_frames=30, max_samples=Non
         train_df = train_df.head(max_samples)
         print(f"Limited to {len(train_df)} samples")
 
-    # Create label mapping
+    # create label mapping
     signs = sorted(train_df['sign'].unique())
     sign_to_idx = {s: i for i, s in enumerate(signs)}
     idx_to_sign = {i: s for s, i in sign_to_idx.items()}
@@ -253,19 +249,16 @@ def load_kaggle_data(data_dir, target_signs=None, max_frames=30, max_samples=Non
         parquet_path = data_dir / row['path']
 
         try:
-            # Load landmarks
             landmarks = load_parquet_file(parquet_path)
 
-            # Get dominant hand
             hand = get_dominant_hand(landmarks)
 
-            # Normalize
             hand = normalize_landmarks(hand)
 
-            # Window to fixed length
+            # window to fixed length
             hand = pad_or_truncate(hand, max_frames)
 
-            # Flatten for model input: (30, 63)
+            # flatten for model input: (30, 63)
             X_data.append(hand.reshape(max_frames, -1))
             y_data.append(sign_to_idx[row['sign']])
 
@@ -311,13 +304,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Load data
     X, y, sign_to_idx, idx_to_sign = load_kaggle_data(
         args.data_dir,
         max_samples=args.max_samples
     )
 
-    # Save
+    # save
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 

@@ -1,0 +1,10 @@
+{
+  "subset": 1000,
+  "streams": "joint",
+  "tag": "ft1",
+  "test_top1": 61.67,
+  "test_top5": 87.58,
+  "test_perclass": 61.55,
+  "best_val": 65.31,
+  "test_n": 1876
+}

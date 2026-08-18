@@ -1,0 +1,10 @@
+{
+  "subset": 1000,
+  "streams": "bone",
+  "tag": "ft1",
+  "test_top1": 49.2,
+  "test_top5": 77.24,
+  "test_perclass": 49.08,
+  "best_val": 53.28,
+  "test_n": 1876
+}

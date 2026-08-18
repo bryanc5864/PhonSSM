@@ -29,11 +29,11 @@ def load_main_model(checkpoint_path, device):
 
     checkpoint = torch.load(checkpoint_path, map_location=device)
 
-    # Get config from checkpoint or use default
+    # get config from checkpoint or use default
     if 'config' in checkpoint:
         config = PhonSSMConfig.from_dict(checkpoint['config'])
     else:
-        # Default config for main model (single hand, 5565 signs)
+        # default config for main model (single hand, 5565 signs)
         config = PhonSSMConfig(
             num_signs=5565,
             input_mode='single_hand',
@@ -42,7 +42,7 @@ def load_main_model(checkpoint_path, device):
 
     model = PhonSSM(config).to(device)
 
-    # Load weights
+    # load weights
     if 'model_state_dict' in checkpoint:
         model.load_state_dict(checkpoint['model_state_dict'])
     else:
@@ -57,7 +57,6 @@ def load_asl_citizen_for_zeroshot(main_label_map):
     """Load ASL Citizen data and find overlap with main model's vocabulary."""
     print(f"\nLoading ASL Citizen for zero-shot evaluation...")
 
-    # Load ASL Citizen data
     X_all = np.load(PROJECT_ROOT / "data" / "processed" / "X_asl_citizen.npy")
     y_all = np.load(PROJECT_ROOT / "data" / "processed" / "y_asl_citizen.npy")
 
@@ -66,7 +65,7 @@ def load_asl_citizen_for_zeroshot(main_label_map):
 
     citizen_idx_to_gloss = {v: k for k, v in citizen_label_map.items()}
 
-    # Find overlap between ASL Citizen glosses and main model vocabulary
+    # find overlap between ASL Citizen glosses and main model vocabulary
     main_glosses = set(main_label_map.keys())
     citizen_glosses = set(citizen_label_map.keys())
     overlap_glosses = list(citizen_glosses & main_glosses)
@@ -79,11 +78,11 @@ def load_asl_citizen_for_zeroshot(main_label_map):
         print("  ERROR: No overlap found!")
         return None
 
-    # Create mapping: ASL Citizen gloss -> main model label
+    # create mapping: ASL Citizen gloss -> main model label
     overlap_set = set(overlap_glosses)
     gloss_to_main_label = {g: main_label_map[g] for g in overlap_glosses}
 
-    # Filter data
+    # filter data
     valid_indices = []
     mapped_labels = []
 
@@ -96,7 +95,7 @@ def load_asl_citizen_for_zeroshot(main_label_map):
     X_filtered = X_all[valid_indices]
     y_filtered = np.array(mapped_labels)
 
-    # Split into test set
+    # split into test set
     from sklearn.model_selection import train_test_split
 
     _, X_test, _, y_test = train_test_split(
@@ -120,15 +119,15 @@ def load_wlasl_for_zeroshot(subset_size, main_label_map):
     """Load WLASL data and find overlap with main model's vocabulary."""
     print(f"\nLoading WLASL{subset_size} for zero-shot evaluation...")
 
-    # Load WLASL JSON
+    # load WLASL JSON
     wlasl_json_path = PROJECT_ROOT / "data" / "raw" / "wlasl" / "start_kit" / "WLASL_v0.3.json"
     with open(wlasl_json_path) as f:
         wlasl_data = json.load(f)
 
-    # Get top-K glosses for subset
+    # get top-K glosses for subset
     subset_glosses = [entry['gloss'].lower() for entry in wlasl_data[:subset_size]]
 
-    # Load WLASL single-hand data (same format as main model)
+    # load WLASL single-hand data (same format as main model)
     X_all = np.load(PROJECT_ROOT / "data" / "processed" / "X_wlasl.npy")
     y_all = np.load(PROJECT_ROOT / "data" / "processed" / "y_wlasl.npy")
 
@@ -137,7 +136,7 @@ def load_wlasl_for_zeroshot(subset_size, main_label_map):
 
     wlasl_idx_to_gloss = {v: k for k, v in wlasl_label_map.items()}
 
-    # Find overlap between WLASL glosses and main model vocabulary
+    # find overlap between WLASL glosses and main model vocabulary
     main_glosses = set(main_label_map.keys())
     overlap_glosses = [g for g in subset_glosses if g in main_glosses]
 
@@ -149,13 +148,13 @@ def load_wlasl_for_zeroshot(subset_size, main_label_map):
         print("  ERROR: No overlap found!")
         return None
 
-    # Filter to overlapping glosses only
+    # filter to overlapping glosses only
     overlap_set = set(overlap_glosses)
 
-    # Create mapping: WLASL gloss -> main model label
+    # create mapping: WLASL gloss -> main model label
     gloss_to_main_label = {g: main_label_map[g] for g in overlap_glosses}
 
-    # Filter data
+    # filter data
     valid_indices = []
     mapped_labels = []
 
@@ -168,7 +167,7 @@ def load_wlasl_for_zeroshot(subset_size, main_label_map):
     X_filtered = X_all[valid_indices]
     y_filtered = np.array(mapped_labels)
 
-    # Split into train/val/test (use same ratios as benchmark)
+    # split into train/val/test (use same ratios as benchmark)
     from sklearn.model_selection import train_test_split
 
     X_train, X_temp, y_train, y_temp = train_test_split(
@@ -215,21 +214,21 @@ def evaluate_zeroshot(model, data, device):
     y_true = np.array(y_test)
     y_pred = logits.argmax(axis=-1)
 
-    # Get unique labels for top-k accuracy
+    # get unique labels for top-k accuracy
     unique_labels = np.unique(y_true)
 
     metrics = {}
     metrics['top1_accuracy'] = accuracy_score(y_true, y_pred) * 100
 
-    # Top-5 and Top-10 within the valid label space
+    # top-5 and Top-10 within the valid label space
     for k in [5, 10]:
         if k <= len(unique_labels):
-            # Get top-k predictions
+            # get top-k predictions
             top_k_preds = np.argsort(logits, axis=-1)[:, -k:]
             correct = np.array([y_true[i] in top_k_preds[i] for i in range(len(y_true))])
             metrics[f'top{k}_accuracy'] = correct.mean() * 100
 
-    # Per-class accuracy
+    # per-class accuracy
     per_class_acc = []
     for c in unique_labels:
         mask = y_true == c
@@ -264,25 +263,25 @@ def main():
     print(f"Device: {device}")
     print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Load main model's label map
+    # load main model's label map
     main_label_map_path = PROJECT_ROOT / "data" / "processed" / "merged" / "label_map.json"
     with open(main_label_map_path) as f:
         main_label_map = json.load(f)
 
     print(f"\nMain model vocabulary: {len(main_label_map)} signs")
 
-    # Load model
+    # load model
     checkpoint_path = PROJECT_ROOT / args.checkpoint
     model, config = load_main_model(checkpoint_path, device)
 
-    # Determine which datasets to evaluate
+    # determine which datasets to evaluate
     datasets_to_eval = []
     if args.dataset == 'wlasl' or args.dataset == 'all':
         datasets_to_eval.append(('wlasl', args.subset))
     if args.dataset == 'asl_citizen' or args.dataset == 'all':
         datasets_to_eval.append(('asl_citizen', None))
 
-    # Create output directory
+    # create output directory
     output_dir = PROJECT_ROOT / "benchmarks" / "zeroshot"
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -291,7 +290,7 @@ def main():
     for dataset_name, subset in datasets_to_eval:
         print(f"\n{'='*60}")
 
-        # Load data
+        # load data
         if dataset_name == 'wlasl':
             data = load_wlasl_for_zeroshot(subset, main_label_map)
             display_name = f'WLASL{subset}'
@@ -303,7 +302,7 @@ def main():
             print(f"Cannot evaluate {display_name} - no vocabulary overlap")
             continue
 
-        # Evaluate
+        # evaluate
         print(f"\nZERO-SHOT EVALUATION on {display_name}")
         print(f"{'='*60}")
         print(f"Evaluating on {data['num_overlap']}/{data['total_classes']} overlapping classes")
@@ -319,7 +318,7 @@ def main():
         print(f"Per-Class Accuracy:  {metrics['per_class_accuracy']:.2f}% (+/- {metrics['per_class_std']:.2f}%)")
         print(f"\nNote: Evaluated on {data['num_overlap']} overlapping classes out of {data['total_classes']}")
 
-        # Save individual results
+        # save individual results
         results = {
             'dataset': display_name,
             'evaluation_type': 'zero-shot',
@@ -337,7 +336,7 @@ def main():
 
         all_results[display_name] = metrics
 
-    # Print summary if multiple datasets
+    # print summary if multiple datasets
     if len(all_results) > 1:
         print(f"\n{'='*60}")
         print("ZERO-SHOT EVALUATION SUMMARY")

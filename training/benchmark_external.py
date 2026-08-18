@@ -1,12 +1,5 @@
-"""
-External Dataset Benchmark Script
-=================================
-Benchmarks PhonSSM on standard external datasets (WLASL, ASL Citizen)
-for comparison with published results.
+"""benchmark PhonSSM on WLASL / ASL Citizen against published numbers.
 
-Includes comprehensive logging matching the main training script.
-
-Usage:
     python training/benchmark_external.py --dataset wlasl --subset 100
     python training/benchmark_external.py --dataset asl_citizen
 """
@@ -40,15 +33,11 @@ from models.phonssm import PhonSSM, PhonSSMConfig
 def load_wlasl_splits(subset_size=100, use_pose_hands=True):
     """Load WLASL data honoring the OFFICIAL per-video train/val/test split.
 
-    FIXED (data-leakage): the previous implementation loaded the official split
-    only to compute train/val RATIOS, then discarded it and partitioned the
-    pooled (triplicated V1/V2/V3) array with a RANDOM stratified train_test_split.
-    That scattered near-identical copies of the same recording across train and
-    test, inflating accuracy, and made the result non-comparable to published
-    WLASL baselines. We now load the leakage-free official-split data produced by
-    ``training/build_wlasl_official.py`` (partitioned by instance['split'], with
-    the test set deduplicated to one copy per source video and a train/test
-    video-id overlap assertion).
+    the old version used the official split only to get train/val ratios, then
+    threw it away and did a random stratified split on the triplicated pool, so
+    V1/V2/V3 copies of one recording landed on both sides. loads the split built
+    by build_wlasl_official.py instead (partitioned by instance['split'], test
+    deduped to one copy per source video, train/test video-id overlap asserted).
     """
     if not use_pose_hands:
         raise NotImplementedError(
@@ -95,7 +84,7 @@ def load_asl_citizen_splits():
     """Load ASL Citizen with official splits."""
     print("Loading ASL Citizen with official splits...")
 
-    # Load preprocessed data
+    # load preprocessed data
     X_all = np.load(PROJECT_ROOT / "data" / "processed" / "X_asl_citizen.npy", allow_pickle=True)
     y_all = np.load(PROJECT_ROOT / "data" / "processed" / "y_asl_citizen.npy", allow_pickle=True)
 
@@ -105,7 +94,7 @@ def load_asl_citizen_splits():
     num_classes = len(label_map)
     print(f"  Total data: {X_all.shape[0]} samples, {num_classes} classes")
 
-    # Use stratified split
+    # use stratified split
     from sklearn.model_selection import train_test_split
 
     X_train, X_temp, y_train, y_temp = train_test_split(
@@ -164,19 +153,19 @@ def train_epoch(model, dataloader, optimizer, device, label_smoothing=0.1):
 
         optimizer.zero_grad()
 
-        # Forward pass
+        # forward pass
         outputs = model(X_batch)
         logits = outputs['logits']
 
-        # Compute loss with label smoothing
+        # compute loss with label smoothing
         loss = F.cross_entropy(logits, y_batch, label_smoothing=label_smoothing)
 
-        # Backward pass
+        # backward pass
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
 
-        # Metrics
+        # metrics
         total_loss += loss.item()
         accs = calculate_accuracy(logits, y_batch, top_k=(1, 5))
         for k in total_acc:
@@ -228,7 +217,7 @@ def evaluate(model, dataloader, device, label_smoothing=0.1):
     all_logits = torch.cat(all_logits, dim=0)
     all_targets = torch.cat(all_targets, dim=0)
 
-    # Per-class accuracy
+    # per-class accuracy
     y_pred = all_logits.argmax(dim=-1).numpy()
     y_true = all_targets.numpy()
 
@@ -247,16 +236,10 @@ def evaluate(model, dataloader, device, label_smoothing=0.1):
 
 
 def train_model_on_dataset(data, args, resume_path=None):
-    """Train a fresh PhonSSM model on the given dataset with full logging.
-
-    Args:
-        data: Dataset dict with X_train, y_train, etc.
-        args: Command line arguments
-        resume_path: Path to checkpoint directory to resume from (optional)
-    """
+    """train a fresh PhonSSM on `data`, resuming from `resume_path` if given."""
     device = torch.device(args.device)
 
-    # Prepare data
+    # prepare data
     X_train = torch.FloatTensor(data['X_train'])
     y_train = torch.LongTensor(data['y_train'])
     X_val = torch.FloatTensor(data['X_val'])
@@ -273,7 +256,7 @@ def train_model_on_dataset(data, args, resume_path=None):
     if device.type == 'cuda':
         print(f"GPU: {torch.cuda.get_device_name(0)}")
 
-    # Create datasets and loaders
+    # create datasets and loaders
     train_dataset = TensorDataset(X_train, y_train)
     val_dataset = TensorDataset(X_val, y_val)
 
@@ -291,23 +274,22 @@ def train_model_on_dataset(data, args, resume_path=None):
         pin_memory=True if device.type == 'cuda' else False
     )
 
-    # Get input mode from data
     input_mode = data.get('input_mode', 'single_hand')
     num_features = data.get('num_features', 63)
     num_landmarks = num_features // 3
 
-    # Create model with adaptive temperature
-    # Low temperature (0.1) creates extreme logit scaling which works for 5000+ classes
+    # create model with adaptive temperature
+    # low temperature (0.1) creates extreme logit scaling which works for 5000+ classes
     # but causes training instability for smaller datasets (cycling behavior)
-    # Higher temperature = softer softmax = more stable gradients for fewer classes
+    # higher temperature = softer softmax = more stable gradients for fewer classes
     if num_classes <= 100:
-        temperature = 1.0  # Soft for small vocab - prevents cycling
+        temperature = 1.0  # soft for small vocab - prevents cycling
     elif num_classes <= 500:
         temperature = 0.5
     elif num_classes <= 1000:
         temperature = 0.3
     else:
-        temperature = 0.1  # Original for large vocab
+        temperature = 0.1  # original for large vocab
 
     print("\nBuilding PhonSSM model...")
     print(f"  Input mode: {input_mode} ({num_landmarks} landmarks, {num_features} features)")
@@ -321,20 +303,19 @@ def train_model_on_dataset(data, args, resume_path=None):
     )
     model = PhonSSM(config).to(device)
 
-    # Print parameter counts
+    # print parameter counts
     param_counts = model.count_parameters()
     print(f"\nParameter counts:")
     for name, count in param_counts.items():
         print(f"  {name}: {count:,}")
 
-    # Optimizer
     optimizer = optim.AdamW(
         model.parameters(),
         lr=args.learning_rate,
         weight_decay=0.01
     )
 
-    # Warmup + Cosine Annealing scheduler for stable training
+    # warmup + Cosine Annealing scheduler for stable training
     warmup_epochs = 5
     def lr_lambda(epoch):
         if epoch < warmup_epochs:
@@ -349,7 +330,7 @@ def train_model_on_dataset(data, args, resume_path=None):
         patience=7
     )
 
-    # Resume from checkpoint if specified
+    # resume from checkpoint if specified
     start_epoch = 0
     best_val_acc = 0
     best_state = None
@@ -368,20 +349,20 @@ def train_model_on_dataset(data, args, resume_path=None):
             best_state = checkpoint['model_state_dict']
             print(f"[RESUME] Resuming from epoch {start_epoch}, best val acc: {best_val_acc*100:.2f}%")
 
-            # Load history if exists
+            # load history if exists
             history_path = resume_dir / 'history.json'
             if history_path.exists():
                 with open(history_path) as f:
                     history = json.load(f)
                 print(f"[RESUME] Loaded training history ({len(history['train'])} epochs)")
 
-            # Use the same run directory
+            # use the same run directory
             run_dir = resume_dir
         else:
             print(f"[RESUME] Checkpoint not found at {checkpoint_path}, starting fresh")
             resume_path = None
 
-    # Create new checkpoint directory if not resuming
+    # create new checkpoint directory if not resuming
     if not resume_path:
         output_dir = PROJECT_ROOT / "benchmarks" / "external" / data['dataset_name'].lower()
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -390,7 +371,7 @@ def train_model_on_dataset(data, args, resume_path=None):
         run_dir = output_dir / timestamp
         run_dir.mkdir(exist_ok=True)
 
-        # Save config
+        # save config
         config_dict = {
             'dataset': data['dataset_name'],
             'num_classes': num_classes,
@@ -403,7 +384,7 @@ def train_model_on_dataset(data, args, resume_path=None):
         with open(run_dir / 'config.json', 'w') as f:
             json.dump(config_dict, f, indent=2)
 
-    # Training loop
+    # training loop
     print(f"\nTraining for up to {args.epochs} epochs (starting from {start_epoch})...")
     print(f"Batch size: {args.batch_size}")
     print(f"Learning rate: {args.learning_rate}")
@@ -414,15 +395,14 @@ def train_model_on_dataset(data, args, resume_path=None):
         print(f"\nEpoch {epoch + 1}/{args.epochs}")
         print("-" * 40)
 
-        # Train
         train_metrics = train_epoch(model, train_loader, optimizer, device)
         history['train'].append(train_metrics)
 
-        # Validate
+        # validate
         val_metrics = evaluate(model, val_loader, device)
         history['val'].append(val_metrics)
 
-        # Update scheduler (warmup first, then ReduceLROnPlateau)
+        # update scheduler (warmup first, then ReduceLROnPlateau)
         if epoch < warmup_epochs:
             warmup_scheduler.step()
             current_lr = optimizer.param_groups[0]['lr']
@@ -430,7 +410,6 @@ def train_model_on_dataset(data, args, resume_path=None):
         else:
             main_scheduler.step(val_metrics['top1'])
 
-        # Print metrics
         print(f"Train - Loss: {train_metrics['loss']:.4f}, "
               f"Top-1: {train_metrics['top1']*100:.2f}%, "
               f"Top-5: {train_metrics['top5']*100:.2f}%")
@@ -439,13 +418,13 @@ def train_model_on_dataset(data, args, resume_path=None):
               f"Top-5: {val_metrics['top5']*100:.2f}%, "
               f"Per-Class: {val_metrics['per_class_acc']*100:.2f}%")
 
-        # Save best model
+        # save best model
         if val_metrics['top1'] > best_val_acc:
             best_val_acc = val_metrics['top1']
             best_state = model.state_dict().copy()
             patience_counter = 0
 
-            # Save checkpoint
+            # save checkpoint
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': best_state,
@@ -459,11 +438,10 @@ def train_model_on_dataset(data, args, resume_path=None):
                 print(f"\nEarly stopping after {epoch + 1} epochs")
                 break
 
-    # Save training history
+    # save training history
     with open(run_dir / 'history.json', 'w') as f:
         json.dump(history, f, indent=2)
 
-    # Load best model
     model.load_state_dict(best_state)
     print(f"\nBest Val Acc: {best_val_acc*100:.2f}%")
 
@@ -499,7 +477,7 @@ def final_evaluation(model, data, device, run_dir):
     y_pred = logits.argmax(axis=-1)
     y_true = np.array(y_test)
 
-    # Compute metrics
+    # compute metrics
     metrics = {}
     metrics['top1_accuracy'] = accuracy_score(y_true, y_pred) * 100
 
@@ -509,7 +487,7 @@ def final_evaluation(model, data, device, run_dir):
                 y_true, logits, k=k, labels=range(data['num_classes'])
             ) * 100
 
-    # Per-class accuracy
+    # per-class accuracy
     per_class_acc = []
     for c in range(data['num_classes']):
         mask = y_true == c
@@ -523,7 +501,6 @@ def final_evaluation(model, data, device, run_dir):
     metrics['macro_f1'] = f1_score(y_true, y_pred, average='macro', zero_division=0) * 100
     metrics['weighted_f1'] = f1_score(y_true, y_pred, average='weighted', zero_division=0) * 100
 
-    # Print results
     print(f"\n--- Test Results ---")
     print(f"Top-1 Accuracy:      {metrics['top1_accuracy']:.2f}%")
     if 'top5_accuracy' in metrics:
@@ -534,7 +511,7 @@ def final_evaluation(model, data, device, run_dir):
     print(f"Macro F1:            {metrics['macro_f1']:.2f}%")
     print(f"Weighted F1:         {metrics['weighted_f1']:.2f}%")
 
-    # Save results
+    # save results
     results = {
         'dataset': data['dataset_name'],
         'num_classes': data['num_classes'],
@@ -548,7 +525,7 @@ def final_evaluation(model, data, device, run_dir):
     return metrics
 
 
-# Published SOTA results for comparison
+# published SOTA results for comparison
 SOTA_RESULTS = {
     'WLASL100': {
         'I3D (Li et al. 2020)': {'top1': 65.89, 'per_class': 60.14},
@@ -586,10 +563,9 @@ def print_comparison(dataset_name, our_metrics):
     print(f"\n{'Method':<35} {'Top-1 Acc':>12} {'Per-Class':>12}")
     print("-" * 60)
 
-    # Our results (highlight)
+    # our results (highlight)
     print(f"{'>>> PhonSSM (Ours) <<<':<35} {our_metrics['top1_accuracy']:>11.2f}% {our_metrics.get('per_class_accuracy', 0):>11.2f}%")
 
-    # SOTA results
     if dataset_name in SOTA_RESULTS:
         print("-" * 60)
         for method, results in SOTA_RESULTS[dataset_name].items():
@@ -599,7 +575,7 @@ def print_comparison(dataset_name, our_metrics):
 
     print("-" * 60)
 
-    # Compute relative improvement over baselines
+    # compute relative improvement over baselines
     if dataset_name in SOTA_RESULTS:
         our_top1 = our_metrics['top1_accuracy']
         print(f"\nRelative to baselines:")
@@ -633,7 +609,7 @@ def main():
     print(f"Device: {args.device}")
     print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Load data
+    # load data
     if args.dataset == 'wlasl':
         use_pose_hands = args.input_mode == 'pose_hands'
         data = load_wlasl_splits(args.subset, use_pose_hands=use_pose_hands)
@@ -641,7 +617,7 @@ def main():
         data = load_asl_citizen_splits()
 
     if args.skip_train:
-        # Just show SOTA comparison
+        # just show SOTA comparison
         print(f"\nPublished SOTA Results for {data['dataset_name']}:")
         if data['dataset_name'] in SOTA_RESULTS:
             print(f"\n{'Method':<35} {'Top-1 Acc':>12}")
@@ -650,14 +626,12 @@ def main():
                 print(f"{method:<35} {results['top1']:>11.2f}%")
         return
 
-    # Train model
     model, run_dir = train_model_on_dataset(data, args, resume_path=args.resume)
 
-    # Final evaluation
+    # final evaluation
     device = torch.device(args.device)
     metrics = final_evaluation(model, data, device, run_dir)
 
-    # Print comparison
     print_comparison(data['dataset_name'], metrics)
 
     print(f"\n{'='*60}")

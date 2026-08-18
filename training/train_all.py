@@ -1,20 +1,9 @@
-"""
-Master Training Script
-======================
-Trains all SignSense models in sequence.
+"""train every model in sequence, then convert them all to TFLite.
 
-Models:
-1. Sign Classifier (Bi-LSTM) - ~385K params
-2. Error Diagnosis Network (Multi-task CNN-LSTM) - ~620K params
-3. Movement Pattern Analyzer (1D CNN) - ~45K params
-4. Feedback Ranker (MLP) - ~50K params
+sign classifier (Bi-LSTM, ~385K), error diagnosis (CNN-LSTM, ~620K), movement
+analyzer (1D CNN, ~45K), feedback ranker (MLP, ~50K).
 
-After training, converts all models to TFLite format.
-
-Usage:
-    python training/train_all.py
-    python training/train_all.py --skip-classifier  # Skip specific models
-    python training/train_all.py --epochs 50 --batch-size 32  # Custom params
+    python training/train_all.py [--skip-classifier] [--epochs 50 --batch-size 32]
 """
 
 import os
@@ -73,7 +62,7 @@ def main():
     common_args = ['--epochs', str(args.epochs), '--batch-size', str(args.batch_size)]
 
     if not args.convert_only:
-        # 1. Sign Classifier
+        # sign classifier
         if not args.skip_classifier:
             print("\n[1/4] SIGN CLASSIFIER")
             results['sign_classifier'] = run_training(
@@ -84,7 +73,7 @@ def main():
             print("\n[1/4] SIGN CLASSIFIER - SKIPPED")
             results['sign_classifier'] = 'skipped'
 
-        # 2. Error Diagnosis Network
+        # error diagnosis net
         if not args.skip_diagnosis:
             print("\n[2/4] ERROR DIAGNOSIS NETWORK")
             results['error_diagnosis'] = run_training(
@@ -95,7 +84,7 @@ def main():
             print("\n[2/4] ERROR DIAGNOSIS NETWORK - SKIPPED")
             results['error_diagnosis'] = 'skipped'
 
-        # 3. Movement Pattern Analyzer
+        # movement analyzer
         if not args.skip_movement:
             print("\n[3/4] MOVEMENT PATTERN ANALYZER")
             results['movement_analyzer'] = run_training(
@@ -106,7 +95,7 @@ def main():
             print("\n[3/4] MOVEMENT PATTERN ANALYZER - SKIPPED")
             results['movement_analyzer'] = 'skipped'
 
-        # 4. Feedback Ranker
+        # feedback ranker
         if not args.skip_ranker:
             print("\n[4/4] FEEDBACK RANKER")
             results['feedback_ranker'] = run_training(
@@ -117,7 +106,7 @@ def main():
             print("\n[4/4] FEEDBACK RANKER - SKIPPED")
             results['feedback_ranker'] = 'skipped'
 
-    # 5. TFLite Conversion
+    # TFLite Conversion
     if not args.skip_convert:
         print("\n[FINAL] TFLITE CONVERSION")
         results['tflite_conversion'] = run_training('convert_tflite.py')
@@ -125,20 +114,20 @@ def main():
         print("\n[FINAL] TFLITE CONVERSION - SKIPPED")
         results['tflite_conversion'] = 'skipped'
 
-    # Summary
+    # summary
     print("\n" + "=" * 60)
     print("TRAINING SUMMARY")
     print("=" * 60)
 
     for model, status in results.items():
         if status == 'skipped':
-            icon = "⏭️"
+            icon = "-"
             status_str = "Skipped"
         elif status:
-            icon = "✅"
+            icon = "ok"
             status_str = "Success"
         else:
-            icon = "❌"
+            icon = "!!"
             status_str = "Failed"
 
         print(f"  {icon} {model}: {status_str}")
@@ -146,7 +135,7 @@ def main():
     print(f"\nCompleted: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
-    # Return exit code based on results
+    # return exit code based on results
     failed = [k for k, v in results.items() if v is False]
     if failed:
         print(f"\nFailed models: {', '.join(failed)}")

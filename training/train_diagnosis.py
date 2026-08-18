@@ -1,24 +1,11 @@
-"""
-Error Diagnosis Network Training Script
-========================================
-Multi-task CNN-LSTM that identifies what's wrong with an incorrect sign.
+"""multi-task CNN-LSTM that says what is wrong with an incorrect sign.
 
-Architecture:
-    Input: (30 frames, 63 features)
-    → Shared Backbone: Conv1D(64) → Conv1D(128) → LSTM(128)
-    → Three output heads:
-        1. Component scores (4): Handshape, Location, Movement, Orientation
-        2. Error types (16): Multi-label classification
-        3. Overall correctness (1): Binary classification
+shared Conv1D(64) -> Conv1D(128) -> LSTM(128) backbone, three heads: 4 component
+scores, 16 multi-label error types, and one binary correctness. ~620K params.
 
-Target metrics:
-    - Component MAE: <0.12
-    - Error type F1: >0.70
-    - Parameters: ~620K
+labels are synthetic (generate_errors.py), so the headline accuracy is circular.
 
-Usage:
-    python training/train_diagnosis.py
-    python training/train_diagnosis.py --epochs 100 --batch-size 64
+    python training/train_diagnosis.py [--epochs 100 --batch-size 64]
 """
 
 import os
@@ -41,7 +28,7 @@ from tensorflow.keras.callbacks import (
     EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TensorBoard
 )
 
-# Paths
+# paths
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
 MODEL_DIR = PROJECT_ROOT / "models" / "error_diagnosis"
@@ -53,16 +40,16 @@ def load_data(data_dir):
 
     print("Loading data...")
 
-    # Load features with errors
+    # load features with errors
     X_train = np.load(data_dir / "X_train_with_errors.npy")
     y_train = np.load(data_dir / "y_train_with_errors.npy")
 
-    # Load error-specific labels
+    # load error-specific labels
     error_labels = np.load(data_dir / "error_labels_train.npy")
     component_scores = np.load(data_dir / "component_scores_train.npy")
     is_correct = np.load(data_dir / "is_correct_train.npy")
 
-    # Load error metadata
+    # load error metadata
     with open(data_dir / "error_metadata.json") as f:
         error_metadata = json.load(f)
 
@@ -71,7 +58,7 @@ def load_data(data_dir):
     print(f"Component scores shape: {component_scores.shape}")
     print(f"Is correct shape: {is_correct.shape}")
 
-    # Split into train/val (80/20 of the error data)
+    # split into train/val (80/20 of the error data)
     n_total = len(X_train)
     n_train = int(0.8 * n_total)
     indices = np.random.permutation(n_total)
@@ -96,17 +83,14 @@ def load_data(data_dir):
 
 
 def build_model(input_shape, num_error_types=16, num_components=4):
-    """
-    Build Error Diagnosis multi-task model.
+    """multi-task error diagnosis model.
 
-    Three output heads:
-    1. Component scores (regression): How well each component is performed
-    2. Error types (multi-label): Which specific errors are present
-    3. Correctness (binary): Overall correct or incorrect
+    three heads: component scores (regression), error types (multi-label),
+    overall correctness (binary).
     """
     inputs = Input(shape=input_shape, name='landmarks')
 
-    # Shared backbone: Conv1D → Conv1D → LSTM
+    # shared backbone: Conv1D  Conv1D  LSTM
     x = Conv1D(64, 3, activation='relu', padding='same')(inputs)
     x = BatchNormalization()(x)
     x = MaxPooling1D(2)(x)
@@ -121,17 +105,17 @@ def build_model(input_shape, num_error_types=16, num_components=4):
     x = LSTM(128, return_sequences=False, dropout=0.2)(x)
     x = Dropout(0.3)(x)
 
-    # Head 1: Component scores (4 values: handshape, location, movement, orientation)
+    # head 1: Component scores (4 values: handshape, location, movement, orientation)
     comp = Dense(64, activation='relu')(x)
     comp = Dropout(0.2)(comp)
     comp = Dense(num_components, activation='sigmoid', name='components')(comp)
 
-    # Head 2: Error types (16 multi-label classification)
+    # head 2: Error types (16 multi-label classification)
     err = Dense(64, activation='relu')(x)
     err = Dropout(0.2)(err)
     err = Dense(num_error_types, activation='sigmoid', name='errors')(err)
 
-    # Head 3: Overall correctness (binary)
+    # head 3: Overall correctness (binary)
     correct = Dense(32, activation='relu')(x)
     correct = Dropout(0.2)(correct)
     correct = Dense(1, activation='sigmoid', name='correct')(correct)
@@ -147,10 +131,8 @@ def train(args):
     print("ERROR DIAGNOSIS NETWORK TRAINING")
     print("=" * 60)
 
-    # Load data
     data, error_metadata = load_data(args.data_dir)
 
-    # Input shape
     input_shape = (data['X_train'].shape[1], data['X_train'].shape[2])
     num_error_types = data['error_train'].shape[1]
     num_components = data['component_train'].shape[1]
@@ -159,12 +141,12 @@ def train(args):
     print(f"Error types: {num_error_types}")
     print(f"Components: {num_components}")
 
-    # Build model
+    # build model
     print("\nBuilding model...")
     model = build_model(input_shape, num_error_types, num_components)
     model.summary()
 
-    # Compile with multiple losses
+    # compile with multiple losses
     model.compile(
         optimizer=Adam(learning_rate=args.learning_rate),
         loss={
@@ -184,7 +166,7 @@ def train(args):
         }
     )
 
-    # Callbacks
+    # callbacks
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -214,7 +196,7 @@ def train(args):
         )
     ]
 
-    # Prepare training data
+    # prepare training data
     train_inputs = data['X_train']
     train_outputs = {
         'components': data['component_train'],
@@ -229,7 +211,7 @@ def train(args):
         'correct': data['correct_val'].reshape(-1, 1)
     }
 
-    # Train
+    # train
     print(f"\nTraining for up to {args.epochs} epochs...")
     print(f"Batch size: {args.batch_size}")
 
@@ -242,30 +224,30 @@ def train(args):
         verbose=1
     )
 
-    # Evaluate
+    # evaluate
     print("\n" + "=" * 60)
     print("EVALUATION")
     print("=" * 60)
 
     results = model.evaluate(val_inputs, val_outputs, verbose=0)
 
-    # Parse results (order: loss, comp_loss, err_loss, correct_loss, comp_mae, err_acc, err_auc, correct_acc)
+    # parse results (order: loss, comp_loss, err_loss, correct_loss, comp_mae, err_acc, err_auc, correct_acc)
     print(f"Total Loss: {results[0]:.4f}")
     print(f"Component MAE: {results[4]:.4f}")
     print(f"Error Type Accuracy: {results[5]:.4f}")
     print(f"Error Type AUC: {results[6]:.4f}")
     print(f"Correctness Accuracy: {results[7]:.4f}")
 
-    # Save model (explicitly as string path for Keras 3 format)
+    # save model (explicitly as string path for Keras 3 format)
     model.save(str(MODEL_DIR / 'error_diagnosis.keras'))
     print(f"\nModel saved to {MODEL_DIR / 'error_diagnosis.keras'}")
 
-    # Save training history
+    # save training history
     history_dict = {k: [float(v) for v in vals] for k, vals in history.history.items()}
     with open(MODEL_DIR / 'training_history.json', 'w') as f:
         json.dump(history_dict, f, indent=2)
 
-    # Save model info
+    # save model info
     model_info = {
         'input_shape': list(input_shape),
         'num_error_types': num_error_types,

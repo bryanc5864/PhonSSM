@@ -1,0 +1,12 @@
+{
+  "subset": 100,
+  "streams": "joint",
+  "tag": "smoke",
+  "seed": 0,
+  "test_top1": 1.94,
+  "test_top5": 6.98,
+  "test_perclass": 1.75,
+  "best_val": 2.37,
+  "test_n": 258,
+  "epochs": 3
+}

@@ -1,9 +1,8 @@
 """
-SignSense Synthetic Error Generation Module
-Generates labeled error samples for training the Error Diagnosis Network.
+generate labeled error samples for the error diagnosis network.
 
-Key Innovation: No public dataset contains labeled errors, so we generate them
-programmatically. This enables supervised training of error detection models.
+no public dataset has labeled sign errors, so we synthesize them by perturbing
+correct samples. that is what makes supervised error detection trainable at all.
 """
 
 import numpy as np
@@ -12,7 +11,7 @@ from tqdm import tqdm
 import json
 
 
-# Error type definitions
+# error type definitions
 ERROR_TYPES = {
     'handshape': [
         'finger_not_extended',
@@ -40,7 +39,7 @@ ERROR_TYPES = {
     ]
 }
 
-# Flatten to list of all error types
+# flatten to list of all error types
 ALL_ERROR_TYPES = []
 for category, errors in ERROR_TYPES.items():
     for error in errors:
@@ -49,27 +48,25 @@ for category, errors in ERROR_TYPES.items():
 ERROR_TO_IDX = {e: i for i, e in enumerate(ALL_ERROR_TYPES)}
 IDX_TO_ERROR = {i: e for e, i in ERROR_TO_IDX.items()}
 
-# Component indices
+# component indices
 COMPONENTS = ['handshape', 'location', 'movement', 'orientation']
 COMPONENT_TO_IDX = {c: i for i, c in enumerate(COMPONENTS)}
 
 
-# =============================================================================
-# Handshape Error Generators
-# =============================================================================
+# handshape errors
 
 def generate_finger_not_extended(landmarks):
     """Curl a finger that should be extended."""
     modified = landmarks.copy().reshape(-1, 21, 3)
 
-    # Randomly choose a finger (index=5-8, middle=9-12, ring=13-16, pinky=17-20)
+    # randomly choose a finger (index=5-8, middle=9-12, ring=13-16, pinky=17-20)
     finger_bases = [5, 9, 13, 17]
     finger_idx = np.random.choice(finger_bases)
 
-    # Curl finger toward palm (landmark 0 = wrist)
-    wrist = modified[:, 0, :]  # Shape: (30, 3)
+    # curl finger toward palm (landmark 0 = wrist)
+    wrist = modified[:, 0, :]  # shape: (30, 3)
     for i in range(finger_idx, finger_idx + 4):
-        # Move landmarks toward wrist
+        # move landmarks toward wrist
         t = (i - finger_idx + 1) / 4  # 0.25, 0.5, 0.75, 1.0
         modified[:, i, :] = modified[:, i, :] * (1 - t * 0.6) + wrist * (t * 0.6)
 
@@ -80,12 +77,12 @@ def generate_fingers_not_curled(landmarks):
     """Extend fingers that should be curled."""
     modified = landmarks.copy().reshape(-1, 21, 3)
 
-    # Extend all fingertips
+    # extend all fingertips
     for tip in [4, 8, 12, 16, 20]:
         base = tip - 3
-        # Direction from base to tip
+        # direction from base to tip
         direction = modified[:, tip] - modified[:, base]
-        # Extend further
+        # extend further
         modified[:, tip] = modified[:, base] + direction * 1.5
 
     return modified.reshape(-1, 63), "handshape:fingers_not_curled"
@@ -95,8 +92,8 @@ def generate_wrong_handshape(landmarks):
     """Randomly perturb finger positions."""
     modified = landmarks.copy().reshape(-1, 21, 3)
 
-    # Add random perturbations to finger landmarks
-    for i in range(4, 21):  # Skip wrist and palm base
+    # add random perturbations to finger landmarks
+    for i in range(4, 21):  # skip wrist and palm base
         perturbation = np.random.uniform(-0.15, 0.15, size=(len(modified), 3))
         modified[:, i] += perturbation
 
@@ -107,8 +104,8 @@ def generate_thumb_position(landmarks):
     """Move thumb to incorrect position."""
     modified = landmarks.copy().reshape(-1, 21, 3)
 
-    # Thumb landmarks: 1, 2, 3, 4
-    # Rotate thumb around wrist
+    # thumb landmarks: 1, 2, 3, 4
+    # rotate thumb around wrist
     angle = np.random.uniform(30, 60) * np.pi / 180
     cos_a, sin_a = np.cos(angle), np.sin(angle)
 
@@ -121,14 +118,12 @@ def generate_thumb_position(landmarks):
     return modified.reshape(-1, 63), "handshape:thumb_position"
 
 
-# =============================================================================
-# Location Error Generators
-# =============================================================================
+# location errors
 
 def generate_hand_too_high(landmarks):
     """Shift hand position up."""
     modified = landmarks.copy().reshape(-1, 21, 3)
-    shift = np.array([0, -0.15, 0])  # Negative Y is up in image coords
+    shift = np.array([0, -0.15, 0])  # negative Y is up in image coords
     modified = modified + shift
     return modified.reshape(-1, 63), "location:hand_too_high"
 
@@ -136,7 +131,7 @@ def generate_hand_too_high(landmarks):
 def generate_hand_too_low(landmarks):
     """Shift hand position down."""
     modified = landmarks.copy().reshape(-1, 21, 3)
-    shift = np.array([0, 0.15, 0])  # Positive Y is down
+    shift = np.array([0, 0.15, 0])  # positive Y is down
     modified = modified + shift
     return modified.reshape(-1, 63), "location:hand_too_low"
 
@@ -161,25 +156,23 @@ def generate_wrong_location(landmarks):
     """Shift hand to completely wrong location."""
     modified = landmarks.copy().reshape(-1, 21, 3)
     shift = np.random.uniform(-0.25, 0.25, size=3)
-    shift[2] = shift[2] * 0.5  # Less Z shift
+    shift[2] = shift[2] * 0.5  # less Z shift
     modified = modified + shift
     return modified.reshape(-1, 63), "location:wrong_location"
 
 
-# =============================================================================
-# Movement Error Generators
-# =============================================================================
+# movement errors
 
 def generate_too_fast(landmarks):
     """Speed up movement by subsampling frames."""
-    n_frames = len(landmarks) // 63  # Assumes flattened input
+    n_frames = len(landmarks) // 63  # assumes flattened input
     modified = landmarks.copy().reshape(n_frames, 21, 3)
 
-    # Take every other frame
+    # take every other frame
     indices = np.linspace(0, n_frames - 1, n_frames // 2).astype(int)
     fast = modified[indices]
 
-    # Pad back to original length by repeating
+    # pad back to original length by repeating
     result = np.repeat(fast, 2, axis=0)[:n_frames]
 
     return result.reshape(-1, 63), "movement:too_fast"
@@ -190,7 +183,7 @@ def generate_too_slow(landmarks):
     n_frames = len(landmarks) // 63
     modified = landmarks.copy().reshape(n_frames, 21, 3)
 
-    # Use only first half of frames, stretched
+    # use only first half of frames, stretched
     half = n_frames // 2
     indices = np.linspace(0, half - 1, n_frames).astype(int)
     slow = modified[indices]
@@ -203,7 +196,7 @@ def generate_wrong_direction(landmarks):
     n_frames = len(landmarks) // 63
     modified = landmarks.copy().reshape(n_frames, 21, 3)
 
-    # Reverse frame order
+    # reverse frame order
     reversed_lm = modified[::-1].copy()
 
     return reversed_lm.reshape(-1, 63), "movement:wrong_direction"
@@ -214,9 +207,9 @@ def generate_incomplete(landmarks):
     n_frames = len(landmarks) // 63
     modified = landmarks.copy().reshape(n_frames, 21, 3)
 
-    # Stop at 60% of the movement
+    # stop at 60% of the movement
     cutoff = int(n_frames * 0.6)
-    modified[cutoff:] = modified[cutoff - 1]  # Freeze
+    modified[cutoff:] = modified[cutoff - 1]  # freeze
 
     return modified.reshape(-1, 63), "movement:incomplete"
 
@@ -226,7 +219,7 @@ def generate_extra_movement(landmarks):
     n_frames = len(landmarks) // 63
     modified = landmarks.copy().reshape(n_frames, 21, 3)
 
-    # Add oscillation in last 20% of frames
+    # add oscillation in last 20% of frames
     start = int(n_frames * 0.8)
     for i in range(start, n_frames):
         t = (i - start) / (n_frames - start)
@@ -236,16 +229,14 @@ def generate_extra_movement(landmarks):
     return modified.reshape(-1, 63), "movement:extra_movement"
 
 
-# =============================================================================
-# Orientation Error Generators
-# =============================================================================
+# orientation errors
 
 def generate_palm_wrong_direction(landmarks):
     """Rotate hand to wrong palm orientation."""
     n_frames = len(landmarks) // 63
     modified = landmarks.copy().reshape(n_frames, 21, 3)
 
-    # Rotate around Y-axis (changes palm direction)
+    # rotate around Y-axis (changes palm direction)
     angle = np.random.uniform(45, 90) * np.pi / 180
     cos_a, sin_a = np.cos(angle), np.sin(angle)
 
@@ -263,7 +254,7 @@ def generate_wrist_rotation(landmarks):
     n_frames = len(landmarks) // 63
     modified = landmarks.copy().reshape(n_frames, 21, 3)
 
-    # Rotate around X-axis
+    # rotate around X-axis
     angle = np.random.uniform(20, 45) * np.pi / 180
     cos_a, sin_a = np.cos(angle), np.sin(angle)
 
@@ -276,11 +267,9 @@ def generate_wrist_rotation(landmarks):
     return modified.reshape(-1, 63), "orientation:wrist_rotation"
 
 
-# =============================================================================
-# Main Error Generation
-# =============================================================================
+# main error generation
 
-# Mapping from error type to generator function
+# mapping from error type to generator function
 ERROR_GENERATORS = {
     'handshape:finger_not_extended': generate_finger_not_extended,
     'handshape:fingers_not_curled': generate_fingers_not_curled,
@@ -322,16 +311,16 @@ def generate_error_sample(landmarks, error_type=None):
     modified, error_name = generator(landmarks.flatten())
     modified = modified.reshape(30, 63)
 
-    # Create component scores (0 = wrong, 1 = correct)
+    # create component scores (0 = wrong, 1 = correct)
     component_scores = np.ones(4, dtype=np.float32)
     error_category = error_name.split(':')[0]
     component_scores[COMPONENT_TO_IDX[error_category]] = 0.0
 
-    # Add some noise to scores
+    # add some noise to scores
     component_scores += np.random.uniform(-0.1, 0.1, size=4)
     component_scores = np.clip(component_scores, 0, 1)
 
-    # Create multi-hot error label
+    # create multi-hot error label
     error_label = np.zeros(len(ALL_ERROR_TYPES), dtype=np.float32)
     error_label[ERROR_TO_IDX[error_name]] = 1.0
 
@@ -364,7 +353,7 @@ def augment_with_errors(X, y, errors_per_sample=3, include_correct=True, seed=42
     component_scores = []
     error_labels = []
 
-    # Include correct samples
+    # include correct samples
     if include_correct:
         for i in range(len(X)):
             X_aug.append(X[i])
@@ -373,7 +362,7 @@ def augment_with_errors(X, y, errors_per_sample=3, include_correct=True, seed=42
             component_scores.append(np.ones(4, dtype=np.float32))
             error_labels.append(np.zeros(len(ALL_ERROR_TYPES), dtype=np.float32))
 
-    # Generate error samples
+    # generate error samples
     print(f"Generating {errors_per_sample} error variants per sample...")
     for i in tqdm(range(len(X)), desc="Generating errors"):
         for _ in range(errors_per_sample):
@@ -430,13 +419,13 @@ if __name__ == "__main__":
     input_dir = Path(args.input_dir)
     output_dir = Path(args.output_dir)
 
-    # Load training data
+    # load training data
     print("Loading training data...")
     X_train = np.load(input_dir / 'X_train.npy')
     y_train = np.load(input_dir / 'y_train.npy')
     print(f"Loaded: X_train={X_train.shape}, y_train={y_train.shape}")
 
-    # Generate errors for training set
+    # generate errors for training set
     print(f"\nGenerating errors ({args.errors_per_sample} per sample)...")
     X_aug, y_aug, is_correct, comp_scores, err_labels = augment_with_errors(
         X_train, y_train,
@@ -448,7 +437,7 @@ if __name__ == "__main__":
     print(f"  Correct: {is_correct.sum()}")
     print(f"  Errors: {(~is_correct).sum()}")
 
-    # Save
+    # save
     print("\nSaving...")
     np.save(output_dir / 'X_train_with_errors.npy', X_aug)
     np.save(output_dir / 'y_train_with_errors.npy', y_aug)

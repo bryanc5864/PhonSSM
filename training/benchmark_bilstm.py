@@ -1,10 +1,5 @@
-"""
-Bi-LSTM Benchmark Script
-========================
-Evaluates the Bi-LSTM baseline with full metrics.
+"""full metrics for the Bi-LSTM baseline. needs the tf-gpu env.
 
-Usage:
-    conda activate tf-gpu
     python training/benchmark_bilstm.py
 """
 
@@ -19,7 +14,6 @@ from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
 
-# Metrics
 from sklearn.metrics import (
     accuracy_score, f1_score, confusion_matrix,
     top_k_accuracy_score
@@ -43,7 +37,7 @@ def load_data():
     with open(DATA_DIR / "label_map.json") as f:
         label_map = json.load(f)
 
-    # Class counts from training
+    # class counts from training
     class_counts = defaultdict(int)
     for label in y_train:
         class_counts[int(label)] += 1
@@ -65,7 +59,7 @@ def compute_metrics(y_true, y_pred, logits, num_classes, class_counts=None):
     """Compute comprehensive metrics."""
     metrics = {}
 
-    # === Primary Accuracy Metrics ===
+    # top-k accuracy
     metrics['top1_accuracy'] = accuracy_score(y_true, y_pred) * 100
 
     for k in [3, 5, 10]:
@@ -74,11 +68,11 @@ def compute_metrics(y_true, y_pred, logits, num_classes, class_counts=None):
                 y_true, logits, k=k, labels=range(num_classes)
             ) * 100
 
-    # === F1 Scores ===
+    # F1 Scores
     metrics['macro_f1'] = f1_score(y_true, y_pred, average='macro', zero_division=0) * 100
     metrics['weighted_f1'] = f1_score(y_true, y_pred, average='weighted', zero_division=0) * 100
 
-    # === Per-Class Accuracy ===
+    # per-class accuracy
     per_class_acc = []
     for c in range(num_classes):
         mask = y_true == c
@@ -91,7 +85,7 @@ def compute_metrics(y_true, y_pred, logits, num_classes, class_counts=None):
     metrics['per_class_accuracy_min'] = np.min(per_class_acc) * 100
     metrics['per_class_accuracy_max'] = np.max(per_class_acc) * 100
 
-    # === Confusion Analysis ===
+    # confusion analysis
     cm = confusion_matrix(y_true, y_pred, labels=range(num_classes))
     cm_no_diag = cm.copy()
     np.fill_diagonal(cm_no_diag, 0)
@@ -107,7 +101,7 @@ def compute_metrics(y_true, y_pred, logits, num_classes, class_counts=None):
                 top_confusions.append({'true': int(i), 'pred': int(j), 'count': int(count)})
         metrics['top_confusions'] = top_confusions
 
-    # === Few-Shot Performance ===
+    # few-shot buckets
     if class_counts:
         bins = [(1, 5), (6, 10), (11, 20), (21, 50), (51, 100), (101, float('inf'))]
         few_shot = {}
@@ -140,14 +134,13 @@ def main():
     print(f"TensorFlow: {tf.__version__}")
     print(f"GPU: {tf.config.list_physical_devices('GPU')}")
 
-    # Load data
     data = load_data()
 
-    # Load model with manual weight extraction (Keras 2.15 .keras format compatibility)
+    # load model with manual weight extraction (Keras 2.15 .keras format compatibility)
     print("\nLoading model...")
     import h5py
 
-    # Rebuild model architecture
+    # rebuild model architecture
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.layers import (
         Input, LSTM, Bidirectional, Dense, Dropout,
@@ -167,10 +160,10 @@ def main():
         Dense(data['num_classes'], activation='softmax', name='predictions')
     ])
 
-    # Build model
+    # build model
     _ = model(tf.zeros((1, 30, 63)))
 
-    # Extract weights from .keras file (which is a zip)
+    # extract weights from .keras file (which is a zip)
     temp_dir = PROJECT_ROOT / "temp_extract"
     temp_dir.mkdir(exist_ok=True)
 
@@ -181,7 +174,7 @@ def main():
 
     weights_path = temp_dir / "model.weights.h5"
 
-    # Manually load weights from HDF5 (handles Keras 2.15 format)
+    # manually load weights from HDF5 (handles Keras 2.15 format)
     with h5py.File(weights_path, 'r') as f:
         layer_mapping = {
             'bidirectional': 'bidirectional',
@@ -228,22 +221,22 @@ def main():
     total_params = model.count_params()
     print(f"Parameters: {total_params:,}")
 
-    # Run inference
+    # run inference
     print("\nRunning inference on test set...")
     X_test = data['X_test']
     y_test = data['y_test']
 
-    # Warm-up
+    # warm-up
     _ = model.predict(X_test[:10], verbose=0)
 
-    # Timed inference
+    # timed inference
     start_time = time.time()
     logits = model.predict(X_test, verbose=1)
     inference_time = time.time() - start_time
 
     y_pred = np.argmax(logits, axis=-1)
 
-    # Compute metrics
+    # compute metrics
     print("\nComputing metrics...")
     metrics = compute_metrics(
         y_test, y_pred, logits,
@@ -251,7 +244,7 @@ def main():
         data['class_counts']
     )
 
-    # Add model info
+    # add model info
     metrics['model'] = 'Bi-LSTM'
     metrics['parameters'] = total_params
     metrics['inference_time_total_s'] = inference_time
@@ -260,7 +253,7 @@ def main():
     metrics['test_samples'] = len(X_test)
     metrics['num_classes'] = data['num_classes']
 
-    # Print results
+    # print results
     print("\n" + "=" * 60)
     print("RESULTS")
     print("=" * 60)
@@ -300,14 +293,14 @@ def main():
                 count = metrics['few_shot'].get(count_key, 0)
                 print(f"  {bin_name:>10} samples: {acc:6.2f}% (n={count})")
 
-    # Save results
+    # save results
     output_dir = PROJECT_ROOT / "benchmarks"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_path = output_dir / f"bilstm_benchmark_{timestamp}.json"
 
-    # Convert numpy types for JSON
+    # convert numpy types for JSON
     def convert(obj):
         if isinstance(obj, np.floating):
             return float(obj)

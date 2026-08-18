@@ -33,6 +33,8 @@ models/*
 !models/sign_classifier/
 !models/phonssm/
 !models/movement_analyzer/
+!models/dstanet/
+!models/phonograph/
 
 # Model weights (except trained checkpoints)
 *.task
@@ -67,3 +69,35 @@ Desktop.ini
 
 # Temp files
 tmpclaude-*
+
+# raw / re-downloadable data
+data/wlasl-processed/videos/
+data/sota_skeleton/
+data/processed/wlasl_honest/
+data/processed/wlasl_official/
+data/processed/wlasl_official_f64/
+*.tar.gz
+*.tgz
+*.mp4
+*.avi
+*.mov
+
+# checkpoints and training logs
+checkpoints/
+benchmarks/**/*.pt
+benchmarks/**/*.npy
+models/sign_classifier/logs/
+logs/
+*.log
+runs/
+wandb/
+
+# node
+node_modules/
+.next/
+out/
+
+# python
+.ipynb_checkpoints/
+*.egg-info/
+.pytest_cache/

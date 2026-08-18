@@ -1,12 +1,8 @@
-"""
-ChicagoFSWild Dataset Downloader
-Downloads the ChicagoFSWild fingerspelling dataset (14 GB).
+"""download ChicagoFSWild (fingerspelling, 14 GB).
 
-Source: https://home.ttic.edu/~klivescu/ChicagoFSWild.htm
+source: https://home.ttic.edu/~klivescu/ChicagoFSWild.htm
 
-Usage:
-    python training/download_chicagofswild.py
-    python training/download_chicagofswild.py --download-only
+    python training/download_chicagofswild.py [--download-only]
 """
 
 import subprocess
@@ -36,7 +32,7 @@ def download_chicagofswild(data_dir=None, download_only=False):
     print(f"Signers: 160")
     print("=" * 60)
 
-    # Download
+    # download
     if archive_path.exists():
         print(f"\nArchive already exists: {archive_path}")
     else:
@@ -63,7 +59,6 @@ def download_chicagofswild(data_dir=None, download_only=False):
         print(f"\nDownload complete: {archive_path}")
         return True
 
-    # Extract
     if extract_dir.exists() and list(extract_dir.rglob("*.csv")):
         print(f"\nAlready extracted: {extract_dir}")
     else:

@@ -1,8 +1,4 @@
-"""
-Confusion Matrix Analysis for PhonSSM
-=====================================
-Generates confusion matrices and identifies most confused sign pairs.
-"""
+"""confusion matrices for PhonSSM, plus the worst confused sign pairs."""
 
 import os
 import sys
@@ -28,7 +24,7 @@ def load_model_and_data(subset=100):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Find best checkpoint
+    # find best checkpoint
     if subset == 100:
         ckpt_path = PROJECT_ROOT / "benchmarks/external/wlasl100/20260118_073336/best_model.pt"
     elif subset == 1000:
@@ -38,35 +34,34 @@ def load_model_and_data(subset=100):
     else:
         raise ValueError(f"No checkpoint for subset {subset}")
 
-    # Load WLASL official data
+    # load WLASL official data
     wlasl_json = PROJECT_ROOT / "data/raw/wlasl/start_kit/WLASL_v0.3.json"
     with open(wlasl_json) as f:
         wlasl_data = json.load(f)
 
-    # Get subset glosses
+    # get subset glosses
     subset_glosses = [entry['gloss'] for entry in wlasl_data[:subset]]
     gloss_to_idx = {g: i for i, g in enumerate(subset_glosses)}
     idx_to_label = {i: g for i, g in enumerate(subset_glosses)}
 
-    # Load pose+hands data
     X_all = np.load(PROJECT_ROOT / "data/processed/X_wlasl_pose_hands.npy")
     y_all = np.load(PROJECT_ROOT / "data/processed/y_wlasl_pose_hands.npy")
 
     with open(PROJECT_ROOT / "data/processed/wlasl_pose_hands_label_map.json") as f:
         full_label_map = json.load(f)
 
-    # Reverse map: idx -> gloss
+    # reverse map: idx -> gloss
     idx_to_gloss = {v: k for k, v in full_label_map.items()}
 
-    # Filter to subset glosses
+    # filter to subset glosses
     mask = np.array([idx_to_gloss.get(int(label), '') in gloss_to_idx for label in y_all])
     X_subset = X_all[mask]
     y_subset_orig = y_all[mask]
 
-    # Remap labels to new indices (0 to subset_size-1)
+    # remap labels to new indices (0 to subset_size-1)
     y_subset = np.array([gloss_to_idx[idx_to_gloss[int(label)]] for label in y_subset_orig])
 
-    # Split (match benchmark ratios)
+    # split (match benchmark ratios)
     X_train, X_temp, y_train, y_temp = train_test_split(
         X_subset, y_subset, test_size=0.32, stratify=y_subset, random_state=42
     )
@@ -74,7 +69,7 @@ def load_model_and_data(subset=100):
         X_temp, y_temp, test_size=0.55, stratify=y_temp, random_state=42
     )
 
-    # Create model
+    # create model
     config = PhonSSMConfig(
         num_signs=subset,
         input_mode="pose_hands",
@@ -82,7 +77,6 @@ def load_model_and_data(subset=100):
     )
     model = PhonSSM(config).to(device)
 
-    # Load weights
     ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
     model.load_state_dict(ckpt['model_state_dict'])
     model.eval()
@@ -114,7 +108,7 @@ def analyze_confusion(y_true, y_pred, idx_to_label, top_k=20):
     """Analyze confusion matrix and find most confused pairs."""
     cm = confusion_matrix(y_true, y_pred)
 
-    # Find most confused pairs (off-diagonal)
+    # find most confused pairs (off-diagonal)
     confused_pairs = []
     n_classes = len(cm)
     for i in range(n_classes):
@@ -128,7 +122,6 @@ def analyze_confusion(y_true, y_pred, idx_to_label, top_k=20):
                     'error_rate': cm[i, j] / max(cm[i].sum(), 1)
                 })
 
-    # Sort by count
     confused_pairs.sort(key=lambda x: -x['count'])
 
     return cm, confused_pairs[:top_k]
@@ -139,10 +132,10 @@ def plot_confusion_matrix(cm, idx_to_label, output_path, subset):
     n_classes = len(cm)
 
     if n_classes <= 100:
-        # Full matrix for small datasets
+        # full matrix for small datasets
         fig, ax = plt.subplots(figsize=(20, 20))
 
-        # Normalize
+        # normalize
         cm_norm = cm.astype('float') / cm.sum(axis=1, keepdims=True)
         cm_norm = np.nan_to_num(cm_norm)
 
@@ -155,14 +148,14 @@ def plot_confusion_matrix(cm, idx_to_label, output_path, subset):
         plt.xticks(rotation=90, fontsize=6)
         plt.yticks(fontsize=6)
     else:
-        # Aggregated view for large datasets
+        # aggregated view for large datasets
         fig, ax = plt.subplots(figsize=(12, 10))
 
-        # Compute per-class accuracy
+        # compute per-class accuracy
         per_class_acc = np.diag(cm) / cm.sum(axis=1)
         per_class_acc = np.nan_to_num(per_class_acc)
 
-        # Histogram of per-class accuracies
+        # histogram of per-class accuracies
         ax.hist(per_class_acc, bins=50, edgecolor='black', alpha=0.7)
         ax.axvline(per_class_acc.mean(), color='red', linestyle='--',
                    label=f'Mean: {per_class_acc.mean():.2%}')
@@ -187,26 +180,24 @@ def main():
     print(f"CONFUSION MATRIX ANALYSIS - WLASL{args.subset}")
     print("=" * 60)
 
-    # Setup output directory
+    # setup output directory
     output_dir = PROJECT_ROOT / "analysis" / "results"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load model and data
     model, X_test, y_test, idx_to_label, device = load_model_and_data(args.subset)
 
-    # Get predictions
+    # get predictions
     print("\nRunning inference...")
     y_pred, probs = get_predictions(model, X_test, device)
 
-    # Compute accuracy
+    # compute accuracy
     accuracy = (y_pred == y_test).mean()
     print(f"Test Accuracy: {accuracy:.2%}")
 
-    # Analyze confusion
+    # analyze confusion
     print("\nAnalyzing confusion matrix...")
     cm, confused_pairs = analyze_confusion(y_test, y_pred, idx_to_label)
 
-    # Print most confused pairs
     print(f"\nTop 20 Most Confused Pairs:")
     print("-" * 60)
     print(f"{'True':<15} {'Predicted':<15} {'Count':<8} {'Error Rate':<10}")
@@ -214,11 +205,11 @@ def main():
     for pair in confused_pairs:
         print(f"{pair['true']:<15} {pair['pred']:<15} {pair['count']:<8} {pair['error_rate']:.1%}")
 
-    # Save confusion matrix plot
+    # save confusion matrix plot
     plot_path = output_dir / f"confusion_matrix_wlasl{args.subset}.png"
     plot_confusion_matrix(cm, idx_to_label, plot_path, args.subset)
 
-    # Save confused pairs to JSON
+    # save confused pairs to JSON
     json_path = output_dir / f"confused_pairs_wlasl{args.subset}.json"
     with open(json_path, 'w') as f:
         json.dump({

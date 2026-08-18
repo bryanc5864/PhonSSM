@@ -9,19 +9,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Warm neutrals
+        // warm neutrals
         bg: {
           primary: "#FDFCFB",
           secondary: "#F7F5F3",
           tertiary: "#EDEAE6",
         },
-        // Rich text colors
+        // rich text colors
         text: {
           primary: "#1A1614",
           secondary: "#5C5552",
           tertiary: "#8A8583",
         },
-        // Distinctive accents
+        // distinctive accents
         accent: {
           primary: "#2D5A4A",
           secondary: "#E8B86D",

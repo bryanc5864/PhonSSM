@@ -12,7 +12,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data" / "processed" / "merged"
 
-# Load data info
+# load data info
 X_train = np.load(DATA_DIR / 'X_train.npy')
 y_train = np.load(DATA_DIR / 'y_train.npy')
 with open(DATA_DIR / 'label_map.json') as f:
@@ -24,7 +24,7 @@ steps_per_epoch = n_samples // batch_size
 
 print(f"Building model...")
 
-# Build actual model
+# build actual model
 model = Sequential([
     Input(shape=(30, 63)),
     Bidirectional(LSTM(128, return_sequences=True, dropout=0.2)),
@@ -38,7 +38,7 @@ model = Sequential([
 ])
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
-# Benchmark on 1000 samples
+# benchmark on 1000 samples
 print(f"Benchmarking on 1000 samples...")
 X_bench = X_train[:1000]
 y_bench = y_train[:1000]

@@ -1,0 +1,11 @@
+{
+  "subset": 2000,
+  "streams": [
+    "s_joint",
+    "s_bone",
+    "s_motion"
+  ],
+  "ensemble_top1": 34.61,
+  "ensemble_top5": 67.37,
+  "n": 2878
+}

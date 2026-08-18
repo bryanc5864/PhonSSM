@@ -1,0 +1,12 @@
+{
+  "subset": 100,
+  "streams": "joint",
+  "tag": "swa",
+  "seed": 0,
+  "test_top1": 74.42,
+  "test_top5": 92.64,
+  "test_perclass": 75.35,
+  "best_val": 79.29,
+  "test_n": 258,
+  "epochs": 250
+}

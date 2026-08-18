@@ -1,13 +1,7 @@
 """
-Process Fingerspelling Datasets and Merge into Main Dataset
-============================================================
-
-This script:
-1. Processes ASL Alphabet (static images, 87K samples, A-Z)
-2. Processes ASL MNIST (28x28 grayscale, 35K samples, A-Z)
-3. Downloads and processes ChicagoFSWild (video sequences, 7K samples)
-4. Merges all into the main dataset
-5. Reshuffles with 80/10/10 train/val/test splits
+process the fingerspelling datasets (ASL Alphabet 87K stills, ASL MNIST 35K
+28x28 greys, ChicagoFSWild 7K clips) and merge them into the main dataset with a
+fresh 80/10/10 reshuffle.
 
 Usage:
     python training/process_fingerspelling.py
@@ -33,7 +27,7 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
-# Paths
+# paths
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_RAW = PROJECT_ROOT / "data" / "raw"
 DATA_PROCESSED = PROJECT_ROOT / "data" / "processed"
@@ -69,7 +63,7 @@ def create_hand_landmarker():
 
 def extract_landmarks_from_image(image, landmarker):
     """Extract hand landmarks from a single image."""
-    if len(image.shape) == 2:  # Grayscale
+    if len(image.shape) == 2:  # grayscale
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     elif image.shape[2] == 4:  # RGBA
         image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
@@ -121,7 +115,7 @@ def process_asl_alphabet(landmarker, max_frames=30):
     letters = sorted([d.name for d in train_dir.iterdir() if d.is_dir()])
     print(f"Found {len(letters)} classes")
 
-    # Filter to A-Z only (exclude del, nothing, space for consistency)
+    # filter to A-Z only (exclude del, nothing, space for consistency)
     alphabet_letters = [l for l in letters if len(l) == 1 and l.isalpha()]
     label_map = {letter.lower(): ord(letter.lower()) - ord('a') for letter in alphabet_letters}
 
@@ -189,7 +183,7 @@ def process_asl_mnist(landmarker, max_frames=30):
 
     print(f"Total samples: {len(df)}")
 
-    # Labels 0-25 for A-Z (J=9 and Z=25 excluded in original)
+    # labels 0-25 for A-Z (J=9 and Z=25 excluded in original)
     label_map = {chr(65 + i).lower(): i for i in range(26)}
 
     X_data, y_data = [], []
@@ -246,16 +240,16 @@ def download_chicagofswild():
     else:
         print(f"Downloading from {CHICAGOFSWILD_URL}...")
         try:
-            # Use curl for better progress
+            # use curl for better progress
             subprocess.run(
                 ['curl', '-L', '-C', '-', '-o', str(archive_path), CHICAGOFSWILD_URL],
                 check=True
             )
         except (subprocess.CalledProcessError, FileNotFoundError):
-            # Fallback to Python download
+            # fallback to Python download
             urllib.request.urlretrieve(CHICAGOFSWILD_URL, archive_path)
 
-    # Extract
+    # extract
     if not CHICAGOFSWILD_DIR.exists():
         print(f"Extracting to {CHICAGOFSWILD_DIR}...")
         CHICAGOFSWILD_DIR.mkdir(parents=True, exist_ok=True)
@@ -276,7 +270,7 @@ def process_single_chicago_sequence(args):
         if not frame_files:
             return None
 
-        # Create landmarker for this process
+        # create landmarker for this process
         model_path = download_model()
         base_options = python.BaseOptions(model_asset_path=model_path)
         options = vision.HandLandmarkerOptions(
@@ -328,12 +322,12 @@ def process_chicagofswild(landmarker, max_frames=30, max_samples=None, num_worke
     print(f"Using {num_workers} CPU cores")
     print("=" * 60)
 
-    # Find the actual data directory (may be nested)
+    # find the actual data directory (may be nested)
     data_dir = CHICAGOFSWILD_DIR
     if (data_dir / "ChicagoFSWild").exists():
         data_dir = data_dir / "ChicagoFSWild"
 
-    # Find CSV
+    # find CSV
     csv_files = list(data_dir.rglob("*.csv"))
     main_csv = None
     for csv_file in csv_files:
@@ -347,14 +341,14 @@ def process_chicagofswild(landmarker, max_frames=30, max_samples=None, num_worke
 
     print(f"Using CSV: {main_csv}")
 
-    # Parse CSV
+    # parse CSV
     df = pd.read_csv(main_csv)
     print(f"Found {len(df)} sequences")
 
     if max_samples:
         df = df.head(max_samples)
 
-    # Build directory index ONCE (much faster than rglob per sequence)
+    # build directory index ONCE (much faster than rglob per sequence)
     print("Building directory index...")
     seq_to_dir = {}
     for subdir in data_dir.iterdir():
@@ -364,7 +358,7 @@ def process_chicagofswild(landmarker, max_frames=30, max_samples=None, num_worke
                     seq_to_dir[seq_dir.name] = seq_dir
     print(f"Indexed {len(seq_to_dir)} sequence directories")
 
-    # Create label map - check various column names
+    # create label map - check various column names
     label_col = None
     for col in ['label', 'label_proc', 'Label', 'processed_label', 'text']:
         if col in df.columns:
@@ -380,7 +374,7 @@ def process_chicagofswild(landmarker, max_frames=30, max_samples=None, num_worke
     label_map = {str(label).lower(): i for i, label in enumerate(all_labels)}
     print(f"Found {len(label_map)} unique labels")
 
-    # Prepare work items
+    # prepare work items
     work_items = []
     not_found = 0
     for idx, row in df.iterrows():
@@ -388,8 +382,8 @@ def process_chicagofswild(landmarker, max_frames=30, max_samples=None, num_worke
         if not filename:
             continue
 
-        # Handle paths like "aslized/elsie_stecker_0001"
-        seq_id = Path(filename).name  # Get last part of path
+        # handle paths like "aslized/elsie_stecker_0001"
+        seq_id = Path(filename).name  # get last part of path
         if seq_id not in seq_to_dir:
             not_found += 1
             continue
@@ -429,20 +423,14 @@ def process_chicagofswild(landmarker, max_frames=30, max_samples=None, num_worke
 
 
 def merge_and_reshuffle(datasets, output_dir):
-    """
-    Merge all datasets and reshuffle with 80/10/10 splits.
-
-    Args:
-        datasets: List of (X, y, label_map, name) tuples
-        output_dir: Output directory
-    """
+    """merge (X, y, label_map, name) tuples and reshuffle into 80/10/10 splits."""
     print("\n" + "=" * 60)
     print("MERGING AND RESHUFFLING")
     print("=" * 60)
 
     output_dir = Path(output_dir)
 
-    # Load existing merged dataset
+    # load existing merged dataset
     merged_dir = output_dir / "merged"
 
     X_existing, y_existing = None, None
@@ -465,23 +453,23 @@ def merge_and_reshuffle(datasets, output_dir):
 
         print(f"Existing: {len(X_existing)} samples, {len(existing_label_map)} signs")
 
-    # Combine all new datasets
+    # combine all new datasets
     all_X, all_y = [], []
     all_labels = set(existing_label_map.keys())
 
-    # Add existing data
+    # add existing data
     if X_existing is not None:
         all_X.append(X_existing)
         all_y.append(y_existing)
 
-    # Add new datasets with label remapping
+    # add new datasets with label remapping
     for X, y, label_map, name in datasets:
         if X is None:
             continue
 
         print(f"Adding {name}: {len(X)} samples")
 
-        # Create new labels for fingerspelling (prefix with 'fs_')
+        # create new labels for fingerspelling (prefix with 'fs_')
         new_label_map = {}
         for label, idx in label_map.items():
             new_label = f"fs_{label}"
@@ -490,17 +478,17 @@ def merge_and_reshuffle(datasets, output_dir):
                 new_label_map[new_label] = new_idx
                 all_labels.add(new_label)
             else:
-                # Find existing index
+                # find existing index
                 for k, v in existing_label_map.items():
                     if k == new_label:
                         new_label_map[new_label] = v
                         break
 
-        # Remap y values
+        # remap y values
         y_remapped = np.array([new_label_map.get(f"fs_{list(label_map.keys())[list(label_map.values()).index(yi)]}", -1)
                                for yi in y])
 
-        # Filter out invalid labels
+        # filter out invalid labels
         valid_mask = y_remapped >= 0
         X_valid = X[valid_mask]
         y_valid = y_remapped[valid_mask]
@@ -513,19 +501,18 @@ def merge_and_reshuffle(datasets, output_dir):
         print("ERROR: No data to merge!")
         return
 
-    # Concatenate all
     X_all = np.concatenate(all_X)
     y_all = np.concatenate(all_y)
 
     print(f"\nTotal samples: {len(X_all)}")
 
-    # Shuffle
+    # shuffle
     print("Shuffling...")
     indices = np.random.permutation(len(X_all))
     X_all = X_all[indices]
     y_all = y_all[indices]
 
-    # Split 80/10/10
+    # split 80/10/10
     n_total = len(X_all)
     n_train = int(0.8 * n_total)
     n_val = int(0.1 * n_total)
@@ -541,7 +528,7 @@ def merge_and_reshuffle(datasets, output_dir):
     print(f"Val: {len(X_val)}")
     print(f"Test: {len(X_test)}")
 
-    # Create unified label map
+    # create unified label map
     unified_label_map = dict(existing_label_map)
     for X, y, label_map, name in datasets:
         if label_map is None:
@@ -553,7 +540,7 @@ def merge_and_reshuffle(datasets, output_dir):
 
     print(f"Total vocabulary: {len(unified_label_map)} signs")
 
-    # Save
+    # save
     merged_dir.mkdir(parents=True, exist_ok=True)
 
     np.save(merged_dir / "X_train.npy", X_train)
@@ -566,7 +553,7 @@ def merge_and_reshuffle(datasets, output_dir):
     with open(merged_dir / "label_map.json", 'w') as f:
         json.dump(unified_label_map, f, indent=2)
 
-    # Save stats
+    # save stats
     stats = {
         'total_samples': int(n_total),
         'train_samples': int(len(X_train)),
@@ -580,7 +567,7 @@ def merge_and_reshuffle(datasets, output_dir):
 
     print(f"\nSaved to {merged_dir}")
 
-    # Print summary
+    # print summary
     print("\n" + "=" * 60)
     print("FINAL DATASET SUMMARY")
     print("=" * 60)
@@ -610,13 +597,13 @@ def main():
 
     args = parser.parse_args()
 
-    # Initialize MediaPipe
+    # initialize MediaPipe
     print("Initializing MediaPipe hand landmarker...")
     landmarker = create_hand_landmarker()
 
     datasets = []
 
-    # Process ASL Alphabet
+    # process ASL Alphabet
     if not args.mnist_only and not args.chicago_only:
         X, y, label_map = process_asl_alphabet(landmarker)
         if X is not None:
@@ -626,7 +613,7 @@ def main():
             with open(DATA_PROCESSED / "asl_alphabet_label_map.json", 'w') as f:
                 json.dump(label_map, f, indent=2)
 
-    # Process ASL MNIST
+    # process ASL MNIST
     if not args.alphabet_only and not args.chicago_only:
         X, y, label_map = process_asl_mnist(landmarker)
         if X is not None:
@@ -636,7 +623,7 @@ def main():
             with open(DATA_PROCESSED / "asl_mnist_label_map.json", 'w') as f:
                 json.dump(label_map, f, indent=2)
 
-    # Download and process ChicagoFSWild
+    # download and process ChicagoFSWild
     if not args.alphabet_only and not args.mnist_only:
         if not args.skip_download:
             download_chicagofswild()
@@ -653,7 +640,7 @@ def main():
                 with open(DATA_PROCESSED / "chicagofswild_label_map.json", 'w') as f:
                     json.dump(label_map, f, indent=2)
 
-    # Merge and reshuffle
+    # merge and reshuffle
     if datasets:
         merge_and_reshuffle(datasets, args.output_dir)
 

@@ -1,20 +1,7 @@
-"""
-Comprehensive Benchmark Script for SignSense Models
-====================================================
-Compares PhonSSM vs Bi-LSTM baseline across multiple metrics.
+"""PhonSSM vs the Bi-LSTM baseline: top-k accuracy, macro/weighted F1, per-class
+stats, inference time, params, confusion, and few-shot buckets by samples/class.
 
-Metrics collected:
-- Top-1, Top-3, Top-5, Top-10 Accuracy
-- Macro/Weighted F1
-- Per-class accuracy statistics
-- Inference time
-- Parameters & FLOPs
-- Confusion analysis
-- Few-shot performance (by samples per class)
-
-Usage:
-    python training/comprehensive_benchmark.py
-    python training/comprehensive_benchmark.py --dataset merged --device cuda
+    python training/comprehensive_benchmark.py [--dataset merged --device cuda]
 """
 
 import os
@@ -28,11 +15,10 @@ from collections import defaultdict
 
 import numpy as np
 
-# Add project root
+# add project root
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# Metrics
 from sklearn.metrics import (
     accuracy_score, f1_score, confusion_matrix,
     top_k_accuracy_score, classification_report
@@ -48,14 +34,14 @@ def load_validation_data(data_dir: Path):
     X_test = np.load(data_dir / "X_test.npy", allow_pickle=True)
     y_test = np.load(data_dir / "y_test.npy", allow_pickle=True)
 
-    # Load label map if exists
+    # load label map if exists
     label_map = {}
     label_map_path = data_dir / "label_map.json"
     if label_map_path.exists():
         with open(label_map_path) as f:
             label_map = json.load(f)
 
-    # Compute class counts from training data
+    # compute class counts from training data
     y_train = np.load(data_dir / "y_train.npy", allow_pickle=True)
     class_counts = defaultdict(int)
     for label in y_train:
@@ -79,21 +65,21 @@ def compute_metrics(y_true, y_pred, logits, num_classes, class_counts=None):
     """Compute comprehensive metrics."""
     metrics = {}
 
-    # === Primary Accuracy Metrics ===
+    # top-k accuracy
     metrics['top1_accuracy'] = accuracy_score(y_true, y_pred) * 100
 
-    # Top-K accuracy (need logits)
+    # top-K accuracy (need logits)
     for k in [3, 5, 10]:
         if k <= num_classes:
             metrics[f'top{k}_accuracy'] = top_k_accuracy_score(
                 y_true, logits, k=k, labels=range(num_classes)
             ) * 100
 
-    # === F1 Scores ===
+    # F1 Scores
     metrics['macro_f1'] = f1_score(y_true, y_pred, average='macro', zero_division=0) * 100
     metrics['weighted_f1'] = f1_score(y_true, y_pred, average='weighted', zero_division=0) * 100
 
-    # === Per-Class Accuracy ===
+    # per-class accuracy
     per_class_acc = []
     per_class_counts = []
     for c in range(num_classes):
@@ -108,10 +94,10 @@ def compute_metrics(y_true, y_pred, logits, num_classes, class_counts=None):
     metrics['per_class_accuracy_min'] = np.min(per_class_acc) * 100
     metrics['per_class_accuracy_max'] = np.max(per_class_acc) * 100
 
-    # === Confusion Analysis ===
+    # confusion analysis
     cm = confusion_matrix(y_true, y_pred, labels=range(num_classes))
 
-    # Top confusions (off-diagonal)
+    # top confusions (off-diagonal)
     cm_no_diag = cm.copy()
     np.fill_diagonal(cm_no_diag, 0)
     top_k = min(10, (cm_no_diag > 0).sum())
@@ -125,7 +111,7 @@ def compute_metrics(y_true, y_pred, logits, num_classes, class_counts=None):
                 top_confusions.append({'true': int(i), 'pred': int(j), 'count': int(count)})
         metrics['top_confusions'] = top_confusions
 
-    # === Few-Shot Performance ===
+    # few-shot buckets
     if class_counts:
         bins = [(1, 5), (6, 10), (11, 20), (21, 50), (51, 100), (101, float('inf'))]
         few_shot_metrics = {}
@@ -157,7 +143,7 @@ def benchmark_bilstm(data, device='cpu'):
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     import tensorflow as tf
 
-    # Load model
+    # load model
     model_path = PROJECT_ROOT / "models" / "sign_classifier" / "sign_classifier.keras"
     if not model_path.exists():
         model_path = PROJECT_ROOT / "models" / "sign_classifier" / "best_model.keras"
@@ -165,35 +151,33 @@ def benchmark_bilstm(data, device='cpu'):
     print(f"Loading model from {model_path}...")
     model = tf.keras.models.load_model(model_path)
 
-    # Model info
+    # model info
     total_params = model.count_params()
     print(f"Parameters: {total_params:,}")
 
-    # Prepare data
+    # prepare data
     X_test = data['X_test']
     y_test = data['y_test']
 
-    # Inference
     print("Running inference...")
 
-    # Warm-up
+    # warm-up
     _ = model.predict(X_test[:10], verbose=0)
 
-    # Timed inference
+    # timed inference
     start_time = time.time()
     logits = model.predict(X_test, verbose=0)
     inference_time = time.time() - start_time
 
     y_pred = np.argmax(logits, axis=-1)
 
-    # Compute metrics
     metrics = compute_metrics(
         y_test, y_pred, logits,
         data['num_classes'],
         data['class_counts']
     )
 
-    # Add model info
+    # add model info
     metrics['model'] = 'Bi-LSTM'
     metrics['parameters'] = total_params
     metrics['inference_time_total_s'] = inference_time
@@ -212,27 +196,26 @@ def benchmark_phonssm(data, device='cuda'):
     import torch
     from models.phonssm import PhonSSM, PhonSSMConfig
 
-    # Device
     if device == 'cuda' and not torch.cuda.is_available():
         print("CUDA not available, falling back to CPU")
         device = 'cpu'
     device = torch.device(device)
     print(f"Device: {device}")
 
-    # Load model
+    # load model
     checkpoint_dir = PROJECT_ROOT / "models" / "phonssm" / "checkpoints"
-    # Find latest checkpoint
+    # find latest checkpoint
     checkpoints = list(checkpoint_dir.glob("*/best_model.pt"))
     if not checkpoints:
         print("ERROR: No PhonSSM checkpoint found!")
         return None
 
-    checkpoint_path = sorted(checkpoints)[-1]  # Latest
+    checkpoint_path = sorted(checkpoints)[-1]  # latest
     print(f"Loading model from {checkpoint_path}...")
 
     checkpoint = torch.load(checkpoint_path, map_location=device)
 
-    # Create model
+    # create model
     config_dict = checkpoint.get('config', {})
     config = PhonSSMConfig(**{k: v for k, v in config_dict.items()
                               if k in PhonSSMConfig.__dataclass_fields__})
@@ -240,27 +223,26 @@ def benchmark_phonssm(data, device='cuda'):
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
 
-    # Model info
+    # model info
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Parameters: {total_params:,}")
 
-    # Prepare data
+    # prepare data
     X_test = torch.FloatTensor(data['X_test']).to(device)
     y_test = data['y_test']
 
-    # Inference
     print("Running inference...")
     batch_size = 64
     all_logits = []
 
-    # Warm-up
+    # warm-up
     with torch.no_grad():
         _ = model(X_test[:10])
 
     if device.type == 'cuda':
         torch.cuda.synchronize()
 
-    # Timed inference
+    # timed inference
     start_time = time.time()
     with torch.no_grad():
         for i in range(0, len(X_test), batch_size):
@@ -275,14 +257,13 @@ def benchmark_phonssm(data, device='cuda'):
     logits = np.vstack(all_logits)
     y_pred = np.argmax(logits, axis=-1)
 
-    # Compute metrics
     metrics = compute_metrics(
         y_test, y_pred, logits,
         data['num_classes'],
         data['class_counts']
     )
 
-    # Add model info
+    # add model info
     metrics['model'] = 'PhonSSM'
     metrics['parameters'] = total_params
     metrics['inference_time_total_s'] = inference_time
@@ -358,7 +339,7 @@ def print_comparison_table(bilstm_metrics, phonssm_metrics):
 
             print(f"{label:<30} {fmt(b_val):>15} {fmt(p_val):>15} {d:>12}")
 
-    # Few-shot comparison
+    # few-shot comparison
     if 'few_shot' in bilstm_metrics:
         print("\n" + "="*80)
         print("FEW-SHOT PERFORMANCE (by training samples per class)")
@@ -420,7 +401,7 @@ def main():
     print(f"Dataset: {args.dataset}")
     print(f"Device: {args.device}")
 
-    # Load data
+    # load data
     if args.dataset == 'merged':
         data_dir = PROJECT_ROOT / "data" / "processed" / "merged"
     elif args.dataset == 'extended':
@@ -430,7 +411,7 @@ def main():
 
     data = load_validation_data(data_dir)
 
-    # Benchmark Bi-LSTM
+    # benchmark Bi-LSTM
     bilstm_metrics = None
     if not args.skip_bilstm:
         try:
@@ -440,7 +421,7 @@ def main():
             import traceback
             traceback.print_exc()
 
-    # Benchmark PhonSSM
+    # benchmark PhonSSM
     phonssm_metrics = None
     if not args.skip_phonssm:
         try:
@@ -450,11 +431,11 @@ def main():
             import traceback
             traceback.print_exc()
 
-    # Print comparison
+    # print comparison
     if bilstm_metrics:
         print_comparison_table(bilstm_metrics, phonssm_metrics)
 
-    # Save results
+    # save results
     output_dir = PROJECT_ROOT / "benchmarks"
     if bilstm_metrics or phonssm_metrics:
         save_results(bilstm_metrics or {}, phonssm_metrics, output_dir)

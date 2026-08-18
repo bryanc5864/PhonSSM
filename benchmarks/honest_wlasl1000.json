@@ -1,0 +1,12 @@
+{
+  "subset": 1000,
+  "protocol": "honest_video_grouped_official_ratios",
+  "test_top1": 17.48,
+  "test_top5": 40.81,
+  "best_val_top1": 17.7,
+  "test_n": 1899,
+  "paper_top1": 62.9,
+  "leaky_repro": 61.09,
+  "epochs_run": 44,
+  "test_near_dup_in_train": 0
+}

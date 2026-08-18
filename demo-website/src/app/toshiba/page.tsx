@@ -10,7 +10,7 @@ const tabs = [
   { id: "future", label: "Future" },
 ];
 
-// Video tiles for overview page - 50 tiles for 10-col grid (5 rows)
+// video tiles for overview page - 50 tiles for 10-col grid (5 rows)
 const videoTiles = [
   { src: "/videos/signs/hello.mp4", label: "HELLO" },
   { src: "/videos/signs/thank_you.mp4", label: "THANK YOU" },
@@ -64,13 +64,11 @@ const videoTiles = [
   { src: "/videos/signs/find.mp4", label: "FIND" },
 ];
 
-// ============================================================================
-// PAGE 1: OVERVIEW
-// ============================================================================
+// overview
 function OverviewPage() {
   return (
     <div className="relative">
-      {/* Video Background - denser grid, more visible */}
+      {/* video Background - denser grid, more visible */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/65 to-white/80 z-10" />
         <div className="grid grid-cols-10 gap-0.5 opacity-75">
@@ -85,9 +83,9 @@ function OverviewPage() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* content */}
       <div className="relative z-20 p-5 space-y-3">
-        {/* Header */}
+        {/* header */}
         <div className="text-center">
           <div className="inline-block bg-[#2D5A4A] text-white text-xs font-bold px-4 py-1 rounded-full mb-1">
             Toshiba Challenge 2026
@@ -99,18 +97,17 @@ function OverviewPage() {
           </p>
         </div>
 
-        {/* Four Models + Benefits */}
+        {/* models and benefits */}
         <div className="grid grid-cols-4 gap-3">
-          {/* Benefits - slightly taller with more padding */}
+          {/* benefits - slightly taller with more padding */}
           <div className="space-y-2">
             {[
-              { icon: "🏆", title: "Highest Accuracy", desc: "88.4% on WLASL100 — best skeleton-only result ever published" },
-              { icon: "🔒", title: "Privacy First", desc: "Only skeleton data processed — your video never leaves your device" },
-              { icon: "💬", title: "Real Feedback", desc: "Tells you exactly what to fix, not just right or wrong" },
+              { title: "Highest Accuracy", desc: "88.4% on WLASL100 — best skeleton-only result ever published" },
+              { title: "Privacy First", desc: "Only skeleton data processed — your video never leaves your device" },
+              { title: "Real Feedback", desc: "Tells you exactly what to fix, not just right or wrong" },
             ].map((b) => (
               <div key={b.title} className="bg-white/95 backdrop-blur rounded-lg p-3 shadow-sm border-l-4 border-[#2D5A4A]">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-base">{b.icon}</span>
                   <span className="font-bold text-xs text-gray-900">{b.title}</span>
                 </div>
                 <p className="text-[11px] text-gray-600 leading-relaxed">{b.desc}</p>
@@ -118,7 +115,7 @@ function OverviewPage() {
             ))}
           </div>
 
-          {/* Four Models - spans 3 columns, slightly taller */}
+          {/* models, spans 3 columns */}
           <div className="col-span-3 bg-white/90 backdrop-blur rounded-xl p-5 shadow-lg flex flex-col">
             <h2 className="text-center text-sm font-bold text-gray-800 mb-3">Four-Model Diagnostic Pipeline</h2>
             <div className="grid grid-cols-4 gap-3 flex-1">
@@ -151,9 +148,9 @@ function OverviewPage() {
           </div>
         </div>
 
-        {/* Benchmark + Pipeline + Stats in one row */}
+        {/* benchmark + Pipeline + Stats in one row */}
         <div className="grid grid-cols-5 gap-3">
-          {/* Benchmark Results */}
+          {/* benchmark Results */}
           <div className="col-span-2 bg-[#2D5A4A] text-white rounded-xl p-3">
             <h3 className="text-xs font-bold mb-2 opacity-80">WLASL BENCHMARK (vs previous skeleton-only best)</h3>
             <table className="w-full text-sm">
@@ -182,7 +179,7 @@ function OverviewPage() {
             </table>
           </div>
 
-          {/* Application Images */}
+          {/* application Images */}
           <div className="col-span-2 grid grid-cols-2 gap-2">
             {[
               { src: "/images/applications/classroom.jpg", label: "Classroom Learning" },
@@ -199,7 +196,7 @@ function OverviewPage() {
             ))}
           </div>
 
-          {/* Stats column */}
+          {/* stats column */}
           <div className="space-y-2">
             {[
               { v: "3.2M", l: "Parameters" },
@@ -222,9 +219,7 @@ function OverviewPage() {
   );
 }
 
-// ============================================================================
-// PAGE 2: PROBLEM
-// ============================================================================
+// problem
 function ProblemPage() {
   return (
     <div className="p-5 space-y-4">
@@ -233,9 +228,9 @@ function ProblemPage() {
         <p className="text-gray-600 mt-1 text-sm">Why existing ASL learning tools fall short</p>
       </div>
 
-      {/* Main Grid */}
+      {/* main Grid */}
       <div className="grid grid-cols-5 gap-4">
-        {/* Left: Issues - 3 cols */}
+        {/* left: Issues - 3 cols */}
         <div className="col-span-3 space-y-3">
           <div className="bg-red-50 border border-red-200 rounded-xl p-4">
             <h3 className="font-bold text-red-700 mb-2 text-sm">Traditional Learning Methods</h3>
@@ -270,7 +265,7 @@ function ProblemPage() {
           </div>
         </div>
 
-        {/* Right: Images - 2 cols */}
+        {/* right: Images - 2 cols */}
         <div className="col-span-2 space-y-3">
           <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
             <img src="/graphics/feedback-comparison.svg" alt="Binary vs Component Feedback" className="w-full object-contain" />
@@ -289,7 +284,7 @@ function ProblemPage() {
         </div>
       </div>
 
-      {/* Comparison Table */}
+      {/* comparison Table */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-100">
@@ -324,9 +319,7 @@ function ProblemPage() {
   );
 }
 
-// ============================================================================
-// PAGE 3: SOLUTION
-// ============================================================================
+// solution
 function SolutionPage() {
   return (
     <div className="p-5 space-y-4">
@@ -335,7 +328,7 @@ function SolutionPage() {
         <p className="text-gray-600 mt-1 text-sm">Linguistically-informed neural architecture</p>
       </div>
 
-      {/* Phonological Decomposition - full width */}
+      {/* phonological Decomposition - full width */}
       <div className="bg-[#2D5A4A] text-white rounded-xl p-4">
         <h2 className="font-bold text-base mb-1.5">Key Innovation: Phonological Decomposition</h2>
         <p className="text-sm opacity-90 leading-relaxed">
@@ -357,13 +350,13 @@ function SolutionPage() {
         </div>
       </div>
 
-      {/* Architecture + Privacy side by side */}
+      {/* architecture + Privacy side by side */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Architecture - 2 columns, larger */}
+        {/* architecture - 2 columns, larger */}
         <div className="col-span-2 bg-white rounded-xl p-5 shadow">
           <h3 className="font-bold text-gray-900 text-base mb-3">PhonSSM Architecture (3.2M Parameters)</h3>
 
-          {/* Flow diagram - all blocks same neutral color */}
+          {/* flow diagram - all blocks same neutral color */}
           <div className="flex items-center justify-center mb-4">
             {[
               { name: "Input", sub: "30×75×3" },
@@ -386,7 +379,7 @@ function SolutionPage() {
             ))}
           </div>
 
-          {/* Supporting models - color-coded to match pipeline */}
+          {/* supporting models - color-coded to match pipeline */}
           <div className="grid grid-cols-3 gap-2 mb-4">
             {[
               { name: "Error Diagnosis Network", params: "500K", desc: "16 error types across all components", color: "#C75D4D", bg: "bg-[#C75D4D]/10", text: "text-[#C75D4D]" },
@@ -403,7 +396,7 @@ function SolutionPage() {
             ))}
           </div>
 
-          {/* Pipeline figure embedded */}
+          {/* pipeline figure embedded */}
           <div className="border-t border-gray-200 pt-3">
             <h4 className="font-bold text-sm text-gray-700 text-center mb-1">Four-Model Diagnostic Pipeline</h4>
             <p className="text-[10px] text-gray-500 text-center mb-2">From webcam to actionable feedback in {"<"}5ms</p>
@@ -411,7 +404,7 @@ function SolutionPage() {
           </div>
         </div>
 
-        {/* Privacy First - 1 column, matched height */}
+        {/* privacy First - 1 column, matched height */}
         <div className="bg-[#2D5A4A] text-white rounded-xl p-4 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -453,9 +446,7 @@ function SolutionPage() {
   );
 }
 
-// ============================================================================
-// PAGE 4: RESULTS
-// ============================================================================
+// results
 function ResultsPage() {
   return (
     <div className="p-5 space-y-4">
@@ -464,14 +455,14 @@ function ResultsPage() {
         <p className="text-gray-600 mt-1 text-sm">State-of-the-art performance on WLASL benchmarks</p>
       </div>
 
-      {/* Benchmark Chart - prominent */}
+      {/* benchmark Chart - prominent */}
       <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
         <img src="/graphics/benchmarks.svg" alt="WLASL Benchmark Results" className="w-full max-h-[300px] object-contain" />
       </div>
 
-      {/* Results Grid */}
+      {/* results Grid */}
       <div className="grid grid-cols-2 gap-4">
-        {/* Demo Video */}
+        {/* demo Video */}
         <div className="rounded-xl overflow-hidden relative h-72">
           <video src="/videos/demo.mp4" autoPlay loop muted playsInline className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -481,9 +472,9 @@ function ResultsPage() {
           </div>
         </div>
 
-        {/* Detailed Results */}
+        {/* detailed Results */}
         <div className="space-y-3">
-          {/* Benchmark Table */}
+          {/* benchmark Table */}
           <div className="bg-white rounded-xl shadow overflow-hidden">
             <div className="bg-[#2D5A4A] text-white px-3 py-1.5">
               <h3 className="font-bold text-xs">Top-1 Accuracy vs Previous Best (Skeleton-Only)</h3>
@@ -515,7 +506,7 @@ function ResultsPage() {
             </table>
           </div>
 
-          {/* Ablation */}
+          {/* ablation */}
           <div className="bg-gray-50 rounded-xl p-3">
             <h3 className="font-bold text-xs text-gray-900 mb-1.5">Ablation Study</h3>
             <div className="space-y-1 text-xs">
@@ -536,7 +527,7 @@ function ResultsPage() {
         </div>
       </div>
 
-      {/* Training Data + Key Stats */}
+      {/* training Data + Key Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-[#2D5A4A]/10 rounded-xl p-3">
           <h3 className="font-bold text-sm text-[#2D5A4A] mb-2">Training Data (4 Datasets)</h3>
@@ -561,9 +552,7 @@ function ResultsPage() {
   );
 }
 
-// ============================================================================
-// PAGE 5: FUTURE
-// ============================================================================
+// future
 function FuturePage() {
   return (
     <div className="p-5 space-y-4">
@@ -572,7 +561,7 @@ function FuturePage() {
         <p className="text-gray-600 mt-1 text-sm">From working prototype to humanoid teaching companion</p>
       </div>
 
-      {/* Current Status */}
+      {/* current Status */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-green-50 border-2 border-green-400 rounded-xl p-4">
           <h3 className="font-bold text-green-800 text-base mb-2 flex items-center gap-2">
@@ -616,7 +605,7 @@ function FuturePage() {
         </div>
       </div>
 
-      {/* Timeline */}
+      {/* timeline */}
       <div className="bg-white rounded-xl p-4 shadow">
         <h3 className="font-bold text-gray-900 text-sm mb-3">Development Roadmap</h3>
         <div className="grid grid-cols-4 gap-3">
@@ -646,11 +635,11 @@ function FuturePage() {
         </div>
       </div>
 
-      {/* Robot Vision - larger images, compact outline */}
+      {/* robot Vision - larger images, compact outline */}
       <div className="bg-gradient-to-r from-[#2D5A4A] to-[#3D7A6A] text-white rounded-xl p-4">
         <h3 className="text-lg font-bold mb-2">SignSense Companion Robot</h3>
         <div className="grid grid-cols-5 gap-4">
-          {/* Description - 2 cols */}
+          {/* description - 2 cols */}
           <div className="col-span-2">
             <p className="text-sm opacity-90 leading-relaxed mb-3">
               Future vision: A humanoid robot with fully articulated hands capable of demonstrating ASL signs
@@ -682,7 +671,7 @@ function FuturePage() {
             </p>
           </div>
 
-          {/* Robot concept - 1 col */}
+          {/* robot concept - 1 col */}
           <div className="flex flex-col">
             <div className="bg-white/10 rounded-xl p-2 flex items-center justify-center flex-1">
               <img src="/graphics/robot-concept.svg" alt="Robot Concept" className="w-full h-full object-contain" />
@@ -693,7 +682,7 @@ function FuturePage() {
             </div>
           </div>
 
-          {/* Robotic hand SVG - 1 col */}
+          {/* robotic hand SVG - 1 col */}
           <div className="flex flex-col">
             <div className="bg-white/10 rounded-xl p-2 flex items-center justify-center flex-1">
               <img src="/graphics/robotic-hand.svg" alt="Robotic Hand Design" className="w-full h-full object-contain" />
@@ -704,7 +693,7 @@ function FuturePage() {
             </div>
           </div>
 
-          {/* Kim et al. hand - 1 col */}
+          {/* kim et al. hand - 1 col */}
           <div className="flex flex-col">
             <div className="bg-white/10 rounded-xl p-2 flex items-center justify-center flex-1">
               <img src="/images/robotic-hand-kim2021.png" alt="Kim et al. 2021 Hand" className="w-full h-full object-contain rounded" />
@@ -720,9 +709,7 @@ function FuturePage() {
   );
 }
 
-// ============================================================================
-// MAIN
-// ============================================================================
+// main
 export default function ToshibaChallengePage() {
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -739,7 +726,7 @@ export default function ToshibaChallengePage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between mb-2">
@@ -764,7 +751,7 @@ export default function ToshibaChallengePage() {
         </div>
       </header>
 
-      {/* Content */}
+      {/* content */}
       <div className="max-w-6xl mx-auto">
         {renderContent()}
       </div>

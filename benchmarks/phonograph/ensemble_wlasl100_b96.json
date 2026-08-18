@@ -1,0 +1,26 @@
+{
+  "subset": 100,
+  "streams": [
+    "joint",
+    "bone",
+    "motion",
+    "bonemotion"
+  ],
+  "per_stream": {
+    "joint": 81.78294573643412,
+    "bone": 73.25581395348837,
+    "motion": 55.81395348837209,
+    "bonemotion": 51.55038759689923
+  },
+  "fixed_ensemble_top1": 83.33,
+  "best_ensemble_top1": 83.72,
+  "best_ensemble_pc": 84.02,
+  "best_weights": {
+    "joint": 0.5,
+    "bone": 0.3,
+    "motion": 0.0,
+    "bonemotion": 0.3
+  },
+  "target_dsta": 82.38,
+  "beat": true
+}

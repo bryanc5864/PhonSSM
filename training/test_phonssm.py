@@ -15,7 +15,7 @@ print("\n" + "=" * 50)
 print("TESTING PHONSSM MODEL")
 print("=" * 50)
 
-# Test imports
+# test imports
 print("\n1. Testing imports...")
 try:
     from models.phonssm import (
@@ -28,12 +28,12 @@ except ImportError as e:
     print(f"   [FAIL] Import error: {e}")
     sys.exit(1)
 
-# Test config
+# test config
 print("\n2. Testing config...")
-config = PhonSSMConfig(num_signs=100)  # Smaller for testing
+config = PhonSSMConfig(num_signs=100)  # smaller for testing
 print(f"   [OK] Config created: {config.num_signs} signs, {config.d_model} dims")
 
-# Test individual components
+# test individual components
 print("\n3. Testing AGAN...")
 agan = AnatomicalGraphAttention(
     in_dim=3, hidden_dim=64, out_dim=128, num_heads=4, num_nodes=21
@@ -77,17 +77,17 @@ print(f"   Logits: {out_hpc['logits'].shape}")
 print(f"   Sign embedding: {out_hpc['sign_embedding'].shape}")
 print(f"   [OK] HPC works")
 
-# Test full model
+# test full model
 print("\n7. Testing full PhonSSM model...")
 model = create_phonssm(num_signs=100)
-x_full = torch.randn(2, 30, 63)  # Flattened input (B, T, 21*3)
+x_full = torch.randn(2, 30, 63)  # flattened input (B, T, 21*3)
 outputs = model(x_full)
 print(f"   Input: {x_full.shape}")
 print(f"   Logits: {outputs['logits'].shape}")
 print(f"   Sign embedding: {outputs['sign_embedding'].shape}")
 print(f"   [OK] Full model forward pass works")
 
-# Test loss computation
+# test loss computation
 print("\n8. Testing loss computation...")
 targets = torch.randint(0, 100, (2,))
 losses = model.compute_loss(outputs, targets)
@@ -96,12 +96,12 @@ print(f"   Orthogonality loss: {losses['orthogonality'].item():.4f}")
 print(f"   Total loss: {losses['total'].item():.4f}")
 print(f"   [OK] Loss computation works")
 
-# Test backward pass
+# test backward pass
 print("\n9. Testing backward pass...")
 losses['total'].backward()
 print(f"   [OK] Backward pass works")
 
-# Test predictions
+# test predictions
 print("\n10. Testing predictions...")
 model.eval()
 with torch.no_grad():
@@ -111,13 +111,13 @@ print(f"   Top-5 predictions: {preds['top_k_indices'].shape}")
 print(f"   Predicted classes: {preds['predicted_class'].tolist()}")
 print(f"   [OK] Predictions work")
 
-# Parameter count
+# parameter count
 print("\n11. Parameter counts:")
 counts = model.count_parameters()
 for name, count in counts.items():
     print(f"   {name}: {count:,}")
 
-# Test with GPU if available
+# test with GPU if available
 if torch.cuda.is_available():
     print("\n12. Testing on GPU...")
     model = model.cuda()
@@ -129,7 +129,7 @@ if torch.cuda.is_available():
     losses['total'].backward()
     print(f"   [OK] GPU forward/backward works")
 
-    # Memory usage
+    # memory usage
     print(f"   GPU memory allocated: {torch.cuda.memory_allocated() / 1024**2:.1f} MB")
 
 print("\n" + "=" * 50)

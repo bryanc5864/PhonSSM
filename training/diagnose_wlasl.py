@@ -26,11 +26,10 @@ print("\n" + "="*70)
 print("DIAGNOSTIC 1: Compare WLASL data vs Training data format")
 print("="*70)
 
-# Load WLASL data
 X_wlasl = np.load(PROJECT_ROOT / 'data/processed/X_wlasl.npy')
 y_wlasl = np.load(PROJECT_ROOT / 'data/processed/y_wlasl.npy')
 
-# Load our merged training data
+# load our merged training data
 X_merged = np.load(PROJECT_ROOT / 'data/processed/merged/X_train.npy')
 y_merged = np.load(PROJECT_ROOT / 'data/processed/merged/y_train.npy')
 
@@ -48,7 +47,7 @@ print(f"  Range: [{X_merged.min():.4f}, {X_merged.max():.4f}]")
 print(f"  Mean: {X_merged.mean():.4f}, Std: {X_merged.std():.4f}")
 print(f"  Labels shape: {y_merged.shape}, unique: {len(np.unique(y_merged))}")
 
-# Check if shapes match expected format
+# check if shapes match expected format
 print(f"\n  Expected input shape: (samples, 30 frames, 63 features)")
 print(f"  WLASL matches: {X_wlasl.shape[1:] == (30, 63)}")
 print(f"  Merged matches: {X_merged.shape[1:] == (30, 63)}")
@@ -57,14 +56,14 @@ print("\n" + "="*70)
 print("DIAGNOSTIC 2: Sample data inspection")
 print("="*70)
 
-# Look at first few samples
+# look at first few samples
 print("\nWLASL sample [0, 0, :10] (first frame, first 10 features):")
 print(f"  {X_wlasl[0, 0, :10]}")
 
 print("\nMerged sample [0, 0, :10]:")
 print(f"  {X_merged[0, 0, :10]}")
 
-# Check for zeros/NaN
+# check for zeros/NaN
 wlasl_zeros = (X_wlasl == 0).sum() / X_wlasl.size * 100
 merged_zeros = (X_merged == 0).sum() / X_merged.size * 100
 print(f"\nZero percentage - WLASL: {wlasl_zeros:.2f}%, Merged: {merged_zeros:.2f}%")
@@ -73,13 +72,13 @@ wlasl_nan = np.isnan(X_wlasl).sum()
 merged_nan = np.isnan(X_merged).sum()
 print(f"NaN count - WLASL: {wlasl_nan}, Merged: {merged_nan}")
 
-# Check variance per feature
+# check variance per feature
 wlasl_var = X_wlasl.var(axis=(0,1))
 merged_var = X_merged.var(axis=(0,1))
 print(f"\nFeature variance - WLASL: min={wlasl_var.min():.4f}, max={wlasl_var.max():.4f}")
 print(f"Feature variance - Merged: min={merged_var.min():.4f}, max={merged_var.max():.4f}")
 
-# Check if data looks normalized
+# check if data looks normalized
 print(f"\nData normalization check:")
 print(f"  WLASL appears normalized (mean≈0, std≈1): {abs(X_wlasl.mean()) < 0.5 and 0.5 < X_wlasl.std() < 2}")
 print(f"  Merged appears normalized: {abs(X_merged.mean()) < 0.5 and 0.5 < X_merged.std() < 2}")
@@ -88,7 +87,7 @@ print("\n" + "="*70)
 print("DIAGNOSTIC 3: Label distribution for WLASL100")
 print("="*70)
 
-# Get WLASL100 subset
+# get WLASL100 subset
 with open(PROJECT_ROOT / 'data/raw/wlasl/start_kit/WLASL_v0.3.json') as f:
     wlasl_json = json.load(f)
 
@@ -98,12 +97,12 @@ with open(PROJECT_ROOT / 'data/processed/wlasl_label_map.json') as f:
 top100_glosses = [e['gloss'] for e in wlasl_json[:100]]
 idx_to_gloss = {v: k for k, v in label_map.items()}
 
-# Filter to top 100
+# filter to top 100
 mask = np.array([idx_to_gloss.get(int(l), '') in top100_glosses for l in y_wlasl])
 X_sub = X_wlasl[mask]
 y_sub = y_wlasl[mask]
 
-# Remap labels
+# remap labels
 gloss_to_new = {g: i for i, g in enumerate(top100_glosses)}
 y_remapped = np.array([gloss_to_new[idx_to_gloss[int(l)]] for l in y_sub])
 
@@ -120,7 +119,7 @@ print("\n" + "="*70)
 print("DIAGNOSTIC 4: Model forward pass check")
 print("="*70)
 
-# Create model for 100 classes
+# create model for 100 classes
 config = PhonSSMConfig(num_signs=100, temperature=0.5)
 model = PhonSSM(config).to(device)
 
@@ -129,7 +128,7 @@ print(f"  num_signs: {config.num_signs}")
 print(f"  temperature: {config.temperature}")
 print(f"  d_model: {config.d_model}")
 
-# Test with WLASL data
+# test with WLASL data
 X_batch = torch.FloatTensor(X_sub[:32]).to(device)
 y_batch = torch.LongTensor(y_remapped[:32]).to(device)
 
@@ -147,14 +146,14 @@ print(f"  Shape: {logits.shape}")
 print(f"  Range: [{logits.min().item():.4f}, {logits.max().item():.4f}]")
 print(f"  Mean: {logits.mean().item():.4f}, Std: {logits.std().item():.4f}")
 
-# Check softmax
+# check softmax
 probs = F.softmax(logits, dim=-1)
 print(f"\nSoftmax probs:")
 print(f"  Max prob: {probs.max().item():.4f}")
 print(f"  Min prob: {probs.min().item():.6f}")
 print(f"  Entropy (should be ~4.6 for random): {-(probs * probs.log()).sum(dim=-1).mean().item():.4f}")
 
-# Check predictions
+# check predictions
 preds = logits.argmax(dim=-1)
 acc = (preds == y_batch).float().mean().item()
 print(f"  Initial accuracy: {acc*100:.1f}% (expected ~1% random)")
@@ -166,16 +165,16 @@ print("="*70)
 model.train()
 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
 
-# Forward pass
+# forward pass
 outputs = model(X_batch)
 logits = outputs['logits']
 loss = F.cross_entropy(logits, y_batch)
 print(f"\nInitial loss: {loss.item():.4f} (expected ~4.6 for random)")
 
-# Backward pass
+# backward pass
 loss.backward()
 
-# Check gradients
+# check gradients
 grad_stats = {}
 zero_grad_params = []
 large_grad_params = []
@@ -207,7 +206,7 @@ print("\n" + "="*70)
 print("DIAGNOSTIC 6: Training dynamics (10 steps)")
 print("="*70)
 
-# Reset model
+# reset model
 model = PhonSSM(config).to(device)
 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
 
@@ -224,11 +223,10 @@ for i in range(10):
     loss = F.cross_entropy(logits, y_batch, label_smoothing=0.1)
     loss.backward()
 
-    # Check gradient norm before clipping
+    # check gradient norm before clipping
     total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
     optimizer.step()
 
-    # Eval
     model.eval()
     with torch.no_grad():
         outputs = model(X_batch)
@@ -267,13 +265,13 @@ print(f"  Shape: {sign_emb.shape}")
 print(f"  Norm: {sign_emb.norm(dim=-1).mean().item():.3f}")
 print(f"  Range: [{sign_emb.min().item():.3f}, {sign_emb.max().item():.3f}]")
 
-# Check sign prototypes
+# check sign prototypes
 sign_protos = model.hpc.sign_prototypes
 print(f"\nSign prototypes:")
 print(f"  Shape: {sign_protos.shape}")
 print(f"  Norm: {sign_protos.norm(dim=-1).mean().item():.3f}")
 
-# Similarity matrix between sign prototypes (should be diverse)
+# similarity matrix between sign prototypes (should be diverse)
 proto_norm = F.normalize(sign_protos, dim=-1)
 sim_matrix = torch.matmul(proto_norm, proto_norm.T)
 off_diag = sim_matrix[~torch.eye(100, dtype=bool, device=device)]
@@ -283,7 +281,7 @@ print("\n" + "="*70)
 print("DIAGNOSTIC 8: Compare with simple baseline")
 print("="*70)
 
-# Simple MLP baseline
+# simple MLP baseline
 class SimpleMLP(nn.Module):
     def __init__(self, input_dim=30*63, hidden_dim=256, num_classes=100):
         super().__init__()
@@ -333,7 +331,7 @@ print("\n" + "="*70)
 print("DIAGNOSTIC 9: Extended training test (100 steps)")
 print("="*70)
 
-# Train PhonSSM for 100 steps on this batch
+# train PhonSSM for 100 steps on this batch
 model = PhonSSM(config).to(device)
 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
 

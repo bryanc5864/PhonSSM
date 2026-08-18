@@ -1,0 +1,15 @@
+{
+  "subset": 100,
+  "protocol": "official_split",
+  "tag": "v2_archonly",
+  "test_top1": 34.88,
+  "test_top5": 56.98,
+  "test_perclass": 36.12,
+  "best_val_top1": 37.57,
+  "test_n": 258,
+  "aug": false,
+  "ema": 0.0,
+  "epochs": 150,
+  "seed": 0,
+  "test_videos": 258
+}

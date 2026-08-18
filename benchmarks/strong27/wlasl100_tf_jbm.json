@@ -1,0 +1,10 @@
+{
+  "subset": 100,
+  "streams": "joint,bone,motion",
+  "tag": "tf_jbm",
+  "test_top1": 68.22,
+  "test_top5": 88.76,
+  "test_perclass": 68.77,
+  "best_val": 69.82,
+  "test_n": 258
+}

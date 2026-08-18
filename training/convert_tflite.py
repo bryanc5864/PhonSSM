@@ -1,17 +1,9 @@
-"""
-TensorFlow Lite Conversion Script
-==================================
-Converts trained Keras models to TFLite format for mobile deployment.
+"""convert the trained Keras models to TFLite for mobile.
 
-Supports quantization options:
-- float32: Full precision (largest size)
-- float16: Half precision (50% smaller, minimal accuracy loss)
-- int8: Full integer quantization (smallest, requires representative dataset)
+quantize float32 / float16 (half the size, negligible loss) / int8 (smallest,
+needs a representative dataset).
 
-Usage:
-    python training/convert_tflite.py
-    python training/convert_tflite.py --quantize float16
-    python training/convert_tflite.py --model sign_classifier --quantize int8
+    python training/convert_tflite.py [--model sign_classifier --quantize float16]
 """
 
 import os
@@ -24,12 +16,12 @@ from pathlib import Path
 
 import tensorflow as tf
 
-# Paths
+# paths
 PROJECT_ROOT = Path(__file__).parent.parent
 MODELS_DIR = PROJECT_ROOT / "models"
 DATA_DIR = PROJECT_ROOT / "data" / "processed" / "merged"
 
-# Model configurations
+# model configurations
 MODELS = {
     'sign_classifier': {
         'keras_path': MODELS_DIR / 'sign_classifier' / 'sign_classifier.keras',
@@ -62,7 +54,7 @@ def representative_dataset_generator(data_path, num_samples=100):
     """Generate representative dataset for int8 quantization."""
     X = np.load(data_path)
 
-    # Randomly sample
+    # randomly sample
     indices = np.random.choice(len(X), min(num_samples, len(X)), replace=False)
 
     for i in indices:
@@ -70,25 +62,17 @@ def representative_dataset_generator(data_path, num_samples=100):
 
 
 def convert_to_tflite(keras_path, tflite_path, quantize='float16', representative_data=None):
-    """
-    Convert Keras model to TFLite.
+    """convert a Keras model to TFLite; returns the output size in MB.
 
-    Args:
-        keras_path: Path to Keras model (.keras or .h5)
-        tflite_path: Output path for TFLite model
-        quantize: Quantization type ('float32', 'float16', 'int8')
-        representative_data: Path to representative data (for int8)
-
-    Returns:
-        Size of converted model in MB
+    int8 needs representative_data to calibrate.
     """
     print(f"\nLoading model from {keras_path}...")
     model = tf.keras.models.load_model(keras_path)
 
-    # Create converter
+    # create converter
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
-    # Apply optimizations
+    # apply optimizations
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
 
     if quantize == 'float16':
@@ -97,8 +81,8 @@ def convert_to_tflite(keras_path, tflite_path, quantize='float16', representativ
 
     elif quantize == 'int8':
         converter.target_spec.supported_types = [tf.int8]
-        converter.inference_input_type = tf.float32  # Keep input as float
-        converter.inference_output_type = tf.float32  # Keep output as float
+        converter.inference_input_type = tf.float32  # keep input as float
+        converter.inference_output_type = tf.float32  # keep output as float
 
         if representative_data is not None:
             print("Applying int8 quantization with representative dataset...")
@@ -110,11 +94,11 @@ def convert_to_tflite(keras_path, tflite_path, quantize='float16', representativ
         print("No quantization (float32)...")
         converter.optimizations = []
 
-    # Convert
+    # convert
     print("Converting...")
     tflite_model = converter.convert()
 
-    # Save
+    # save
     tflite_path = Path(tflite_path)
     tflite_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -142,7 +126,7 @@ def verify_tflite(tflite_path, test_input_shape):
     print(f"Input dtype: {input_details[0]['dtype']}")
     print(f"Output(s): {len(output_details)}")
 
-    # Test inference
+    # test inference
     test_input = np.random.randn(*test_input_shape).astype(np.float32)
     interpreter.set_tensor(input_details[0]['index'], test_input)
     interpreter.invoke()
@@ -180,7 +164,7 @@ def convert_all(args):
             print("Train the model first, then convert.")
             continue
 
-        # Determine representative data path
+        # determine representative data path
         rep_data = None
         if quantize == 'int8':
             rep_data = DATA_DIR / 'X_train.npy'
@@ -206,7 +190,7 @@ def convert_all(args):
                 'error': str(e)
             })
 
-    # Summary
+    # summary
     print("\n" + "=" * 60)
     print("CONVERSION SUMMARY")
     print("=" * 60)
@@ -216,7 +200,7 @@ def convert_all(args):
         if r['status'] == 'success':
             status = f"{r['size_mb']:.2f} MB"
             if r['size_mb'] <= r['target_mb']:
-                status += " ✓"
+                status += " (under target)"
             else:
                 status += f" (target: {r['target_mb']} MB)"
             total_size += r['size_mb']
@@ -228,7 +212,7 @@ def convert_all(args):
     print(f"\nTotal size: {total_size:.2f} MB")
     print(f"Target total: ~5 MB")
 
-    # Save conversion info
+    # save conversion info
     info_path = MODELS_DIR / 'tflite_info.json'
     with open(info_path, 'w') as f:
         json.dump(results, f, indent=2)

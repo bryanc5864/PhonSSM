@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 
-// Animation variants
+// animation variants
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 40 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] } }
@@ -22,7 +22,7 @@ const scaleUpVariants = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } }
 };
 
-// Counter component for animated numbers
+// counter component for animated numbers
 function AnimatedCounter({ target, suffix = "", duration = 2 }: { target: number; suffix?: string; duration?: number }) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
@@ -48,7 +48,7 @@ function AnimatedCounter({ target, suffix = "", duration = 2 }: { target: number
   return <span ref={ref}>{count.toFixed(1)}{suffix}</span>;
 }
 
-// Section wrapper with scroll animations
+// section wrapper with scroll animations
 function Section({ children, className = "", id = "" }: { children: React.ReactNode; className?: string; id?: string }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -67,7 +67,7 @@ function Section({ children, className = "", id = "" }: { children: React.ReactN
   );
 }
 
-// Video tile showing sign with prediction label (optimized for performance)
+// video tile showing sign with prediction label (optimized for performance)
 function VideoTile({ videoSrc, prediction, confidence, index }: {
   videoSrc: string; prediction: string; confidence: number; index: number;
 }) {
@@ -81,9 +81,9 @@ function VideoTile({ videoSrc, prediction, confidence, index }: {
         playsInline
         className="w-full h-full object-cover"
       />
-      {/* Simple gradient overlay */}
+      {/* simple gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
-      {/* Prediction badge */}
+      {/* prediction badge */}
       <div className="absolute bottom-1 left-1 right-1">
         <div className="bg-black/70 rounded px-1.5 py-0.5">
           <div className="flex items-center justify-between gap-1">
@@ -96,7 +96,7 @@ function VideoTile({ videoSrc, prediction, confidence, index }: {
   );
 }
 
-// Navigation
+// navigation
 function Navigation() {
   const [scrolled, setScrolled] = useState(false);
 
@@ -146,7 +146,7 @@ function Navigation() {
   );
 }
 
-// Hero Section with Video Background Grid - 58 diverse signers from ASL Citizen
+// hero with the video background grid - 58 signers from ASL Citizen
 function HeroSection() {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -217,12 +217,12 @@ function HeroSection() {
 
   return (
     <section ref={ref} className="min-h-screen relative overflow-hidden">
-      {/* Video Grid Background - 58 diverse signers, GPU accelerated */}
+      {/* video Grid Background - 58 diverse signers, GPU accelerated */}
       <div className="absolute inset-0 z-0">
-        {/* Dark gradient overlay for readability */}
+        {/* dark gradient overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-bg-primary/90 via-bg-primary/70 to-bg-primary/90 z-10" />
 
-        {/* Video grid - responsive: 4 cols mobile, 6 tablet, 10 desktop */}
+        {/* video grid - responsive: 4 cols mobile, 6 tablet, 10 desktop */}
         <div className="absolute inset-0 grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-10 gap-0.5 p-0.5 opacity-60">
           {videoTiles.map((tile, i) => (
             <VideoTile
@@ -236,7 +236,7 @@ function HeroSection() {
         </div>
       </div>
 
-      {/* Hero Content */}
+      {/* hero Content */}
       <motion.div
         className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 pt-24 sm:pt-32 pb-16 sm:pb-20 min-h-screen flex flex-col justify-center"
         style={{ y, opacity }}
@@ -301,7 +301,7 @@ function HeroSection() {
             </motion.a>
           </motion.div>
 
-          {/* Quick Stats */}
+          {/* quick Stats */}
           <motion.div
             className="flex flex-wrap gap-3 sm:gap-4 lg:gap-8 pt-4 sm:pt-8 justify-center px-2"
             initial={{ opacity: 0 }}
@@ -321,7 +321,7 @@ function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Scroll indicator - hidden on mobile */}
+        {/* scroll indicator - hidden on mobile */}
         <motion.div
           className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 hidden sm:block"
           initial={{ opacity: 0 }}
@@ -340,7 +340,7 @@ function HeroSection() {
   );
 }
 
-// Problem Section
+// problem
 function ProblemSection() {
   return (
     <Section className="py-16 sm:py-24 lg:py-32 bg-bg-secondary" id="problem">
@@ -387,9 +387,9 @@ function ProblemSection() {
             </motion.div>
           </div>
 
-          {/* Comparison Visual */}
+          {/* comparison Visual */}
           <motion.div variants={scaleUpVariants} className="relative">
-            {/* ASL Learning Image */}
+            {/* aSL Learning Image */}
             <motion.div
               className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg"
               whileHover={{ scale: 1.02 }}
@@ -408,7 +408,7 @@ function ProblemSection() {
               </h3>
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-                {/* Traditional */}
+                {/* traditional */}
                 <div className="space-y-3 sm:space-y-4">
                   <div className="text-center p-3 sm:p-4 bg-red-50 rounded-lg sm:rounded-xl">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-accent-tertiary/20 rounded-lg flex items-center justify-center">
@@ -429,7 +429,7 @@ function ProblemSection() {
                   </div>
                 </div>
 
-                {/* SignSense */}
+                {/* signSense */}
                 <div className="space-y-3 sm:space-y-4">
                   <div className="text-center p-3 sm:p-4 bg-accent-primary/10 rounded-lg sm:rounded-xl">
                     <span className="text-lg sm:text-xl lg:text-2xl font-bold text-accent-primary">SignSense</span>
@@ -470,7 +470,7 @@ function ProblemSection() {
   );
 }
 
-// Solution Overview
+// solution
 function SolutionSection() {
   const models = [
     {
@@ -529,7 +529,7 @@ function SolutionSection() {
           </motion.p>
         </div>
 
-        {/* Model cards */}
+        {/* model cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10 sm:mb-16">
           {models.map((model, i) => (
             <motion.div
@@ -558,7 +558,7 @@ function SolutionSection() {
           ))}
         </div>
 
-        {/* Pipeline SVG Graphic */}
+        {/* pipeline SVG Graphic */}
         <motion.div
           variants={scaleUpVariants}
           className="rounded-2xl overflow-hidden shadow-lg"
@@ -570,7 +570,7 @@ function SolutionSection() {
           />
         </motion.div>
 
-        {/* Feedback Comparison */}
+        {/* feedback Comparison */}
         <motion.div
           variants={fadeUpVariants}
           className="mt-10 sm:mt-16 lg:mt-20"
@@ -586,7 +586,7 @@ function SolutionSection() {
   );
 }
 
-// Architecture Deep Dive
+// architecture
 function ArchitectureSection() {
   const components = [
     {
@@ -645,13 +645,13 @@ function ArchitectureSection() {
           </motion.p>
         </div>
 
-        {/* Architecture diagram */}
+        {/* architecture diagram */}
         <motion.div
           variants={scaleUpVariants}
           className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-8 md:p-12 max-w-4xl mx-auto"
         >
           <div className="space-y-4">
-            {/* Input */}
+            {/* input */}
             <motion.div
               className="text-center p-3 sm:p-4 bg-bg-secondary rounded-lg sm:rounded-xl"
               initial={{ opacity: 0, y: 20 }}
@@ -666,7 +666,7 @@ function ArchitectureSection() {
               <p className="font-medium text-text-primary mt-2 text-xs sm:text-sm lg:text-base">Input: 30 frames × 75 landmarks × 3 coordinates</p>
             </motion.div>
 
-            {/* Arrow */}
+            {/* arrow */}
             <div className="flex justify-center">
               <motion.div
                 className="w-0.5 h-8 bg-accent-primary"
@@ -676,7 +676,7 @@ function ArchitectureSection() {
               />
             </div>
 
-            {/* Components */}
+            {/* components */}
             {components.map((comp, i) => (
               <div key={i}>
                 <motion.div
@@ -712,7 +712,7 @@ function ArchitectureSection() {
               </div>
             ))}
 
-            {/* Arrow */}
+            {/* arrow */}
             <div className="flex justify-center">
               <motion.div
                 className="w-0.5 h-8 bg-accent-primary"
@@ -722,7 +722,7 @@ function ArchitectureSection() {
               />
             </div>
 
-            {/* Output */}
+            {/* output */}
             <motion.div
               className="text-center p-3 sm:p-4 bg-accent-primary/10 rounded-lg sm:rounded-xl border-2 border-accent-primary"
               initial={{ opacity: 0, y: 20 }}
@@ -739,7 +739,7 @@ function ArchitectureSection() {
           </div>
         </motion.div>
 
-        {/* Key insight callout */}
+        {/* key insight callout */}
         <motion.div
           variants={fadeUpVariants}
           className="mt-8 sm:mt-12 max-w-3xl mx-auto bg-accent-primary text-white rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-10 text-center"
@@ -755,7 +755,7 @@ function ArchitectureSection() {
   );
 }
 
-// Results Section
+// results
 function ResultsSection() {
   const stats = [
     { value: 88.4, label: "WLASL100 Accuracy", suffix: "%" },
@@ -764,7 +764,7 @@ function ResultsSection() {
     { value: 225, label: "Few-shot Learning Gain", suffix: "%" },
   ];
 
-  // Animated bar data for background - more bars for visual richness
+  // animated bar data for background - more bars for visual richness
   const bars = [
     { width: "92%", height: "h-16", top: "5%", delay: 0, color: "bg-accent-primary" },
     { width: "65%", height: "h-20", top: "18%", delay: 0.15, color: "bg-accent-secondary" },
@@ -777,7 +777,7 @@ function ResultsSection() {
 
   return (
     <Section className="py-16 sm:py-24 lg:py-32 bg-bg-primary relative overflow-hidden" id="results">
-      {/* Animated Background Bars - drifting chart effect */}
+      {/* animated Background Bars - drifting chart effect */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {bars.map((bar, i) => (
           <motion.div
@@ -819,7 +819,7 @@ function ResultsSection() {
           </motion.p>
         </div>
 
-        {/* Big stats with animated bars behind */}
+        {/* big stats with animated bars behind */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-10 sm:mb-16 lg:mb-20">
           {stats.map((stat, i) => (
             <motion.div
@@ -827,7 +827,7 @@ function ResultsSection() {
               variants={fadeUpVariants}
               className="relative bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-center shadow-sm card-hover overflow-hidden"
             >
-              {/* Mini animated bar inside card */}
+              {/* mini animated bar inside card */}
               <motion.div
                 className="absolute bottom-0 left-0 h-1 bg-accent-primary/20"
                 initial={{ width: "0%" }}
@@ -843,7 +843,7 @@ function ResultsSection() {
           ))}
         </div>
 
-        {/* Benchmark Chart Graphic */}
+        {/* benchmark Chart Graphic */}
         <motion.div
           variants={scaleUpVariants}
           className="rounded-2xl overflow-hidden shadow-lg"
@@ -855,7 +855,7 @@ function ResultsSection() {
           />
         </motion.div>
 
-        {/* Skeleton Hand Visualization */}
+        {/* skeleton Hand Visualization */}
         <motion.div
           variants={fadeUpVariants}
           className="mt-10 sm:mt-16 lg:mt-20 grid md:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center"
@@ -883,7 +883,7 @@ function ResultsSection() {
               </li>
             </ul>
           </div>
-          {/* Video demo without skeleton overlay */}
+          {/* video demo without skeleton overlay */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             className="rounded-2xl overflow-hidden shadow-xl bg-text-primary"
@@ -897,7 +897,7 @@ function ResultsSection() {
                 playsInline
                 className="w-full h-full object-cover"
               />
-              {/* Prediction overlay */}
+              {/* prediction overlay */}
               <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4">
                 <div className="bg-black/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-4">
                   <div className="flex items-center justify-between mb-1.5 sm:mb-2">
@@ -932,7 +932,7 @@ function ResultsSection() {
                   </div>
                 </div>
               </div>
-              {/* Live indicator */}
+              {/* live indicator */}
               <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex items-center gap-1.5 sm:gap-2 bg-black/60 backdrop-blur-sm rounded-full px-2 sm:px-3 py-1 sm:py-1.5">
                 <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full animate-pulse"></span>
                 <span className="text-white text-[10px] sm:text-xs font-medium">Real-time Analysis</span>
@@ -945,7 +945,7 @@ function ResultsSection() {
   );
 }
 
-// Applications Section
+// applications
 function ApplicationsSection() {
   const applications = [
     {
@@ -1015,17 +1015,17 @@ function ApplicationsSection() {
               whileHover={{ y: -8 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Background Image */}
+              {/* background Image */}
               <img
                 src={app.image}
                 alt={app.title}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
 
-              {/* Gradient Overlay */}
+              {/* gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-              {/* Content */}
+              {/* content */}
               <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-end">
                 <h3 className="font-display text-lg sm:text-xl lg:text-2xl text-white mb-1 sm:mb-2 group-hover:text-accent-secondary transition-colors">
                   {app.title}
@@ -1042,7 +1042,7 @@ function ApplicationsSection() {
   );
 }
 
-// Demo Section
+// demo
 function DemoSection() {
   return (
     <Section className="py-16 sm:py-24 lg:py-32 bg-bg-primary" id="demo">
@@ -1063,22 +1063,22 @@ function DemoSection() {
           </motion.h2>
         </div>
 
-        {/* Video placeholder with ASL preview */}
+        {/* video placeholder with ASL preview */}
         <motion.div
           variants={scaleUpVariants}
           className="max-w-4xl mx-auto"
         >
           <div className="relative aspect-video rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl">
-            {/* Background image */}
+            {/* background image */}
             <img
               src="/images/asl-examples.png"
               alt="ASL sign examples grid"
               className="absolute inset-0 w-full h-full object-cover"
             />
-            {/* Dark overlay */}
+            {/* dark overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
 
-            {/* Play button content */}
+            {/* play button content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
               <motion.div
                 className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-accent-primary/90 flex items-center justify-center mb-4 sm:mb-6 cursor-pointer shadow-xl"
@@ -1095,7 +1095,7 @@ function DemoSection() {
               <p className="text-white/70 mt-1 sm:mt-2 text-sm sm:text-base">See SignSense in action</p>
             </div>
 
-            {/* Decorative elements */}
+            {/* decorative elements */}
             <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4 flex justify-between items-center text-white/60 text-xs sm:text-sm">
               <span>0:00</span>
               <div className="flex-1 mx-2 sm:mx-4 h-0.5 sm:h-1 bg-white/20 rounded-full overflow-hidden">
@@ -1111,7 +1111,7 @@ function DemoSection() {
             </div>
           </div>
 
-          {/* Video chapters with better styling */}
+          {/* video chapters with better styling */}
           <motion.div
             variants={fadeUpVariants}
             className="mt-4 sm:mt-6 lg:mt-8 flex flex-wrap justify-center gap-2 sm:gap-3"
@@ -1139,13 +1139,13 @@ function DemoSection() {
   );
 }
 
-// Tech Specs Section
+// tech specs
 function TechSpecsSection() {
   return (
     <Section className="py-16 sm:py-24 lg:py-32 bg-bg-secondary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12">
-          {/* Specs table */}
+          {/* specs table */}
           <motion.div variants={fadeUpVariants}>
             <h3 className="font-display text-xl sm:text-2xl lg:text-h2 text-text-primary mb-4 sm:mb-6 lg:mb-8">Technical Specifications</h3>
             <div className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
@@ -1175,7 +1175,7 @@ function TechSpecsSection() {
             </div>
           </motion.div>
 
-          {/* Privacy callout */}
+          {/* privacy callout */}
           <motion.div variants={fadeUpVariants}>
             <h3 className="font-display text-xl sm:text-2xl lg:text-h2 text-text-primary mb-4 sm:mb-6 lg:mb-8">Privacy by Design</h3>
             <div className="bg-accent-primary text-white rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 space-y-4 sm:space-y-5">
@@ -1228,7 +1228,7 @@ function TechSpecsSection() {
   );
 }
 
-// Footer
+// footer
 function Footer() {
   return (
     <footer className="bg-text-primary text-white py-10 sm:py-12 lg:py-16">
@@ -1272,7 +1272,7 @@ function Footer() {
   );
 }
 
-// Main Page
+// main page
 export default function Home() {
   return (
     <main className="relative">

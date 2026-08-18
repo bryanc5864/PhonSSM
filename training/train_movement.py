@@ -1,24 +1,11 @@
-"""
-Movement Pattern Analyzer Training Script
-==========================================
-1D CNN that evaluates movement quality: speed, smoothness, and completeness.
+"""1D CNN scoring movement quality (speed, smoothness, completeness).
 
-Architecture:
-    Input: (30 frames, 9 features) - position(3) + velocity(3) + acceleration(3)
-    → Conv1D(32, k=3) → ReLU → MaxPool
-    → Conv1D(64, k=3) → ReLU → MaxPool
-    → Conv1D(128, k=3) → ReLU → GlobalAvgPool
-    → Two output heads:
-        1. Movement type (6 classes): static, linear, circular, arc, zigzag, compound
-        2. Quality scores (3 values): speed, smoothness, completeness
+input is (30 frames, 9) = position + velocity + acceleration. three conv blocks,
+then two heads: 6-way movement type and 3 quality scores. ~45K params.
 
-Target metrics:
-    - Movement type accuracy: >85%
-    - Parameters: ~45K
+targets are computed from the same input features, so its accuracy is circular.
 
-Usage:
-    python training/train_movement.py
-    python training/train_movement.py --epochs 100 --batch-size 128
+    python training/train_movement.py [--epochs 100 --batch-size 128]
 """
 
 import os
@@ -42,12 +29,11 @@ from tensorflow.keras.callbacks import (
 )
 from tensorflow.keras.utils import to_categorical
 
-# Paths
+# paths
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data" / "processed" / "merged"
 MODEL_DIR = PROJECT_ROOT / "models" / "movement_analyzer"
 
-# Movement types
 MOVEMENT_TYPES = ['static', 'linear', 'circular', 'arc', 'zigzag', 'compound']
 
 
@@ -60,19 +46,18 @@ def compute_motion_features(landmarks):
 
     We use the wrist (landmark 0) as the reference point for motion.
     """
-    # Extract wrist position (first 3 features per frame)
+    # extract wrist position (first 3 features per frame)
     # landmarks shape: (N, 30, 63)
     position = landmarks[:, :, :3]  # (N, 30, 3) - wrist x, y, z
 
-    # Compute velocity (first derivative)
+    # compute velocity (first derivative)
     velocity = np.zeros_like(position)
     velocity[:, 1:, :] = position[:, 1:, :] - position[:, :-1, :]
 
-    # Compute acceleration (second derivative)
+    # compute acceleration (second derivative)
     acceleration = np.zeros_like(velocity)
     acceleration[:, 1:, :] = velocity[:, 1:, :] - velocity[:, :-1, :]
 
-    # Concatenate: position + velocity + acceleration
     motion_features = np.concatenate([position, velocity, acceleration], axis=2)
 
     return motion_features  # (N, 30, 9)
@@ -94,14 +79,14 @@ def classify_movement_type(motion_features):
         velocity = motion_features[i, :, 3:6]
         acceleration = motion_features[i, :, 6:9]
 
-        # Compute motion statistics
+        # compute motion statistics
         total_displacement = np.linalg.norm(position[-1] - position[0])
         path_length = np.sum(np.linalg.norm(np.diff(position, axis=0), axis=1))
         avg_speed = np.mean(np.linalg.norm(velocity, axis=1))
         speed_variance = np.var(np.linalg.norm(velocity, axis=1))
         avg_acceleration = np.mean(np.linalg.norm(acceleration, axis=1))
 
-        # Classify based on heuristics
+        # classify based on heuristics
         if avg_speed < 0.01:
             movement_type = 0  # static
         elif path_length > 0 and total_displacement / (path_length + 1e-6) > 0.8:
@@ -117,10 +102,10 @@ def classify_movement_type(motion_features):
 
         labels.append(movement_type)
 
-        # Compute quality scores
-        speed_score = min(1.0, avg_speed / 0.1)  # Normalized speed
-        smoothness_score = max(0, 1.0 - speed_variance * 10)  # Less variance = smoother
-        completeness_score = min(1.0, path_length / 0.5)  # Normalized path length
+        # compute quality scores
+        speed_score = min(1.0, avg_speed / 0.1)  # normalized speed
+        smoothness_score = max(0, 1.0 - speed_variance * 10)  # less variance = smoother
+        completeness_score = min(1.0, path_length / 0.5)  # normalized path length
 
         quality_scores.append([speed_score, smoothness_score, completeness_score])
 
@@ -150,7 +135,7 @@ def load_and_prepare_data(data_dir):
     y_val_type, y_val_quality = classify_movement_type(X_val_motion)
     y_test_type, y_test_quality = classify_movement_type(X_test_motion)
 
-    # Print distribution
+    # print distribution
     unique, counts = np.unique(y_train_type, return_counts=True)
     print("\nMovement type distribution:")
     for u, c in zip(unique, counts):
@@ -192,11 +177,11 @@ def build_model(input_shape, num_movement_types=6, num_quality_scores=3):
 
     x = Dropout(0.3)(x)
 
-    # Head 1: Movement type classification
+    # head 1: Movement type classification
     type_out = Dense(32, activation='relu')(x)
     type_out = Dense(num_movement_types, activation='softmax', name='movement_type')(type_out)
 
-    # Head 2: Quality scores (speed, smoothness, completeness)
+    # head 2: Quality scores (speed, smoothness, completeness)
     quality_out = Dense(32, activation='relu')(x)
     quality_out = Dense(num_quality_scores, activation='sigmoid', name='quality')(quality_out)
 
@@ -211,7 +196,6 @@ def train(args):
     print("MOVEMENT PATTERN ANALYZER TRAINING")
     print("=" * 60)
 
-    # Load and prepare data
     data = load_and_prepare_data(args.data_dir)
 
     input_shape = (data['X_train'].shape[1], data['X_train'].shape[2])  # (30, 9)
@@ -220,17 +204,16 @@ def train(args):
     print(f"\nInput shape: {input_shape}")
     print(f"Movement types: {num_types}")
 
-    # Convert type labels to one-hot
+    # convert type labels to one-hot
     y_train_type_cat = to_categorical(data['y_train_type'], num_types)
     y_val_type_cat = to_categorical(data['y_val_type'], num_types)
     y_test_type_cat = to_categorical(data['y_test_type'], num_types)
 
-    # Build model
+    # build model
     print("\nBuilding model...")
     model = build_model(input_shape, num_types, 3)
     model.summary()
 
-    # Compile
     model.compile(
         optimizer=Adam(learning_rate=args.learning_rate),
         loss={
@@ -247,7 +230,7 @@ def train(args):
         }
     )
 
-    # Callbacks
+    # callbacks
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -277,7 +260,7 @@ def train(args):
         )
     ]
 
-    # Train
+    # train
     print(f"\nTraining for up to {args.epochs} epochs...")
 
     history = model.fit(
@@ -293,7 +276,7 @@ def train(args):
         verbose=1
     )
 
-    # Evaluate
+    # evaluate
     print("\n" + "=" * 60)
     print("EVALUATION")
     print("=" * 60)
@@ -308,16 +291,15 @@ def train(args):
     print(f"Movement Type Accuracy: {results[3]:.4f} ({results[3]*100:.2f}%)")
     print(f"Quality MAE: {results[4]:.4f}")
 
-    # Save model
     model.save(MODEL_DIR / 'movement_analyzer.keras')
     print(f"\nModel saved to {MODEL_DIR / 'movement_analyzer.keras'}")
 
-    # Save training history
+    # save training history
     history_dict = {k: [float(v) for v in vals] for k, vals in history.history.items()}
     with open(MODEL_DIR / 'training_history.json', 'w') as f:
         json.dump(history_dict, f, indent=2)
 
-    # Save model info
+    # save model info
     model_info = {
         'input_shape': list(input_shape),
         'num_movement_types': num_types,

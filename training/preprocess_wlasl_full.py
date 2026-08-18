@@ -18,20 +18,9 @@ PROJECT_ROOT = Path(__file__).parent.parent
 
 
 def extract_pose_and_hands(landmarks):
-    """
-    Extract pose + both hands from MediaPipe Holistic landmarks.
+    """(frames, 180, 3) Holistic -> (frames, 75, 3) pose + both hands.
 
-    WLASL landmarks structure (180 total):
-    - Pose: indices 0-32 (33 landmarks)
-    - Left hand: indices 33-53 (21 landmarks)
-    - Right hand: indices 54-74 (21 landmarks)
-    - Face: indices 75-179 (105 landmarks) - skip for now
-
-    Args:
-        landmarks: (frames, 180, 3) array
-
-    Returns:
-        (frames, 75, 3) array with pose + both hands
+    WLASL layout: 0-32 pose, 33-53 left hand, 54-74 right hand, 75-179 face (dropped).
     """
     pose = landmarks[:, 0:33, :]       # 33 landmarks
     left_hand = landmarks[:, 33:54, :]  # 21 landmarks
@@ -40,94 +29,127 @@ def extract_pose_and_hands(landmarks):
     return np.concatenate([pose, left_hand, right_hand], axis=1)
 
 
-def normalize_pose_hands(landmarks):
+def normalize_pose_hands(landmarks, clip=5.0):
     """
-    Normalize pose+hands landmarks to be position/scale invariant.
+    Robust, position/scale-invariant normalization computed ONCE PER SEQUENCE.
 
-    Uses the midpoint between shoulders as the origin and
-    shoulder width as the scale reference.
+    The previous implementation divided EVERY frame by that frame's own raw
+    shoulder width (floored only at 1e-6). When MediaPipe collapses the shoulders
+    (subject turned, or a bad detection) the width is tiny and coordinates are
+    amplified to +/-10^4; and because the scale is recomputed per frame it also
+    injects frame-to-frame scale flicker that destroys the motion signal. Missing
+    (all-zero) joints were mapped to a spurious -center/scale location instead of
+    staying "absent".
+
+    This version:
+      - uses ONE center (median shoulder-midpoint over frames where both
+        shoulders are present) and ONE scale (median shoulder width over those
+        frames) for the whole clip;
+      - is scale-agnostic: if the shoulder width is degenerate it falls back to
+        the median radius of present joints, so it works whether coords are in
+        normalized [0,1] image space or pixel space;
+      - leaves genuinely missing joints at 0 AFTER scaling (not -center/scale);
+      - clips to +/-`clip` so a residual bad frame cannot blow up the features.
 
     Args:
         landmarks: (frames, 75, 3) array
-
     Returns:
-        Normalized landmarks
+        (frames, 75, 3) float32, values in [-clip, clip], missing joints = 0
     """
-    normalized = []
+    lm = np.nan_to_num(np.asarray(landmarks, dtype=np.float32), nan=0.0)
+    if lm.ndim != 3:
+        return lm
+    F, J, C = lm.shape
+    present = ~np.all(lm == 0.0, axis=2)                      # (F, J) joint visible?
 
-    for frame in landmarks:
-        # Skip empty frames
-        if np.all(frame == 0) or np.all(np.isnan(frame)):
-            normalized.append(np.zeros_like(frame))
+    ls, rs = lm[:, 11, :], lm[:, 12, :]                       # shoulders (pose 11,12)
+    sh_ok = present[:, 11] & present[:, 12]                   # frames with both shoulders
+
+    if sh_ok.any():
+        center = np.median((ls[sh_ok] + rs[sh_ok]) / 2.0, axis=0)
+        scale = float(np.median(np.linalg.norm(ls[sh_ok] - rs[sh_ok], axis=1)))
+    else:
+        pts = lm[present]
+        center = np.median(pts, axis=0) if len(pts) else np.zeros(3, np.float32)
+        scale = 0.0
+
+    # robust fallback / floor: median radius of present joints about the center.
+    pts = lm[present]
+    if len(pts):
+        radius = float(np.median(np.linalg.norm(pts - center, axis=1)))
+    else:
+        radius = 1.0
+    floor = max(0.2 * radius, 1e-3)
+    if not np.isfinite(scale) or scale < floor:
+        scale = floor if (np.isfinite(radius) and radius > 0) else 1.0
+
+    out = (lm - center) / scale
+    out[~present] = 0.0
+    out = np.clip(out, -clip, clip)
+    return np.nan_to_num(out, nan=0.0, posinf=clip, neginf=-clip).astype(np.float32)
+
+
+def temporal_impute(landmarks):
+    """fill all-zero joints by linear interpolation over time.
+
+    MediaPipe drops hands in ~30% of frames and leaving them at 0 injects huge
+    fake jumps. ends are held at the nearest value; joints never seen stay 0.
+    """
+    lm = np.asarray(landmarks, dtype=np.float32).copy()
+    Fr, J, C = lm.shape
+    present = ~np.all(lm == 0.0, axis=2)          # (Fr, J)
+    t = np.arange(Fr)
+    for j in range(J):
+        p = present[:, j]
+        if p.all() or not p.any():
             continue
-
-        # Get shoulder positions (indices 11 and 12 in pose)
-        left_shoulder = frame[11]
-        right_shoulder = frame[12]
-
-        # Center at midpoint between shoulders
-        center = (left_shoulder + right_shoulder) / 2
-        centered = frame - center
-
-        # Scale by shoulder width (or max distance if shoulders not visible)
-        shoulder_width = np.linalg.norm(left_shoulder - right_shoulder)
-        if shoulder_width < 1e-6:
-            # Fallback: use max distance from center
-            distances = np.linalg.norm(centered, axis=1)
-            scale = distances.max() if distances.max() > 1e-6 else 1.0
-        else:
-            scale = shoulder_width
-
-        centered = centered / scale
-        normalized.append(centered)
-
-    return np.array(normalized)
+        for c in range(C):
+            lm[:, j, c] = np.interp(t, t[p], lm[p, j, c])
+    return lm
 
 
 def pad_or_truncate(sequence, target_length=30):
-    """Adjust sequence to fixed length."""
-    current_length = len(sequence)
+    """Resample a sequence to a fixed length by linear interpolation over time.
 
+    The previous version integer-index-subsampled (aliasing / dropping motion)
+    and padded short clips by repeating the last frame. Linear interpolation
+    resamples smoothly and preserves the movement trajectory, which is the main
+    discriminative cue for many signs.
+    """
+    sequence = np.asarray(sequence, dtype=np.float32)
+    current_length = len(sequence)
     if current_length == target_length:
         return sequence
-    elif current_length < target_length:
-        pad_length = target_length - current_length
-        padding = np.repeat(sequence[-1:], pad_length, axis=0)
-        return np.concatenate([sequence, padding], axis=0)
-    else:
-        indices = np.linspace(0, current_length - 1, target_length).astype(int)
-        return sequence[indices]
+    if current_length == 1:
+        return np.repeat(sequence, target_length, axis=0)
+    src = np.linspace(0.0, current_length - 1, target_length)
+    lo = np.floor(src).astype(int); hi = np.minimum(lo + 1, current_length - 1)
+    frac = (src - lo).reshape(-1, *([1] * (sequence.ndim - 1)))
+    return (sequence[lo] * (1 - frac) + sequence[hi] * frac).astype(np.float32)
 
 
 def preprocess_wlasl_full(data_dir, output_dir, max_frames=30):
-    """
-    Preprocess all WLASL data with pose + both hands.
-
-    Args:
-        data_dir: Path to wlasl-landmarks directory
-        output_dir: Output directory
-        max_frames: Fixed sequence length
-    """
+    """preprocess every WLASL clip into pose + both hands, max_frames long."""
     data_dir = Path(data_dir)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load parsed data for gloss mapping
+    # load parsed data for gloss mapping
     parsed_path = data_dir / 'WLASL_parsed_data.json'
     with open(parsed_path, 'r') as f:
         parsed_data = json.load(f)
 
     print(f"Total entries in parsed data: {len(parsed_data)}")
 
-    # Get all available glosses
+    # get all available glosses
     available_glosses = sorted(set(entry['gloss'].lower() for entry in parsed_data))
     print(f"Total unique signs: {len(available_glosses)}")
 
-    # Create label mapping for ALL signs
+    # create label mapping for ALL signs
     sign_to_idx = {s: i for i, s in enumerate(available_glosses)}
     idx_to_sign = {i: s for s, i in sign_to_idx.items()}
 
-    # Load all npz files
+    # load all npz files
     npz_files = list(data_dir.glob('landmarks_V*.npz'))
     print(f"Found {len(npz_files)} landmark files")
 
@@ -153,26 +175,25 @@ def preprocess_wlasl_full(data_dir, output_dir, max_frames=30):
                     skipped += 1
                     continue
 
-                # Load landmarks (frames, 180, 3)
+                # load landmarks (frames, 180, 3)
                 landmarks = data[key]
 
                 if len(landmarks) == 0:
                     skipped += 1
                     continue
 
-                # Extract pose + both hands (frames, 75, 3)
+                # extract pose + both hands (frames, 75, 3)
                 pose_hands = extract_pose_and_hands(landmarks)
 
-                # Handle NaN
+                # handle NaN
                 pose_hands = np.nan_to_num(pose_hands, nan=0.0)
 
-                # Normalize
                 pose_hands = normalize_pose_hands(pose_hands)
 
-                # Adjust to fixed length
+                # adjust to fixed length
                 pose_hands = pad_or_truncate(pose_hands, max_frames)
 
-                # Flatten for model input: (30, 225)
+                # flatten for model input: (30, 225)
                 X_data.append(pose_hands.reshape(max_frames, -1))
                 y_data.append(sign_to_idx[gloss])
                 processed += 1
@@ -189,7 +210,6 @@ def preprocess_wlasl_full(data_dir, output_dir, max_frames=30):
     print(f"\nFinal data shape: X={X.shape}, y={y.shape}")
     print(f"Features per frame: {X.shape[-1]} (75 landmarks * 3 coords)")
 
-    # Save
     np.save(output_dir / 'X_wlasl_pose_hands.npy', X)
     np.save(output_dir / 'y_wlasl_pose_hands.npy', y)
 

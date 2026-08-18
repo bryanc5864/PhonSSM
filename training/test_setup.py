@@ -30,7 +30,7 @@ def test_tensorflow_gpu():
         print("WARNING: No GPU detected!")
         return False
 
-    # Quick GPU test
+    # quick GPU test
     with tf.device('/GPU:0'):
         a = tf.constant([[1.0, 2.0], [3.0, 4.0]])
         b = tf.constant([[1.0, 1.0], [0.0, 1.0]])
@@ -45,7 +45,7 @@ def test_data_loading():
     print("TEST 2: Data Loading")
     print("=" * 50)
 
-    # Check files exist
+    # check files exist
     required_files = ['X_train.npy', 'y_train.npy', 'X_val.npy', 'y_val.npy', 'label_map.json']
     for f in required_files:
         path = DATA_DIR / f
@@ -54,7 +54,6 @@ def test_data_loading():
             return False
         print(f"Found: {f}")
 
-    # Load data
     X_train = np.load(DATA_DIR / 'X_train.npy')
     y_train = np.load(DATA_DIR / 'y_train.npy')
     X_val = np.load(DATA_DIR / 'X_val.npy')
@@ -72,7 +71,7 @@ def test_data_loading():
     print(f"  y_val: {y_val.shape}")
     print(f"  num_classes: {num_classes}")
 
-    # Verify labels are in range
+    # verify labels are in range
     if y_train.max() >= num_classes:
         print(f"ERROR: y_train max ({y_train.max()}) >= num_classes ({num_classes})")
         return False
@@ -99,7 +98,7 @@ def test_model_building():
         Input, LSTM, Bidirectional, Dense, Dropout, BatchNormalization
     )
 
-    # Load to get dimensions
+    # load to get dimensions
     X_train = np.load(DATA_DIR / 'X_train.npy')
     with open(DATA_DIR / 'label_map.json') as f:
         label_map = json.load(f)
@@ -109,7 +108,7 @@ def test_model_building():
 
     print(f"Building model for input_shape={input_shape}, num_classes={num_classes}")
 
-    # Build the same model as train_classifier.py
+    # build the same model as train_classifier.py
     model = Sequential([
         Input(shape=input_shape, name='landmarks'),
         Bidirectional(LSTM(128, return_sequences=True, dropout=0.2)),
@@ -146,7 +145,7 @@ def test_training_step():
         Input, LSTM, Bidirectional, Dense, Dropout, BatchNormalization
     )
 
-    # Load small subset
+    # load small subset
     X_train = np.load(DATA_DIR / 'X_train.npy')[:100]
     y_train = np.load(DATA_DIR / 'y_train.npy')[:100]
 
@@ -156,7 +155,7 @@ def test_training_step():
     input_shape = (X_train.shape[1], X_train.shape[2])
     num_classes = len(label_map)
 
-    # Smaller model for quick test
+    # smaller model for quick test
     model = Sequential([
         Input(shape=input_shape),
         LSTM(32, return_sequences=False),
@@ -191,35 +190,35 @@ def main():
 
     results = {}
 
-    # Test 1: TensorFlow and GPU
+    # test 1: TensorFlow and GPU
     try:
         results['gpu'] = test_tensorflow_gpu()
     except Exception as e:
         print(f"ERROR: {e}")
         results['gpu'] = False
 
-    # Test 2: Data loading
+    # test 2: Data loading
     try:
         results['data'] = test_data_loading()
     except Exception as e:
         print(f"ERROR: {e}")
         results['data'] = False
 
-    # Test 3: Model building
+    # test 3: Model building
     try:
         results['model'] = test_model_building()
     except Exception as e:
         print(f"ERROR: {e}")
         results['model'] = False
 
-    # Test 4: Training step
+    # test 4: Training step
     try:
         results['training'] = test_training_step()
     except Exception as e:
         print(f"ERROR: {e}")
         results['training'] = False
 
-    # Summary
+    # summary
     print("\n" + "=" * 50)
     print("TEST SUMMARY")
     print("=" * 50)

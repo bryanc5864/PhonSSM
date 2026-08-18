@@ -1,24 +1,9 @@
-"""
-Sign Classifier Training Script
-================================
-Bi-directional LSTM that identifies which sign the user is attempting.
+"""bi-LSTM that guesses which sign the user is attempting.
 
-Architecture:
-    Input: (30 frames, 63 features) - 21 landmarks × 3 coords
-    → Bidirectional LSTM (128 units)
-    → Bidirectional LSTM (64 units)
-    → Dense (128, ReLU) + Dropout(0.3)
-    → Dense (num_classes, Softmax)
+(30 frames, 63 features) -> BiLSTM 128 -> BiLSTM 64 -> dense 128 -> softmax.
+~385K params.
 
-Target metrics:
-    - Top-1 accuracy: >85%
-    - Top-3 accuracy: >95%
-    - Parameters: ~385K
-
-Usage:
-    python training/train_classifier.py
-    python training/train_classifier.py --epochs 100 --batch-size 64
-    python training/train_classifier.py --data-dir data/processed/merged
+    python training/train_classifier.py [--epochs 100 --batch-size 64]
 """
 
 import os
@@ -40,10 +25,10 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import (
     EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TensorBoard
 )
-# Note: using sparse_categorical_crossentropy, no to_categorical needed
+# using sparse_categorical_crossentropy, no to_categorical needed
 from sklearn.utils.class_weight import compute_class_weight
 
-# Paths
+# paths
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data" / "processed" / "merged"
 MODEL_DIR = PROJECT_ROOT / "models" / "sign_classifier"
@@ -83,14 +68,14 @@ def build_model(input_shape, num_classes):
     model = Sequential([
         Input(shape=input_shape, name='landmarks'),
 
-        # Mask zero-padded frames
+        # mask zero-padded frames
         Masking(mask_value=0.0),
 
-        # Bidirectional LSTM layers
+        # bidirectional LSTM layers
         Bidirectional(LSTM(128, return_sequences=True, dropout=0.2)),
         Bidirectional(LSTM(64, dropout=0.2)),
 
-        # Dense layers
+        # dense layers
         Dense(128, activation='relu'),
         BatchNormalization(),
         Dropout(0.3),
@@ -98,7 +83,7 @@ def build_model(input_shape, num_classes):
         Dense(64, activation='relu'),
         Dropout(0.2),
 
-        # Output layer
+        # output layer
         Dense(num_classes, activation='softmax', name='predictions')
     ])
 
@@ -111,38 +96,36 @@ def train(args):
     print("SIGN CLASSIFIER TRAINING")
     print("=" * 60)
 
-    # Load data
     X_train, y_train, X_val, y_val, X_test, y_test, num_classes, label_map = load_data(args.data_dir)
 
-    # Input shape
     input_shape = (X_train.shape[1], X_train.shape[2])  # (30, 63)
     print(f"Input shape: {input_shape}")
 
-    # Keep labels as integers (sparse) - one-hot would be 4GB+ for 5565 classes!
-    # Using sparse_categorical_crossentropy instead
+    # keep labels as integers (sparse) - one-hot would be 4GB+ for 5565 classes!
+    # using sparse_categorical_crossentropy instead
 
-    # Compute class weights for imbalanced data
+    # compute class weights for imbalanced data
     class_weights = None
     if args.use_class_weights:
         print("Computing class weights...")
         classes_in_train = np.unique(y_train)
         weights = compute_class_weight('balanced', classes=classes_in_train, y=y_train)
 
-        # Create weight dict for classes that exist in training data
+        # create weight dict for classes that exist in training data
         weight_dict = dict(zip(classes_in_train, weights))
 
-        # Fill missing classes with max weight (treat rare/missing classes as important)
+        # fill missing classes with max weight (treat rare/missing classes as important)
         max_weight = max(weights)
         class_weights = {i: weight_dict.get(i, max_weight) for i in range(num_classes)}
 
         print(f"Class weights: {len(classes_in_train)} classes in training, {num_classes - len(classes_in_train)} missing (assigned max weight)")
 
-    # Build model
+    # build model
     print("\nBuilding model...")
     model = build_model(input_shape, num_classes)
     model.summary()
 
-    # Compile with sparse loss (no one-hot encoding needed)
+    # compile with sparse loss (no one-hot encoding needed)
     model.compile(
         optimizer=Adam(learning_rate=args.learning_rate),
         loss='sparse_categorical_crossentropy',
@@ -153,7 +136,7 @@ def train(args):
         ]
     )
 
-    # Callbacks
+    # callbacks
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -184,7 +167,7 @@ def train(args):
         )
     ]
 
-    # Train
+    # train
     print(f"\nTraining for up to {args.epochs} epochs...")
     print(f"Batch size: {args.batch_size}")
     print(f"Learning rate: {args.learning_rate}")
@@ -199,7 +182,7 @@ def train(args):
         verbose=1
     )
 
-    # Evaluate on test set
+    # evaluate on test set
     print("\n" + "=" * 60)
     print("EVALUATION")
     print("=" * 60)
@@ -210,16 +193,16 @@ def train(args):
     print(f"Test Top-3 Accuracy: {test_results[2]:.4f} ({test_results[2]*100:.2f}%)")
     print(f"Test Top-5 Accuracy: {test_results[3]:.4f} ({test_results[3]*100:.2f}%)")
 
-    # Save final model
+    # save final model
     model.save(MODEL_DIR / 'sign_classifier.keras')
     print(f"\nModel saved to {MODEL_DIR / 'sign_classifier.keras'}")
 
-    # Save training history
+    # save training history
     history_dict = {k: [float(v) for v in vals] for k, vals in history.history.items()}
     with open(MODEL_DIR / 'training_history.json', 'w') as f:
         json.dump(history_dict, f, indent=2)
 
-    # Save model info
+    # save model info
     model_info = {
         'input_shape': list(input_shape),
         'num_classes': num_classes,

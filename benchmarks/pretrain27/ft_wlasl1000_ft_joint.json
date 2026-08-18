@@ -1,0 +1,9 @@
+{
+  "subset": 1000,
+  "tag": "ft_joint",
+  "test_top1": 46.7,
+  "test_top5": 73.51,
+  "test_perclass": 47.52,
+  "best_val": 49.05,
+  "test_n": 1876
+}

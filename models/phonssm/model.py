@@ -1,14 +1,6 @@
-"""
-PhonSSM: Phonology-Aware State Space Model for Sign Language Recognition
-========================================================================
+"""PhonSSM: AGAN (spatial) -> PDM (phonological split) -> BiSSM (temporal) -> HPC (head).
 
-Full architecture combining:
-1. AGAN - Anatomical Graph Attention Network (spatial encoding)
-2. PDM - Phonological Disentanglement Module (phonological decomposition)
-3. BiSSM - Bidirectional Selective State Space (temporal modeling)
-4. HPC - Hierarchical Prototypical Classifier (metric learning)
-
-Target: Large vocabulary isolated sign recognition (5000+ signs)
+built for large-vocabulary isolated sign recognition.
 """
 import torch
 import torch.nn as nn
@@ -19,18 +11,14 @@ from .config import PhonSSMConfig
 from .agan import AnatomicalGraphAttention
 from .pdm import PhonologicalDisentanglement
 from .bissm import BiSSM
-from .hpc import HierarchicalPrototypicalClassifier
+from .hpc import HierarchicalPrototypicalClassifier, SimpleHead
 
 
 class PhonSSM(nn.Module):
-    """
-    PhonSSM: Phonology-Aware State Space Model.
+    """PhonSSM: phonology-aware state space model.
 
-    End-to-end model for sign language recognition that:
-    1. Encodes hand landmarks with anatomical graph attention
-    2. Disentangles features into phonological components
-    3. Models temporal dynamics with selective state spaces
-    4. Classifies using hierarchical prototypes
+    landmarks -> anatomical graph attention -> phonological components ->
+    selective state space over time -> prototype classifier.
 
     Architecture:
         Input: (B, T, N, C) - landmarks
@@ -44,9 +32,11 @@ class PhonSSM(nn.Module):
         super().__init__()
         self.config = config or PhonSSMConfig()
 
-        # 1. Anatomical Graph Attention Network
+        # AGAN, spatial
+        self.use_multistream = getattr(self.config, 'use_multistream', False)
+        agan_in_dim = self.config.coord_dim * (3 if self.use_multistream else 1)
         self.agan = AnatomicalGraphAttention(
-            in_dim=self.config.coord_dim,
+            in_dim=agan_in_dim,
             hidden_dim=self.config.spatial_hidden,
             out_dim=self.config.spatial_out,
             num_heads=self.config.num_gat_heads,
@@ -55,15 +45,23 @@ class PhonSSM(nn.Module):
             input_mode=self.config.input_mode
         )
 
-        # 2. Phonological Disentanglement Module
-        self.pdm = PhonologicalDisentanglement(
-            in_dim=self.config.spatial_out,
-            component_dim=self.config.component_dim,
-            num_components=self.config.num_components,
-            dropout=self.config.dropout
-        )
+        # PDM, optional (see use_pdm)
+        self.use_pdm = getattr(self.config, 'use_pdm', True)
+        if self.use_pdm:
+            self.pdm = PhonologicalDisentanglement(
+                in_dim=self.config.spatial_out,
+                component_dim=self.config.component_dim,
+                num_components=self.config.num_components,
+                dropout=self.config.dropout
+            )
+        else:
+            # spatial_out -> d_model projection (PDM normally does this via 'fused')
+            self.spatial_to_temporal = nn.Sequential(
+                nn.Linear(self.config.spatial_out, self.config.d_model),
+                nn.LayerNorm(self.config.d_model), nn.GELU(), nn.Dropout(self.config.dropout)
+            )
 
-        # 3. Bidirectional Selective State Space
+        # BiSSM, temporal
         self.bissm = BiSSM(
             d_model=self.config.d_model,
             d_state=self.config.d_state,
@@ -73,72 +71,91 @@ class PhonSSM(nn.Module):
             dropout=self.config.dropout
         )
 
-        # 4. Hierarchical Prototypical Classifier
-        self.hpc = HierarchicalPrototypicalClassifier(
-            d_model=self.config.d_model,
-            component_dim=self.config.component_dim,
-            num_signs=self.config.num_signs,
-            num_handshapes=self.config.num_handshapes,
-            num_locations=self.config.num_locations,
-            num_movements=self.config.num_movements,
-            num_orientations=self.config.num_orientations,
-            temperature=self.config.temperature,
-            dropout=self.config.dropout
-        )
+        # classification head
+        if self.use_pdm:
+            self.hpc = HierarchicalPrototypicalClassifier(
+                d_model=self.config.d_model,
+                component_dim=self.config.component_dim,
+                num_signs=self.config.num_signs,
+                num_handshapes=self.config.num_handshapes,
+                num_locations=self.config.num_locations,
+                num_movements=self.config.num_movements,
+                num_orientations=self.config.num_orientations,
+                temperature=self.config.temperature,
+                dropout=self.config.dropout
+            )
+        else:
+            self.hpc = SimpleHead(d_model=self.config.d_model, num_signs=self.config.num_signs,
+                                  dropout=self.config.dropout)
 
     def forward(self, x: torch.Tensor) -> dict:
         """
-        Forward pass through PhonSSM.
+        x is (B, T, N*C) or (B, T, N, C) landmarks.
 
-        Args:
-            x: (B, T, N*C) or (B, T, N, C) - hand landmarks
-               B: batch size
-               T: number of frames (typically 30)
-               N: number of landmarks (21)
-               C: coordinate dimensions (3)
-
-        Returns:
-            dict containing:
-                - logits: (B, num_signs) - classification logits
-                - sign_embedding: (B, D) - learned sign representation
-                - phonological_components: dict of component features
-                - component_similarities: dict of prototype similarities
+        returns logits, sign_embedding, phonological_components, component_similarities.
         """
         B = x.shape[0]
 
-        # Handle flattened input (B, T, N*C) -> (B, T, N, C)
+        # handle flattened input (B, T, N*C) -> (B, T, N, C)
         expected_flat = self.config.num_landmarks * self.config.coord_dim
         if x.dim() == 3 and x.shape[-1] == expected_flat:
             x = x.view(B, -1, self.config.num_landmarks, self.config.coord_dim)
 
-        # 1. Spatial encoding with graph attention
+        # multi-stream: joint + bone (graph difference) + motion (velocity).
+        # bone uses the anatomical graph (node minus its neighbour centroid);
+        # missing joints (all-zero) contribute zero bone/motion so they stay 0.
+        if self.use_multistream:
+            valid = (~torch.all(x == 0, dim=-1, keepdim=True)).float()  # (B,T,N,1)
+            A = self.agan.A_anat
+            An = A / (A.sum(dim=-1, keepdim=True) + 1e-6)
+            neigh = torch.einsum('nm,btmc->btnc', An, x)
+            bone = (x - neigh) * valid
+            motion = torch.zeros_like(x)
+            motion[:, 1:] = x[:, 1:] - x[:, :-1]
+            motion = motion * valid
+            x = torch.cat([x, bone, motion], dim=-1)  # (B, T, N, 3C)
+
+        # spatial encoding with graph attention
         spatial_features = self.agan(x)  # (B, T, D)
 
-        # 2. Phonological disentanglement
-        pdm_output = self.pdm(spatial_features)
-        phonological_features = pdm_output['fused']  # (B, T, D)
-        phonological_components = {
-            'handshape': pdm_output['handshape'],
-            'location': pdm_output['location'],
-            'movement': pdm_output['movement'],
-            'orientation': pdm_output['orientation']
-        }
+        if self.use_pdm:
+            # phonological disentanglement
+            pdm_output = self.pdm(spatial_features)
+            phonological_features = pdm_output['fused']  # (B, T, D)
+            phonological_components = {
+                'handshape': pdm_output['handshape'],
+                'location': pdm_output['location'],
+                'movement': pdm_output['movement'],
+                'orientation': pdm_output['orientation']
+            }
+        else:
+            phonological_features = self.spatial_to_temporal(spatial_features)
+            phonological_components = None
 
-        # 3. Temporal modeling with BiSSM
+        # temporal modeling with BiSSM
         temporal_features = self.bissm(phonological_features)  # (B, T, D)
 
-        # 4. Hierarchical prototypical classification
-        hpc_output = self.hpc(temporal_features, phonological_components)
-
-        return {
-            'logits': hpc_output['logits'],
-            'sign_embedding': hpc_output['sign_embedding'],
-            'phonological_components': phonological_components,
-            'component_similarities': hpc_output['component_similarities'],
-            'component_assignments': hpc_output['component_assignments'],
-            'spatial_features': spatial_features,
-            'temporal_features': temporal_features
-        }
+        # classification
+        if self.use_pdm:
+            hpc_output = self.hpc(temporal_features, phonological_components)
+            return {
+                'logits': hpc_output['logits'],
+                'sign_embedding': hpc_output['sign_embedding'],
+                'phonological_components': phonological_components,
+                'component_similarities': hpc_output['component_similarities'],
+                'component_assignments': hpc_output['component_assignments'],
+                'spatial_features': spatial_features,
+                'temporal_features': temporal_features
+            }
+        else:
+            hpc_output = self.hpc(temporal_features)
+            return {
+                'logits': hpc_output['logits'],
+                'sign_embedding': hpc_output['sign_embedding'],
+                'phonological_components': None,
+                'spatial_features': spatial_features,
+                'temporal_features': temporal_features
+            }
 
     def compute_loss(
         self,
@@ -147,19 +164,11 @@ class PhonSSM(nn.Module):
         label_smoothing: float = 0.1
     ) -> dict:
         """
-        Compute all losses for training.
-
-        Args:
-            outputs: dict from forward()
-            targets: (B,) - ground truth sign indices
-            label_smoothing: label smoothing factor
-
-        Returns:
-            dict with individual losses and total loss
+        cross-entropy plus the auxiliary terms; returns each loss and the total.
         """
         losses = {}
 
-        # Main classification loss
+        # main classification loss
         ce_loss = F.cross_entropy(
             outputs['logits'],
             targets,
@@ -167,49 +176,44 @@ class PhonSSM(nn.Module):
         )
         losses['classification'] = ce_loss
 
-        # Orthogonality loss for disentanglement
-        ortho_loss = self.pdm.orthogonality_loss({
-            'handshape': outputs['phonological_components']['handshape'],
-            'location': outputs['phonological_components']['location'],
-            'movement': outputs['phonological_components']['movement'],
-            'orientation': outputs['phonological_components']['orientation']
-        })
-        losses['orthogonality'] = ortho_loss
+        if self.use_pdm:
+            # orthogonality loss for disentanglement
+            ortho_loss = self.pdm.orthogonality_loss({
+                'handshape': outputs['phonological_components']['handshape'],
+                'location': outputs['phonological_components']['location'],
+                'movement': outputs['phonological_components']['movement'],
+                'orientation': outputs['phonological_components']['orientation']
+            })
+            losses['orthogonality'] = ortho_loss
 
-        # Prototype diversity losses
-        aux_losses = self.hpc.get_auxiliary_losses(outputs, targets)
-        losses.update(aux_losses)
+            # prototype diversity losses
+            aux_losses = self.hpc.get_auxiliary_losses(outputs, targets)
+            losses.update(aux_losses)
 
-        # Weighted total loss
-        total_loss = (
-            ce_loss +
-            0.1 * ortho_loss +
-            0.01 * sum(v for k, v in aux_losses.items())
-        )
+            total_loss = (
+                ce_loss +
+                0.1 * ortho_loss +
+                0.01 * sum(v for k, v in aux_losses.items())
+            )
+        else:
+            total_loss = ce_loss
         losses['total'] = total_loss
 
         return losses
 
     def get_predictions(self, outputs: dict, top_k: int = 5) -> dict:
         """
-        Get predictions from model outputs.
-
-        Args:
-            outputs: dict from forward()
-            top_k: number of top predictions to return
-
-        Returns:
-            dict with predictions, probabilities, and component info
+        top-k predictions, probabilities and dominant component per sample.
         """
         logits = outputs['logits']
 
         # Softmax probabilities
         probs = F.softmax(logits, dim=-1)
 
-        # Top-k predictions
+        # top-k predictions
         top_probs, top_indices = torch.topk(probs, k=top_k, dim=-1)
 
-        # Get dominant component assignments
+        # get dominant component assignments
         component_predictions = {}
         for name in ['handshape', 'location', 'movement', 'orientation']:
             assignments = outputs['component_assignments'][name]
@@ -228,7 +232,8 @@ class PhonSSM(nn.Module):
         """Count parameters in each module."""
         counts = {
             'agan': sum(p.numel() for p in self.agan.parameters()),
-            'pdm': sum(p.numel() for p in self.pdm.parameters()),
+            'pdm': sum(p.numel() for p in self.pdm.parameters()) if self.use_pdm
+                   else sum(p.numel() for p in self.spatial_to_temporal.parameters()),
             'bissm': sum(p.numel() for p in self.bissm.parameters()),
             'hpc': sum(p.numel() for p in self.hpc.parameters()),
         }
@@ -241,17 +246,7 @@ def create_phonssm(
     num_frames: int = 30,
     **kwargs
 ) -> PhonSSM:
-    """
-    Factory function to create PhonSSM with custom parameters.
-
-    Args:
-        num_signs: number of sign classes
-        num_frames: sequence length
-        **kwargs: additional config parameters
-
-    Returns:
-        PhonSSM model
-    """
+    """build a PhonSSM; kwargs go straight into PhonSSMConfig."""
     config = PhonSSMConfig(
         num_signs=num_signs,
         num_frames=num_frames,

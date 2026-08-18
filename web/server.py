@@ -1,15 +1,8 @@
-"""
-SignSense Web Server - Full Diagnostic Pipeline
-================================================
-Integrates all 4 neural networks:
-1. PhonSSM - Sign classification with phonological components
-2. Error Diagnosis - Multi-task CNN-LSTM detecting component errors
-3. Movement Analyzer - 1D CNN evaluating movement quality
-4. Feedback Ranker - MLP prioritizing corrections
+"""web server wiring the four nets together: PhonSSM for the sign, the error
+diagnosis net for which component is wrong, the movement analyzer for quality,
+and the ranker to decide which correction to show first.
 
-Usage:
-    python web/server.py
-    # Then open http://localhost:8000 in browser
+    python web/server.py    # then http://localhost:8000
 """
 
 import os
@@ -17,7 +10,7 @@ import sys
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-# Add project root to path
+# add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -39,9 +32,7 @@ import uvicorn
 from models.phonssm import PhonSSM, PhonSSMConfig
 
 
-# ============================================================================
-# Global Model Instances
-# ============================================================================
+# global model handles
 phonssm_model: Optional[PhonSSM] = None
 error_diagnosis_model: Optional[tf.keras.Model] = None
 movement_analyzer_model: Optional[tf.keras.Model] = None
@@ -51,7 +42,7 @@ device: torch.device = torch.device('cpu')
 label_map: dict = {}
 idx_to_label: dict = {}
 
-# Error type definitions
+# error type definitions
 ERROR_TYPES = [
     "handshape:finger_not_extended",
     "handshape:fingers_not_curled",
@@ -71,7 +62,7 @@ ERROR_TYPES = [
     "orientation:wrist_rotation"
 ]
 
-# Feedback templates for each error type
+# feedback templates for each error type
 FEEDBACK_TEMPLATES = {
     "handshape:finger_not_extended": "Try extending your {finger} finger more",
     "handshape:fingers_not_curled": "Curl your fingers more tightly",
@@ -94,9 +85,7 @@ FEEDBACK_TEMPLATES = {
 MOVEMENT_TYPES = ["static", "linear", "circular", "arc", "zigzag", "compound"]
 
 
-# ============================================================================
-# Model Loading
-# ============================================================================
+# model loading
 def load_all_models():
     """Load all 4 neural networks."""
     global phonssm_model, error_diagnosis_model, movement_analyzer_model, feedback_ranker
@@ -106,16 +95,14 @@ def load_all_models():
     print("LOADING SIGNSENSE MODELS")
     print("=" * 60)
 
-    # 1. Load PhonSSM (Sign Classifier)
+    # load PhonSSM
     load_phonssm()
 
-    # 2. Load Error Diagnosis Model
+    # load the error diagnosis model
     load_error_diagnosis()
 
-    # 3. Load Movement Analyzer
     load_movement_analyzer()
 
-    # 4. Load Feedback Ranker
     load_feedback_ranker()
 
     print("=" * 60)
@@ -131,14 +118,14 @@ def load_phonssm():
     print(f"\n[1/4] Loading PhonSSM Sign Classifier...")
     print(f"      Device: {device}")
 
-    # Find best WLASL100 model
+    # find best WLASL100 model
     model_path = PROJECT_ROOT / "benchmarks" / "external" / "wlasl100" / "20260118_073336" / "best_model.pt"
 
     if not model_path.exists():
         print(f"      WARNING: PhonSSM model not found at {model_path}")
         return
 
-    # Load label map
+    # load label map
     wlasl_json_path = PROJECT_ROOT / "data" / "raw" / "wlasl" / "start_kit" / "WLASL_v0.3.json"
     with open(wlasl_json_path) as f:
         wlasl_data = json.load(f)
@@ -147,7 +134,7 @@ def load_phonssm():
     label_map = {g: i for i, g in enumerate(subset_glosses)}
     idx_to_label = {i: g for g, i in label_map.items()}
 
-    # Create model
+    # create model
     config = PhonSSMConfig(
         num_signs=100,
         temperature=1.0,
@@ -156,7 +143,6 @@ def load_phonssm():
     )
     phonssm_model = PhonSSM(config).to(device)
 
-    # Load weights
     checkpoint = torch.load(model_path, map_location=device, weights_only=False)
     phonssm_model.load_state_dict(checkpoint['model_state_dict'])
     phonssm_model.eval()
@@ -222,9 +208,7 @@ def load_feedback_ranker():
         print(f"      ERROR loading model: {e}")
 
 
-# ============================================================================
-# Preprocessing Functions (Match Training Exactly!)
-# ============================================================================
+# preprocessing, must match training exactly
 def normalize_pose_hands(landmarks: np.ndarray) -> np.ndarray:
     """
     Normalize pose+hands landmarks (75 landmarks).
@@ -233,7 +217,7 @@ def normalize_pose_hands(landmarks: np.ndarray) -> np.ndarray:
     if np.all(landmarks == 0) or np.abs(landmarks).sum() < 1e-6:
         return landmarks
 
-    # Shoulders are at indices 11 and 12
+    # shoulders are at indices 11 and 12
     left_shoulder = landmarks[11]
     right_shoulder = landmarks[12]
 
@@ -258,11 +242,11 @@ def normalize_single_hand(landmarks: np.ndarray) -> np.ndarray:
     if np.all(landmarks == 0) or np.abs(landmarks).sum() < 1e-6:
         return landmarks
 
-    # Center at wrist (landmark 0)
+    # center at wrist (landmark 0)
     wrist = landmarks[0].copy()
     centered = landmarks - wrist
 
-    # Scale by max distance
+    # scale by max distance
     max_dist = np.linalg.norm(centered, axis=1).max()
     if max_dist > 1e-6:
         centered = centered / max_dist
@@ -272,14 +256,14 @@ def normalize_single_hand(landmarks: np.ndarray) -> np.ndarray:
 
 def extract_right_hand(pose_hands: np.ndarray) -> np.ndarray:
     """Extract right hand from pose+hands layout."""
-    # Layout: Pose(33) + Left(21) + Right(21) = 75
-    # Right hand: indices 54-74
+    # layout: Pose(33) + Left(21) + Right(21) = 75
+    # right hand: indices 54-74
     return pose_hands[54:75]
 
 
 def extract_left_hand(pose_hands: np.ndarray) -> np.ndarray:
     """Extract left hand from pose+hands layout."""
-    # Left hand: indices 33-53
+    # left hand: indices 33-53
     return pose_hands[33:54]
 
 
@@ -293,31 +277,30 @@ def extract_movement_features(frames: np.ndarray) -> np.ndarray:
     if len(frames) < 2:
         return np.zeros((len(frames), 9))
 
-    # Get wrist positions over time (landmark 0)
+    # get wrist positions over time (landmark 0)
     wrist_positions = frames[:, 0, :]  # (T, 3)
 
-    # Velocity (frame-to-frame differences)
+    # velocity (frame-to-frame differences)
     velocity = np.diff(wrist_positions, axis=0)  # (T-1, 3)
-    velocity = np.vstack([velocity, velocity[-1:]])  # Pad to match length
+    velocity = np.vstack([velocity, velocity[-1:]])  # pad to match length
 
-    # Acceleration
     acceleration = np.diff(velocity, axis=0)  # (T-2, 3)
     acceleration = np.vstack([acceleration, acceleration[-1:], acceleration[-1:]])
 
-    # Path length (cumulative)
+    # path length (cumulative)
     path_lengths = np.cumsum(np.linalg.norm(velocity, axis=1))
-    path_lengths = path_lengths / (path_lengths[-1] + 1e-6)  # Normalize
+    path_lengths = path_lengths / (path_lengths[-1] + 1e-6)  # normalize
 
-    # Directness ratio (direct distance / path length)
+    # directness ratio (direct distance / path length)
     direct_dist = np.linalg.norm(wrist_positions - wrist_positions[0], axis=1)
     directness = direct_dist / (path_lengths * path_lengths[-1] + 1e-6)
     directness = np.clip(directness, 0, 1)
 
-    # Smoothness (velocity consistency)
+    # smoothness (velocity consistency)
     vel_magnitude = np.linalg.norm(velocity, axis=1)
     smoothness = 1.0 - np.abs(np.diff(vel_magnitude, prepend=vel_magnitude[0])) / (vel_magnitude.max() + 1e-6)
 
-    # Combine features
+    # combine features
     features = np.column_stack([
         velocity,                    # 3 features
         acceleration,                # 3 features
@@ -344,20 +327,11 @@ def pad_sequence(frames: np.ndarray, target_length: int = 30) -> np.ndarray:
         return frames[indices]
 
 
-# ============================================================================
-# Inference Pipeline
-# ============================================================================
+# inference pipeline
 @torch.no_grad()
 def run_full_pipeline(frames_225: np.ndarray, target_sign: Optional[str] = None) -> dict:
-    """
-    Run the complete SignSense diagnostic pipeline.
-
-    Args:
-        frames_225: (30, 225) normalized pose+hands landmarks
-        target_sign: Optional sign the user is trying to make
-
-    Returns:
-        Complete diagnostic result with predictions, errors, and feedback
+    """frames_225 is (30, 225) normalized pose+hands. returns predictions, detected
+    errors and ranked feedback; target_sign narrows the diagnosis if known.
     """
     result = {
         'status': 'prediction',
@@ -369,12 +343,10 @@ def run_full_pipeline(frames_225: np.ndarray, target_sign: Optional[str] = None)
         'overall_score': 0.0
     }
 
-    # Reshape for processing: (30, 225) -> (30, 75, 3)
+    # reshape for processing: (30, 225) -> (30, 75, 3)
     frames_75x3 = frames_225.reshape(-1, 75, 3)
 
-    # ========================================
-    # 1. Sign Classification (PhonSSM)
-    # ========================================
+    # sign classification
     if phonssm_model is not None:
         x = torch.FloatTensor(frames_225).unsqueeze(0).to(device)
         outputs = phonssm_model(x)
@@ -389,7 +361,7 @@ def run_full_pipeline(frames_225: np.ndarray, target_sign: Optional[str] = None)
                 'confidence': float(prob)
             })
 
-        # Extract phonological components from PhonSSM
+        # extract phonological components from PhonSSM
         if 'phonological_components' in outputs:
             for comp_name, comp_tensor in outputs['phonological_components'].items():
                 comp_mean = comp_tensor.mean(dim=1)[0]
@@ -401,60 +373,57 @@ def run_full_pipeline(frames_225: np.ndarray, target_sign: Optional[str] = None)
         result['top_sign'] = result['predictions'][0]['sign'] if result['predictions'] else None
         result['confidence'] = result['predictions'][0]['confidence'] if result['predictions'] else 0
 
-    # ========================================
-    # 2. Error Diagnosis (or synthetic scores from PhonSSM)
-    # ========================================
-    # If error diagnosis model not available, use PhonSSM component magnitudes as proxy scores
+    # error diagnosis, or synthetic scores from PhonSSM
+    # if error diagnosis model not available, use PhonSSM component magnitudes as proxy scores
     if error_diagnosis_model is None and phonssm_model is not None:
-        # Generate synthetic scores based on confidence and component magnitudes
+        # generate synthetic scores based on confidence and component magnitudes
         confidence = result.get('confidence', 0.5)
         comp_names = ['handshape', 'location', 'movement', 'orientation']
         for name in comp_names:
             if name in result['components']:
-                # Scale magnitude to 0-1 score, weighted by confidence
+                # scale magnitude to 0-1 score, weighted by confidence
                 mag = result['components'][name].get('magnitude', 2.5)
                 synthetic_score = min(1.0, (mag / 5.0) * 0.7 + confidence * 0.3)
                 result['components'][name]['score'] = synthetic_score
         result['overall_score'] = confidence
 
     if error_diagnosis_model is not None:
-        # Extract right hand (or use dominant hand)
-        # Right hand is at indices 54-74 in pose_hands layout
+        # extract right hand (or use dominant hand)
+        # right hand is at indices 54-74 in pose_hands layout
         right_hand_frames = frames_75x3[:, 54:75, :]  # (30, 21, 3)
         left_hand_frames = frames_75x3[:, 33:54, :]   # (30, 21, 3)
 
-        # Use whichever hand has more movement
+        # use whichever hand has more movement
         right_movement = np.std(right_hand_frames)
         left_movement = np.std(left_hand_frames)
         hand_frames = right_hand_frames if right_movement > left_movement else left_hand_frames
 
-        # Normalize single hand
         normalized_hand = np.array([normalize_single_hand(f) for f in hand_frames])
         hand_input = normalized_hand.reshape(1, 30, 63)  # (1, 30, 63)
 
         try:
-            # Run error diagnosis model
+            # run error diagnosis model
             diagnosis_output = error_diagnosis_model.predict(hand_input, verbose=0)
 
-            # Parse outputs (model has 3 heads: components, errors, correctness)
+            # parse outputs (model has 3 heads: components, errors, correctness)
             if isinstance(diagnosis_output, list):
                 component_scores = diagnosis_output[0][0]  # (4,) - handshape, location, movement, orientation
                 error_probs = diagnosis_output[1][0]       # (16,) - error type probabilities
                 correctness = diagnosis_output[2][0]       # (1,) or scalar - overall correctness
             else:
-                # Single output - assume it's error probs
+                # single output - assume it's error probs
                 error_probs = diagnosis_output[0]
                 component_scores = np.array([0.8, 0.8, 0.8, 0.8])
                 correctness = 0.8
 
-            # Update component scores
+            # update component scores
             comp_names = ['handshape', 'location', 'movement', 'orientation']
             for i, name in enumerate(comp_names):
                 if name not in result['components']:
                     result['components'][name] = {}
                 result['components'][name]['score'] = float(component_scores[i])
 
-            # Detect errors above threshold
+            # detect errors above threshold
             ERROR_THRESHOLD = 0.3
             for i, prob in enumerate(error_probs):
                 if prob > ERROR_THRESHOLD:
@@ -470,12 +439,10 @@ def run_full_pipeline(frames_225: np.ndarray, target_sign: Optional[str] = None)
         except Exception as e:
             print(f"Error diagnosis failed: {e}")
 
-    # ========================================
-    # 3. Movement Analysis
-    # ========================================
+    # movement analysis
     if movement_analyzer_model is not None:
         try:
-            # Extract movement features from dominant hand
+            # extract movement features from dominant hand
             right_hand_frames = frames_75x3[:, 54:75, :]
             left_hand_frames = frames_75x3[:, 33:54, :]
 
@@ -508,13 +475,11 @@ def run_full_pipeline(frames_225: np.ndarray, target_sign: Optional[str] = None)
         except Exception as e:
             print(f"Movement analysis failed: {e}")
 
-    # ========================================
-    # 4. Feedback Ranking
-    # ========================================
+    # feedback ranking
     if feedback_ranker is not None and result['errors']:
         try:
-            # Prepare input for feedback ranker
-            # Features: 4 component scores + 16 error probs + user_skill + sign_difficulty
+            # prepare input for feedback ranker
+            # features: 4 component scores + 16 error probs + user_skill + sign_difficulty
             comp_scores = [result['components'].get(c, {}).get('score', 0.8) for c in comp_names]
             error_probs_full = np.zeros(16)
             for err in result['errors']:
@@ -524,7 +489,7 @@ def run_full_pipeline(frames_225: np.ndarray, target_sign: Optional[str] = None)
             ranker_input = np.array(comp_scores + list(error_probs_full) + [0.5, 0.5], dtype=np.float32)
             ranker_input = ranker_input.reshape(1, -1)
 
-            # Run feedback ranker
+            # run feedback ranker
             input_details = feedback_ranker.get_input_details()
             output_details = feedback_ranker.get_output_details()
 
@@ -532,7 +497,7 @@ def run_full_pipeline(frames_225: np.ndarray, target_sign: Optional[str] = None)
             feedback_ranker.invoke()
             priority_scores = feedback_ranker.get_tensor(output_details[0]['index'])[0]
 
-            # Sort errors by priority
+            # sort errors by priority
             error_priorities = []
             for i, err in enumerate(result['errors']):
                 idx = ERROR_TYPES.index(err['type'])
@@ -545,9 +510,7 @@ def run_full_pipeline(frames_225: np.ndarray, target_sign: Optional[str] = None)
         except Exception as e:
             print(f"Feedback ranking failed: {e}")
 
-    # ========================================
-    # 5. Generate Final Feedback
-    # ========================================
+    # final feedback text
     result['feedback'] = generate_feedback(result, target_sign)
 
     return result
@@ -559,9 +522,9 @@ def generate_feedback(result: dict, target_sign: Optional[str]) -> List[str]:
 
     top_sign = result.get('top_sign', '')
     confidence = result.get('confidence', 0)
-    overall_score = result.get('overall_score', 0.8)  # Default to 0.8 if no error diagnosis
+    overall_score = result.get('overall_score', 0.8)  # default to 0.8 if no error diagnosis
 
-    # Check if sign matches target
+    # check if sign matches target
     if target_sign:
         if top_sign and top_sign.lower() == target_sign.lower():
             if confidence > 0.8:
@@ -573,18 +536,18 @@ def generate_feedback(result: dict, target_sign: Optional[str]) -> List[str]:
         elif top_sign:
             feedback.append(f"That looks more like '{top_sign.upper()}'. Let's work on '{target_sign.upper()}'.")
     else:
-        # Free practice mode
+        # free practice mode
         if top_sign and confidence > 0.6:
             feedback.append(f"Recognized: '{top_sign.upper()}' ({confidence*100:.0f}% confidence)")
 
-    # Add component feedback based on PhonSSM phonological components
+    # add component feedback based on PhonSSM phonological components
     components = result.get('components', {})
     if components:
-        # Analyze component magnitudes from PhonSSM
+        # analyze component magnitudes from PhonSSM
         comp_analysis = []
         for comp_name, data in components.items():
             magnitude = data.get('magnitude', 0)
-            score = data.get('score', magnitude / 5)  # Normalize magnitude to score
+            score = data.get('score', magnitude / 5)  # normalize magnitude to score
             if score > 0.7:
                 comp_analysis.append((comp_name, 'good', score))
             elif score < 0.4:
@@ -596,7 +559,7 @@ def generate_feedback(result: dict, target_sign: Optional[str]) -> List[str]:
         if good_comps and not weak_comps:
             feedback.append(f"Good {', '.join(good_comps)}!")
         elif weak_comps:
-            for comp in weak_comps[:2]:  # Limit to 2 suggestions
+            for comp in weak_comps[:2]:  # limit to 2 suggestions
                 if comp == 'handshape':
                     feedback.append("Focus on your hand shape - check finger positions.")
                 elif comp == 'location':
@@ -606,12 +569,12 @@ def generate_feedback(result: dict, target_sign: Optional[str]) -> List[str]:
                 elif comp == 'orientation':
                     feedback.append("Adjust your palm orientation.")
 
-    # Add top error feedback if available (limit to 2)
+    # add top error feedback if available (limit to 2)
     errors = result.get('errors', [])[:2]
     for err in errors:
         feedback.append(err['message'])
 
-    # Add movement feedback if relevant
+    # add movement feedback if relevant
     movement = result.get('movement', {})
     if movement:
         smoothness = movement.get('smoothness', 0.8)
@@ -623,7 +586,7 @@ def generate_feedback(result: dict, target_sign: Optional[str]) -> List[str]:
         if completeness < 0.6:
             feedback.append("Complete the full motion of the sign.")
 
-    # Confidence-based general feedback
+    # confidence-based general feedback
     if confidence < 0.4 and not feedback:
         feedback.append("Keep your hands clearly visible and try again.")
     elif not feedback:
@@ -632,9 +595,7 @@ def generate_feedback(result: dict, target_sign: Optional[str]) -> List[str]:
     return feedback
 
 
-# ============================================================================
 # FastAPI Application
-# ============================================================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     load_all_models()
@@ -692,7 +653,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 if landmarks.ndim == 1:
                     landmarks = landmarks.reshape(-1, 3)
 
-                # Normalize (center at shoulders, scale by shoulder width)
+                # normalize (center at shoulders, scale by shoulder width)
                 landmarks = normalize_pose_hands(landmarks)
                 frame_buffer.append(landmarks.flatten())
 
@@ -700,7 +661,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     frames = np.array(frame_buffer[-AUTO_PREDICT_FRAMES:])
                     result = run_full_pipeline(frames, target_sign)
                     await websocket.send_json(result)
-                    frame_buffer = frame_buffer[-15:]  # Keep sliding window
+                    frame_buffer = frame_buffer[-15:]  # keep sliding window
                 else:
                     await websocket.send_json({
                         'status': 'buffering',

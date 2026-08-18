@@ -1,9 +1,4 @@
-"""
-Hierarchical Prototypical Classifier (HPC)
-==========================================
-Metric learning-based classifier using phonological prototypes.
-Handles large vocabulary (5000+ signs) efficiently.
-"""
+"""HPC: prototype/metric-learning classifier, meant to scale to 5000+ signs."""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -27,7 +22,7 @@ class PrototypeBank(nn.Module):
         self.prototype_dim = prototype_dim
         self.temperature = temperature
 
-        # Learnable prototypes
+        # learnable prototypes
         self.prototypes = nn.Parameter(torch.randn(num_prototypes, prototype_dim))
         nn.init.xavier_uniform_(self.prototypes)
 
@@ -48,21 +43,40 @@ class PrototypeBank(nn.Module):
         # Cosine similarity
         similarities = torch.matmul(x_norm, proto_norm.T)  # (B, num_prototypes)
 
-        # Soft assignments via temperature-scaled softmax
+        # soft assignments via temperature-scaled softmax
         assignments = F.softmax(similarities / self.temperature, dim=-1)
 
         return similarities, assignments
 
 
-class HierarchicalPrototypicalClassifier(nn.Module):
-    """
-    Hierarchical Prototypical Classifier for large vocabulary sign recognition.
+class SimpleHead(nn.Module):
+    """Attention-pool over time + learnable-scale cosine classifier, bypassing
+    PDM's unsupervised phonological decomposition (empirically harmful without
+    real phoneme supervision)."""
 
-    Key innovations:
-    1. Component-specific prototype banks (handshape, location, movement, orientation)
-    2. Hierarchical aggregation from components to signs
-    3. Temperature-scaled cosine similarity for metric learning
-    4. Efficient for large vocabularies (no O(n) output layer)
+    def __init__(self, d_model: int = 128, num_signs: int = 5565, dropout: float = 0.1):
+        super().__init__()
+        self.q = nn.Parameter(torch.randn(d_model) * 0.02)
+        self.norm = nn.LayerNorm(d_model)
+        self.drop = nn.Dropout(dropout)
+        self.prototypes = nn.Parameter(torch.randn(num_signs, d_model))
+        nn.init.xavier_uniform_(self.prototypes)
+        self.logit_scale = nn.Parameter(torch.tensor(math.log(16.0)))
+
+    def forward(self, temporal_features: torch.Tensor) -> dict:
+        w = F.softmax((temporal_features @ self.q) / temporal_features.shape[-1] ** 0.5, dim=1).unsqueeze(-1)
+        e = self.drop(self.norm((temporal_features * w).sum(dim=1)))
+        logits = F.normalize(e, dim=-1) @ F.normalize(self.prototypes, dim=-1).T
+        logits = logits * self.logit_scale.exp().clamp(4.0, 64.0)
+        return {'logits': logits, 'sign_embedding': e}
+
+
+class HierarchicalPrototypicalClassifier(nn.Module):
+    """prototype classifier for large sign vocabularies.
+
+    one prototype bank per phonological component, aggregated up to sign level,
+    scored by temperature-scaled cosine. no O(n) output layer, so it stays cheap
+    at 5000+ classes.
     """
 
     def __init__(
@@ -82,17 +96,17 @@ class HierarchicalPrototypicalClassifier(nn.Module):
         self.num_signs = num_signs
         self.temperature = temperature
 
-        # Component prototype banks
+        # component prototype banks
         self.handshape_bank = PrototypeBank(num_handshapes, component_dim, temperature)
         self.location_bank = PrototypeBank(num_locations, component_dim, temperature)
         self.movement_bank = PrototypeBank(num_movements, component_dim, temperature)
         self.orientation_bank = PrototypeBank(num_orientations, component_dim, temperature)
 
-        # Aggregate component dimensions
+        # aggregate component dimensions
         total_proto_dim = num_handshapes + num_locations + num_movements + num_orientations
 
-        # Sign embedding projection
-        # Maps concatenated component similarities to sign embedding space
+        # sign embedding projection
+        # maps concatenated component similarities to sign embedding space
         self.sign_proj = nn.Sequential(
             nn.Linear(total_proto_dim, d_model),
             nn.LayerNorm(d_model),
@@ -102,7 +116,7 @@ class HierarchicalPrototypicalClassifier(nn.Module):
             nn.LayerNorm(d_model)
         )
 
-        # Global feature projection (from temporal features)
+        # global feature projection (from temporal features)
         self.global_proj = nn.Sequential(
             nn.Linear(d_model, d_model),
             nn.LayerNorm(d_model),
@@ -110,7 +124,7 @@ class HierarchicalPrototypicalClassifier(nn.Module):
             nn.Dropout(dropout)
         )
 
-        # Final fusion
+        # final fusion
         self.fusion = nn.Sequential(
             nn.Linear(d_model * 2, d_model),
             nn.LayerNorm(d_model),
@@ -118,9 +132,17 @@ class HierarchicalPrototypicalClassifier(nn.Module):
             nn.Dropout(dropout)
         )
 
-        # Sign prototypes (learnable embeddings for each sign)
+        # sign prototypes (learnable embeddings for each sign)
         self.sign_prototypes = nn.Parameter(torch.randn(num_signs, d_model))
         nn.init.xavier_uniform_(self.sign_prototypes)
+
+        # learnable logit scale (CLIP/CosFace style). The old code divided cosine
+        # logits (in [-1, 1]) by a fixed temperature that was set to 1.0 for
+        # <=100 classes, which caps the correct-class softmax near 7% and floors
+        # cross-entropy at ~2.67 regardless of embedding quality — effectively
+        # untrainable on the small-vocab benchmarks. A large learnable scale
+        # (init 16, clamped [4, 64]) makes the objective trainable at any vocab.
+        self.logit_scale = nn.Parameter(torch.tensor(math.log(16.0)))
 
     def forward(
         self,
@@ -137,38 +159,38 @@ class HierarchicalPrototypicalClassifier(nn.Module):
         """
         B = temporal_features.shape[0]
 
-        # Pool temporal dimension for each component
+        # pool temporal dimension for each component
         h = phonological_components['handshape'].mean(dim=1)  # (B, D_c)
         l = phonological_components['location'].mean(dim=1)
         m = phonological_components['movement'].mean(dim=1)
         o = phonological_components['orientation'].mean(dim=1)
 
-        # Get component similarities
+        # get component similarities
         h_sim, h_assign = self.handshape_bank(h)
         l_sim, l_assign = self.location_bank(l)
         m_sim, m_assign = self.movement_bank(m)
         o_sim, o_assign = self.orientation_bank(o)
 
-        # Concatenate similarities
+        # concatenate similarities
         component_sims = torch.cat([h_sim, l_sim, m_sim, o_sim], dim=-1)  # (B, total_proto_dim)
 
-        # Project to sign embedding space
+        # project to sign embedding space
         sign_embed_from_components = self.sign_proj(component_sims)  # (B, d_model)
 
-        # Global temporal features (mean pool)
+        # global temporal features (mean pool)
         global_features = temporal_features.mean(dim=1)  # (B, D)
         global_embed = self.global_proj(global_features)  # (B, d_model)
 
-        # Fuse component-based and global embeddings
+        # fuse component-based and global embeddings
         fused = torch.cat([sign_embed_from_components, global_embed], dim=-1)
         sign_embedding = self.fusion(fused)  # (B, d_model)
 
-        # Compute logits via cosine similarity to sign prototypes
+        # compute logits via cosine similarity to sign prototypes
         sign_embedding_norm = F.normalize(sign_embedding, dim=-1)
         sign_prototypes_norm = F.normalize(self.sign_prototypes, dim=-1)
 
         logits = torch.matmul(sign_embedding_norm, sign_prototypes_norm.T)  # (B, num_signs)
-        logits = logits / self.temperature  # Temperature scaling
+        logits = logits * self.logit_scale.exp().clamp(4.0, 64.0)  # learnable scale
 
         return {
             'logits': logits,
@@ -196,7 +218,7 @@ class HierarchicalPrototypicalClassifier(nn.Module):
         """
         losses = {}
 
-        # Prototype diversity loss - encourage prototypes to be spread out
+        # prototype diversity loss - encourage prototypes to be spread out
         for name, bank in [
             ('handshape', self.handshape_bank),
             ('location', self.location_bank),
@@ -206,15 +228,15 @@ class HierarchicalPrototypicalClassifier(nn.Module):
             proto_norm = F.normalize(bank.prototypes, dim=-1)
             similarity_matrix = torch.matmul(proto_norm, proto_norm.T)
 
-            # Penalize high off-diagonal similarities
+            # penalize high off-diagonal similarities
             mask = ~torch.eye(bank.num_prototypes, device=similarity_matrix.device, dtype=torch.bool)
             off_diag_sim = similarity_matrix[mask]
             losses[f'{name}_diversity'] = (off_diag_sim ** 2).mean()
 
-        # Sign prototype diversity
+        # sign prototype diversity
         sign_proto_norm = F.normalize(self.sign_prototypes, dim=-1)
 
-        # Sample subset for efficiency (full matrix is 5565x5565)
+        # sample subset for efficiency (full matrix is 5565x5565)
         if self.num_signs > 500:
             idx = torch.randperm(self.num_signs, device=sign_proto_norm.device)[:500]
             sampled_protos = sign_proto_norm[idx]

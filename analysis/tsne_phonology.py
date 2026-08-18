@@ -1,8 +1,4 @@
-"""
-t-SNE Visualization of PhonSSM Embeddings
-==========================================
-Extracts phonological subspace embeddings and visualizes with t-SNE.
-"""
+"""t-SNE over the phonological subspace embeddings."""
 
 import os
 import sys
@@ -26,7 +22,7 @@ def load_model_and_data(subset=100):
     """Load PhonSSM model and WLASL test data."""
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Find best checkpoint
+    # find best checkpoint
     if subset == 100:
         ckpt_path = PROJECT_ROOT / "benchmarks/external/wlasl100/20260118_073336/best_model.pt"
     elif subset == 2000:
@@ -34,17 +30,16 @@ def load_model_and_data(subset=100):
     else:
         raise ValueError(f"No checkpoint for subset {subset}")
 
-    # Load WLASL official data
+    # load WLASL official data
     wlasl_json = PROJECT_ROOT / "data/raw/wlasl/start_kit/WLASL_v0.3.json"
     with open(wlasl_json) as f:
         wlasl_data = json.load(f)
 
-    # Get subset glosses
+    # get subset glosses
     subset_glosses = [entry['gloss'] for entry in wlasl_data[:subset]]
     gloss_to_idx = {g: i for i, g in enumerate(subset_glosses)}
     idx_to_label = {i: g for i, g in enumerate(subset_glosses)}
 
-    # Load pose+hands data
     X_all = np.load(PROJECT_ROOT / "data/processed/X_wlasl_pose_hands.npy")
     y_all = np.load(PROJECT_ROOT / "data/processed/y_wlasl_pose_hands.npy")
 
@@ -53,19 +48,19 @@ def load_model_and_data(subset=100):
 
     idx_to_gloss = {v: k for k, v in full_label_map.items()}
 
-    # Filter to subset glosses
+    # filter to subset glosses
     mask = np.array([idx_to_gloss.get(int(label), '') in gloss_to_idx for label in y_all])
     X_subset = X_all[mask]
     y_subset_orig = y_all[mask]
     y_subset = np.array([gloss_to_idx[idx_to_gloss[int(label)]] for label in y_subset_orig])
 
-    # Sample for visualization (t-SNE is slow for large datasets)
+    # sample for visualization (t-SNE is slow for large datasets)
     if len(X_subset) > 3000:
         indices = np.random.choice(len(X_subset), 3000, replace=False)
         X_subset = X_subset[indices]
         y_subset = y_subset[indices]
 
-    # Create model
+    # create model
     config = PhonSSMConfig(
         num_signs=subset,
         input_mode="pose_hands",
@@ -73,7 +68,6 @@ def load_model_and_data(subset=100):
     )
     model = PhonSSM(config).to(device)
 
-    # Load weights
     ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
     model.load_state_dict(ckpt['model_state_dict'])
     model.eval()
@@ -92,7 +86,7 @@ def extract_embeddings(model, X, device, batch_size=64):
         'location': [],
         'movement': [],
         'orientation': [],
-        'final': []  # Final representation before classifier
+        'final': []  # final representation before classifier
     }
 
     with torch.no_grad():
@@ -100,18 +94,18 @@ def extract_embeddings(model, X, device, batch_size=64):
             batch = torch.FloatTensor(X[i:i+batch_size]).to(device)
             outputs = model(batch)
 
-            # Extract phonological components
+            # extract phonological components
             if 'phonological_components' in outputs:
                 for comp_name, comp_tensor in outputs['phonological_components'].items():
-                    # Mean pool over time
+                    # mean pool over time
                     comp_mean = comp_tensor.mean(dim=1)  # (B, D)
                     all_embeddings[comp_name].append(comp_mean.cpu().numpy())
 
-            # Final embedding (before classifier)
+            # final embedding (before classifier)
             if 'embedding' in outputs:
                 all_embeddings['final'].append(outputs['embedding'].cpu().numpy())
 
-    # Concatenate
+    # concatenate
     for key in all_embeddings:
         if all_embeddings[key]:
             all_embeddings[key] = np.vstack(all_embeddings[key])
@@ -131,21 +125,21 @@ def plot_tsne(coords, labels, idx_to_label, title, output_path, top_n_classes=20
     """Plot t-SNE visualization."""
     fig, ax = plt.subplots(figsize=(14, 12))
 
-    # Get most frequent classes for coloring
+    # get most frequent classes for coloring
     unique, counts = np.unique(labels, return_counts=True)
     top_classes = unique[np.argsort(-counts)[:top_n_classes]]
 
-    # Color map
+    # color map
     cmap = plt.colormaps['tab20']
     colors = [cmap(i % 20) for i in range(len(top_classes))]
     class_to_color = {c: colors[i] for i, c in enumerate(top_classes)}
 
-    # Plot other classes in gray first
+    # plot other classes in gray first
     other_mask = ~np.isin(labels, top_classes)
     ax.scatter(coords[other_mask, 0], coords[other_mask, 1],
                c='lightgray', alpha=0.3, s=10, label='Other')
 
-    # Plot top classes
+    # plot top classes
     for cls in top_classes:
         mask = labels == cls
         ax.scatter(coords[mask, 0], coords[mask, 1],
@@ -177,7 +171,7 @@ def plot_component_comparison(embeddings_dict, labels, idx_to_label, output_dir,
     if n_cols == 1:
         axes = [axes]
 
-    # Get top classes
+    # get top classes
     unique, counts = np.unique(labels, return_counts=True)
     top_classes = unique[np.argsort(-counts)[:10]]
     cmap = plt.colormaps['tab10']
@@ -189,12 +183,12 @@ def plot_component_comparison(embeddings_dict, labels, idx_to_label, output_dir,
 
         ax = axes[idx]
 
-        # Plot other classes in gray
+        # plot other classes in gray
         other_mask = ~np.isin(labels, top_classes)
         ax.scatter(coords[other_mask, 0], coords[other_mask, 1],
                    c='lightgray', alpha=0.3, s=10)
 
-        # Plot top classes
+        # plot top classes
         for cls in top_classes:
             mask = labels == cls
             ax.scatter(coords[mask, 0], coords[mask, 1],
@@ -205,7 +199,7 @@ def plot_component_comparison(embeddings_dict, labels, idx_to_label, output_dir,
         ax.set_xticks([])
         ax.set_yticks([])
 
-    # Single legend
+    # single legend
     handles, labels_legend = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels_legend, loc='center right', bbox_to_anchor=(1.15, 0.5))
 
@@ -231,18 +225,16 @@ def main():
     output_dir = PROJECT_ROOT / "analysis" / "results"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load model and data
     model, X, y, idx_to_label, device = load_model_and_data(args.subset)
 
-    # Extract embeddings
+    # extract embeddings
     print("\nExtracting embeddings...")
     embeddings = extract_embeddings(model, X, device)
 
-    # Plot component comparison
     print("\nCreating component comparison plot...")
     plot_component_comparison(embeddings, y, idx_to_label, output_dir, args.subset)
 
-    # Plot final embedding
+    # plot final embedding
     if embeddings['final'] is not None:
         print("\nRunning t-SNE on final embeddings...")
         coords = run_tsne(embeddings['final'])

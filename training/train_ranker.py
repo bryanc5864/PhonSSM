@@ -1,25 +1,10 @@
-"""
-Feedback Ranker Training Script
-================================
-MLP that prioritizes which feedback corrections to show first.
+"""tiny MLP deciding which correction to show the user first.
 
-Architecture:
-    Input: (22,) features:
-        - 4 component scores (handshape, location, movement, orientation)
-        - 16 error type probabilities
-        - 1 user skill level
-        - 1 sign difficulty
-    → Dense(64, ReLU)
-    → Dense(32, ReLU)
-    → Dense(1, Sigmoid) - priority score
+22 inputs (4 component scores, 16 error probs, skill level, sign difficulty) ->
+64 -> 32 -> sigmoid priority. targets are a hand-written rule over those same
+inputs, so the reported accuracy is circular.
 
-Target metrics:
-    - Ranking accuracy: >80%
-    - Parameters: ~50K
-
-Usage:
-    python training/train_ranker.py
-    python training/train_ranker.py --epochs 100 --batch-size 256
+    python training/train_ranker.py [--epochs 100 --batch-size 256]
 """
 
 import os
@@ -39,12 +24,12 @@ from tensorflow.keras.callbacks import (
     EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TensorBoard
 )
 
-# Paths
+# paths
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data" / "processed"
 MODEL_DIR = PROJECT_ROOT / "models" / "feedback_ranker"
 
-# Error severity weights (higher = more important to fix first)
+# error severity weights (higher = more important to fix first)
 ERROR_SEVERITY = {
     'handshape:finger_not_extended': 0.9,
     'handshape:fingers_not_curled': 0.85,
@@ -90,27 +75,27 @@ def generate_ranking_data(data_dir, num_samples=100000):
     X_data = []
     y_data = []
 
-    # Create severity lookup
+    # create severity lookup
     severity_weights = np.array([
         ERROR_SEVERITY.get(et, 0.5) for et in error_types
     ])
 
     for i in range(num_samples):
-        # Sample from real error data or generate synthetic
+        # sample from real error data or generate synthetic
         if i < len(error_labels):
             error_probs = error_labels[i].astype(np.float32)
             comp_scores = component_scores[i]
         else:
-            # Generate synthetic error combinations
+            # generate synthetic error combinations
             error_probs = np.random.random(num_error_types).astype(np.float32)
             error_probs = (error_probs > 0.7).astype(np.float32) * np.random.random(num_error_types)
             comp_scores = np.random.random(4).astype(np.float32)
 
-        # Add context features
+        # add context features
         user_skill = np.random.random()  # 0 = beginner, 1 = expert
         sign_difficulty = np.random.random()  # 0 = easy, 1 = hard
 
-        # Combine features
+        # combine features
         features = np.concatenate([
             comp_scores,           # 4 component scores
             error_probs,           # 16 error probabilities
@@ -120,13 +105,13 @@ def generate_ranking_data(data_dir, num_samples=100000):
 
         X_data.append(features)
 
-        # Compute priority score
-        # Higher priority for: high severity errors, beginner users, difficult signs
+        # compute priority score
+        # higher priority for: high severity errors, beginner users, difficult signs
         base_priority = np.sum(error_probs * severity_weights)
-        skill_modifier = 1.0 + (1.0 - user_skill) * 0.3  # Beginners need more help
-        difficulty_modifier = 1.0 + sign_difficulty * 0.2  # Hard signs need more feedback
+        skill_modifier = 1.0 + (1.0 - user_skill) * 0.3  # beginners need more help
+        difficulty_modifier = 1.0 + sign_difficulty * 0.2  # hard signs need more feedback
 
-        # Also consider component scores (lower score = higher priority)
+        # also consider component scores (lower score = higher priority)
         component_priority = np.sum(1.0 - comp_scores) / 4.0
 
         priority = (base_priority * skill_modifier * difficulty_modifier + component_priority) / 3.0
@@ -174,10 +159,10 @@ def train(args):
     print("FEEDBACK RANKER TRAINING")
     print("=" * 60)
 
-    # Generate training data
+    # generate training data
     X, y, error_types = generate_ranking_data(args.data_dir, args.num_samples)
 
-    # Split into train/val/test
+    # split into train/val/test
     n_total = len(X)
     n_train = int(0.8 * n_total)
     n_val = int(0.1 * n_total)
@@ -196,19 +181,18 @@ def train(args):
     input_dim = X_train.shape[1]
     print(f"Input dimension: {input_dim}")
 
-    # Build model
+    # build model
     print("\nBuilding model...")
     model = build_model(input_dim)
     model.summary()
 
-    # Compile
     model.compile(
         optimizer=Adam(learning_rate=args.learning_rate),
         loss='mse',
         metrics=['mae', tf.keras.metrics.RootMeanSquaredError(name='rmse')]
     )
 
-    # Callbacks
+    # callbacks
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -238,7 +222,7 @@ def train(args):
         )
     ]
 
-    # Train
+    # train
     print(f"\nTraining for up to {args.epochs} epochs...")
 
     history = model.fit(
@@ -250,7 +234,7 @@ def train(args):
         verbose=1
     )
 
-    # Evaluate
+    # evaluate
     print("\n" + "=" * 60)
     print("EVALUATION")
     print("=" * 60)
@@ -260,14 +244,14 @@ def train(args):
     print(f"Test MAE: {results[1]:.4f}")
     print(f"Test RMSE: {results[2]:.4f}")
 
-    # Compute ranking accuracy (pairwise comparison)
+    # compute ranking accuracy (pairwise comparison)
     print("\nComputing ranking accuracy...")
     y_pred = model.predict(X_test, verbose=0).flatten()
 
     correct_pairs = 0
     total_pairs = 0
 
-    # Sample pairs for evaluation
+    # sample pairs for evaluation
     n_pairs = min(10000, len(X_test) * (len(X_test) - 1) // 2)
     pair_indices = np.random.choice(len(X_test), size=(n_pairs, 2), replace=True)
 
@@ -276,25 +260,24 @@ def train(args):
             continue
         total_pairs += 1
 
-        # Check if ranking order is preserved
+        # check if ranking order is preserved
         if (y_test[i] > y_test[j]) == (y_pred[i] > y_pred[j]):
             correct_pairs += 1
         elif y_test[i] == y_test[j]:
-            correct_pairs += 1  # Ties are acceptable
+            correct_pairs += 1  # ties are acceptable
 
     ranking_accuracy = correct_pairs / total_pairs if total_pairs > 0 else 0
     print(f"Ranking Accuracy: {ranking_accuracy:.4f} ({ranking_accuracy*100:.2f}%)")
 
-    # Save model
     model.save(MODEL_DIR / 'feedback_ranker.keras')
     print(f"\nModel saved to {MODEL_DIR / 'feedback_ranker.keras'}")
 
-    # Save training history
+    # save training history
     history_dict = {k: [float(v) for v in vals] for k, vals in history.history.items()}
     with open(MODEL_DIR / 'training_history.json', 'w') as f:
         json.dump(history_dict, f, indent=2)
 
-    # Save model info
+    # save model info
     model_info = {
         'input_dim': input_dim,
         'parameters': int(model.count_params()),

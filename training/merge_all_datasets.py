@@ -1,12 +1,5 @@
-"""
-Merge All ASL Datasets
-Combines all available ASL datasets into a unified training set:
-- MVP (Kaggle ASL signs)
-- WLASL (Word-Level ASL)
-- ASL Citizen
-- ASL Alphabet (fingerspelling)
-- ASL MNIST (fingerspelling)
-- ChicagoFSWild (fingerspelling in the wild)
+"""merge every ASL source we have into one training set: Kaggle MVP, WLASL,
+ASL Citizen, ASL Alphabet, ASL MNIST, ChicagoFSWild.
 """
 
 import numpy as np
@@ -65,7 +58,7 @@ def merge_all_datasets(processed_dir, output_dir=None):
     all_datasets = {}
     all_label_maps = {}
 
-    # 1. Load all available datasets
+    # load all available datasets
     print("\n1. Loading available datasets...")
 
     # MVP+WLASL (from extended if exists)
@@ -75,7 +68,7 @@ def merge_all_datasets(processed_dir, output_dir=None):
     else:
         mvp_dir = processed_dir
 
-    # Load MVP splits
+    # load MVP splits
     for split in ['train', 'val', 'test']:
         X_path = mvp_dir / f'X_{split}.npy'
         y_path = mvp_dir / f'y_{split}.npy'
@@ -92,7 +85,7 @@ def merge_all_datasets(processed_dir, output_dir=None):
             all_label_maps['mvp'] = json.load(f)
         print(f"   MVP vocabulary: {len(all_label_maps['mvp'])} signs")
 
-    # Other datasets (single files, need splitting)
+    # other datasets (single files, need splitting)
     other_datasets = [
         ('asl_citizen', 'asl_citizen_label_map', 'ASL Citizen'),
         ('asl_alphabet', 'asl_alphabet_label_map', 'ASL Alphabet'),
@@ -108,25 +101,25 @@ def merge_all_datasets(processed_dir, output_dir=None):
             all_label_maps[prefix] = lm
             print(f"   {display_name}: {X.shape}, vocab: {len(lm)} signs")
 
-    # 2. Create unified label map
+    # create unified label map
     print("\n2. Creating unified label map...")
 
     all_signs = set()
     for name, lmap in all_label_maps.items():
         all_signs.update(lmap.keys())
 
-    # Sort for reproducibility
+    # sort for reproducibility
     unified_signs = sorted(all_signs)
     unified_label_map = {s: i for i, s in enumerate(unified_signs)}
 
     print(f"   Total unique signs: {len(unified_label_map)}")
 
-    # Show some overlaps
+    # show some overlaps
     if 'mvp' in all_label_maps and 'asl_citizen' in all_label_maps:
         overlap = set(all_label_maps['mvp'].keys()) & set(all_label_maps['asl_citizen'].keys())
         print(f"   MVP-ASL Citizen overlap: {len(overlap)} signs")
 
-    # 3. Remap all labels
+    # remap all labels
     print("\n3. Remapping labels...")
 
     for name, lmap in all_label_maps.items():
@@ -146,14 +139,14 @@ def merge_all_datasets(processed_dir, output_dir=None):
                 all_datasets[name]['X'] = all_datasets[name]['X'][valid]
                 print(f"   {name}: {np.sum(valid)}/{len(valid)} valid")
 
-    # 4. Split non-MVP datasets and combine
+    # split non-MVP datasets and combine
     print("\n4. Splitting and combining datasets...")
 
     train_X, train_y = [], []
     val_X, val_y = [], []
     test_X, test_y = [], []
 
-    # Add MVP splits directly
+    # add MVP splits directly
     for split, (X_list, y_list) in [('train', (train_X, train_y)),
                                       ('val', (val_X, val_y)),
                                       ('test', (test_X, test_y))]:
@@ -162,16 +155,12 @@ def merge_all_datasets(processed_dir, output_dir=None):
             X_list.append(all_datasets[key]['X'])
             y_list.append(all_datasets[key]['y'])
 
-    # Split and add other datasets (80/10/10)
-    # FIXED (reproducibility): use a SEEDED RNG so the split can be regenerated
-    # (the previous np.random.permutation was unseeded, so the exact 76/12/12
-    # partition behind the reported Merged-5565 number could never be reproduced).
-    # KNOWN LIMITATION (signer leakage): ASL Citizen ships an OFFICIAL
-    # signer-independent train/val/test split, but process_asl_citizen.py drops
-    # the split label, so we fall back to a random 80/10/10 here — this mixes the
-    # same signers/glosses across splits and inflates accuracy. To fully fix,
-    # carry instance['split'] through preprocessing and partition by it (and by
-    # signer) instead of the random split below.
+    # split and add other datasets (80/10/10)
+    # seeded rng: the old unseeded permutation meant the 76/12/12 partition
+    # behind the Merged-5565 number can never be regenerated.
+    # still leaky though — ASL Citizen ships a signer-independent split but
+    # process_asl_citizen.py throws the split label away, so the same signers
+    # end up on both sides. real fix is to carry instance['split'] through.
     split_rng = np.random.default_rng(42)
     for name in ['asl_citizen', 'asl_alphabet', 'asl_mnist', 'chicagofswild']:
         if name in all_datasets:
@@ -195,7 +184,7 @@ def merge_all_datasets(processed_dir, output_dir=None):
 
             print(f"   {name}: train={n_train}, val={n_val}, test={n_total-n_train-n_val}")
 
-    # Concatenate all
+    # concatenate all
     X_train = np.concatenate(train_X, axis=0)
     y_train = np.concatenate(train_y, axis=0)
     X_val = np.concatenate(val_X, axis=0)
@@ -203,7 +192,7 @@ def merge_all_datasets(processed_dir, output_dir=None):
     X_test = np.concatenate(test_X, axis=0)
     y_test = np.concatenate(test_y, axis=0)
 
-    # 5. Shuffle training data
+    # shuffle training data
     print("\n5. Shuffling training data...")
     indices = np.random.permutation(len(X_train))
     X_train = X_train[indices]
@@ -213,14 +202,14 @@ def merge_all_datasets(processed_dir, output_dir=None):
     print(f"   Val: {X_val.shape}")
     print(f"   Test: {X_test.shape}")
 
-    # Verify labels are in range
+    # verify labels are in range
     print("\n6. Verifying label integrity...")
     max_label = len(unified_label_map) - 1
     for name, y in [('train', y_train), ('val', y_val), ('test', y_test)]:
         out_of_range = np.sum((y < 0) | (y > max_label))
         print(f"   {name}: min={y.min()}, max={y.max()}, out_of_range={out_of_range}")
 
-    # 7. Save
+    # save
     print(f"\n7. Saving to {output_dir}...")
 
     np.save(output_dir / 'X_train.npy', X_train)
@@ -233,7 +222,7 @@ def merge_all_datasets(processed_dir, output_dir=None):
     with open(output_dir / 'label_map.json', 'w') as f:
         json.dump(unified_label_map, f, indent=2)
 
-    # Save stats
+    # save stats
     stats = {
         'total_samples': len(X_train) + len(X_val) + len(X_test),
         'train_samples': len(X_train),
@@ -245,7 +234,7 @@ def merge_all_datasets(processed_dir, output_dir=None):
     with open(output_dir / 'stats.json', 'w') as f:
         json.dump(stats, f, indent=2)
 
-    # Summary
+    # summary
     print("\n" + "=" * 60)
     print("MERGED DATASET SUMMARY")
     print("=" * 60)

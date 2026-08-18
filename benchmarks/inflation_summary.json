@@ -1,0 +1,42 @@
+[
+  {
+    "subset": 100,
+    "paper": 88.37,
+    "leaky": 88.63,
+    "honest": 50.0,
+    "drop": 38.6,
+    "honest_top5": 75.72,
+    "test_n": 276,
+    "leak": 0
+  },
+  {
+    "subset": 300,
+    "paper": 74.41,
+    "leaky": 74.06,
+    "honest": 31.96,
+    "drop": 42.1,
+    "honest_top5": 58.47,
+    "test_n": 679,
+    "leak": 0
+  },
+  {
+    "subset": 1000,
+    "paper": 62.9,
+    "leaky": 61.09,
+    "honest": 17.48,
+    "drop": 43.6,
+    "honest_top5": 40.81,
+    "test_n": 1899,
+    "leak": 0
+  },
+  {
+    "subset": 2000,
+    "paper": 72.08,
+    "leaky": 72.76,
+    "honest": 19.67,
+    "drop": 53.1,
+    "honest_top5": 44.65,
+    "test_n": 3187,
+    "leak": 0
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "subset": 100,
+  "streams": "joint",
+  "tag": "p_joint",
+  "use_pdm": false,
+  "test_top1": 30.23,
+  "test_top5": 54.65,
+  "test_perclass": 28.9,
+  "best_val_top1": 33.14,
+  "test_n": 258,
+  "width": 256,
+  "ssm_layers": 2
+}

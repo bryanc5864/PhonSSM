@@ -1,0 +1,9 @@
+{
+  "subset": 300,
+  "tag": "ft_jbm",
+  "test_top1": 68.71,
+  "test_top5": 86.23,
+  "test_perclass": 69.52,
+  "best_val": 71.78,
+  "test_n": 668
+}
