@@ -88,7 +88,7 @@ print("DIAGNOSTIC 3: Label distribution for WLASL100")
 print("="*70)
 
 # get WLASL100 subset
-with open(PROJECT_ROOT / 'data/raw/wlasl/start_kit/WLASL_v0.3.json') as f:
+with open(PROJECT_ROOT / 'data/wlasl-processed/WLASL_v0.3.json') as f:
     wlasl_json = json.load(f)
 
 with open(PROJECT_ROOT / 'data/processed/wlasl_label_map.json') as f:

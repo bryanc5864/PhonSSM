@@ -120,7 +120,7 @@ def load_wlasl_for_zeroshot(subset_size, main_label_map):
     print(f"\nLoading WLASL{subset_size} for zero-shot evaluation...")
 
     # load WLASL JSON
-    wlasl_json_path = PROJECT_ROOT / "data" / "raw" / "wlasl" / "start_kit" / "WLASL_v0.3.json"
+    wlasl_json_path = PROJECT_ROOT / "data" / "wlasl-processed" / "WLASL_v0.3.json"
     with open(wlasl_json_path) as f:
         wlasl_data = json.load(f)
 

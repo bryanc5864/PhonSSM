@@ -55,7 +55,7 @@ def load_model_and_data(subset=100):
         ckpt_path = PROJECT_ROOT / "benchmarks/external/wlasl2000/20260119_020829/best_model.pt"
 
     # load data
-    wlasl_json = PROJECT_ROOT / "data/raw/wlasl/start_kit/WLASL_v0.3.json"
+    wlasl_json = PROJECT_ROOT / "data/wlasl-processed/WLASL_v0.3.json"
     with open(wlasl_json) as f:
         wlasl_data = json.load(f)
 

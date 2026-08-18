@@ -22,7 +22,7 @@ from models.phonssm import PhonSSM, PhonSSMConfig
 from training.train_official import EMA, param_groups, evaluate
 
 DATA = ROOT / 'data' / 'sota_skeleton' / 'wlasl27'
-_V03 = json.load(open(ROOT / 'data' / 'raw' / 'wlasl' / 'start_kit' / 'WLASL_v0.3.json'))
+_V03 = json.load(open(ROOT / 'data' / 'wlasl-processed' / 'WLASL_v0.3.json'))
 _VID2SPLIT = {inst['video_id']: inst['split'] for e in _V03 for inst in e['instances']}
 
 

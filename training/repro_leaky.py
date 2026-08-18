@@ -30,7 +30,7 @@ ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 from models.phonssm import PhonSSM, PhonSSMConfig
 
-WLASL_JSON = ROOT / 'data' / 'raw' / 'wlasl' / 'start_kit' / 'WLASL_v0.3.json'
+WLASL_JSON = ROOT / 'data' / 'wlasl-processed' / 'WLASL_v0.3.json'
 POOL_X = ROOT / 'data' / 'processed' / 'X_wlasl_pose_hands.npy'
 POOL_Y = ROOT / 'data' / 'processed' / 'y_wlasl_pose_hands.npy'
 POOL_MAP = ROOT / 'data' / 'processed' / 'wlasl_pose_hands_label_map.json'

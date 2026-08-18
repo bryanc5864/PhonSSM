@@ -12,7 +12,7 @@ with open(PROJECT_ROOT / 'data/processed/wlasl_label_map.json') as f:
     label_map = json.load(f)
 
 # load WLASL JSON to get top 100 glosses
-with open(PROJECT_ROOT / 'data/raw/wlasl/start_kit/WLASL_v0.3.json') as f:
+with open(PROJECT_ROOT / 'data/wlasl-processed/WLASL_v0.3.json') as f:
     wlasl = json.load(f)
 
 top100 = [e['gloss'] for e in wlasl[:100]]

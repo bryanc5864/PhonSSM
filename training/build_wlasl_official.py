@@ -31,7 +31,7 @@ def build(subset_size, max_frames=30, dedup_test=True):
     parsed = json.load(open(LM_DIR / 'WLASL_parsed_data.json'))
     # top-N glosses by first appearance order = WLASL_v0.3 top-N convention.
     # match benchmark_external: it used WLASL_v0.3.json[:subset] gloss order.
-    v03 = json.load(open(ROOT / 'data' / 'raw' / 'wlasl' / 'start_kit' / 'WLASL_v0.3.json'))
+    v03 = json.load(open(ROOT / 'data' / 'wlasl-processed' / 'WLASL_v0.3.json'))
     subset_glosses = [e['gloss'].lower() for e in v03[:subset_size]]
     gloss_to_idx = {g: i for i, g in enumerate(subset_glosses)}
 
